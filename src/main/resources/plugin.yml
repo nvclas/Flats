@@ -1,0 +1,10 @@
+name: Flats
+version: '${version}'
+main: de.nvclas.flats.Flats
+api-version: '1.18'
+authors: [nvclas]
+description: Creating flats with build permission
+
+commands:
+  flat:
+    description: Plugin base command

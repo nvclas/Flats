@@ -1,9 +1,12 @@
 package de.nvclas.flats.utils;
 
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Selection {
@@ -22,12 +25,16 @@ public class Selection {
     }
 
     public static Selection getSelection(Player p) {
-        if (!selections.containsKey(p)) selections.put(p, new Selection());
+        if (!selections.containsKey(p)) {
+            selections.put(p, new Selection());
+        }
         return selections.get(p);
     }
 
     public int calculateVolume() {
-        if (pos1 == null || pos2 == null) return 0;
+        if (pos1 == null || pos2 == null) {
+            return 0;
+        }
 
         int length = Math.abs(pos2.getBlockX() - pos1.getBlockX()) + 1;
         int height = Math.abs(pos2.getBlockY() - pos1.getBlockY()) + 1;
@@ -73,19 +80,41 @@ public class Selection {
         return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
     }
 
-    public void setPos1(Location pos1) {
-        this.pos1 = pos1;
-    }
+    public List<Block> getBlockList() {
+        List<Block> blocks = new ArrayList<>();
+        int topBlockX = (Math.max(pos1.getBlockX(), pos2.getBlockX()));
+        int bottomBlockX = (Math.min(pos1.getBlockX(), pos2.getBlockX()));
 
-    public void setPos2(Location pos2) {
-        this.pos2 = pos2;
+        int topBlockY = (Math.max(pos1.getBlockY(), pos2.getBlockY()));
+        int bottomBlockY = (Math.min(pos1.getBlockY(), pos2.getBlockY()));
+
+        int topBlockZ = (Math.max(pos1.getBlockZ(), pos2.getBlockZ()));
+        int bottomBlockZ = (Math.min(pos1.getBlockZ(), pos2.getBlockZ()));
+
+        for (int x = bottomBlockX; x <= topBlockX; x++) {
+            for (int y = bottomBlockY; y <= topBlockY; y++) {
+                for (int z = bottomBlockZ; z <= topBlockZ; z++) {
+                    Block block = pos1.getWorld().getBlockAt(x, y, z);
+                    blocks.add(block);
+                }
+            }
+        }
+        return blocks;
     }
 
     public Location getPos1() {
         return pos1;
     }
 
+    public void setPos1(Location pos1) {
+        this.pos1 = pos1;
+    }
+
     public Location getPos2() {
         return pos2;
+    }
+
+    public void setPos2(Location pos2) {
+        this.pos2 = pos2;
     }
 }

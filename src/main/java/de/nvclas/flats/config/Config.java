@@ -9,8 +9,8 @@ import java.io.IOException;
 
 public abstract class Config {
 
-    protected FileConfiguration config;
     protected final File file;
+    protected FileConfiguration config;
 
     public Config(String fileName) {
         this.file = new File(Flats.getInstance().getDataFolder(), fileName);

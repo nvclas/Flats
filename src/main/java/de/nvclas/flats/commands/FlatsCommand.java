@@ -13,13 +13,14 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class FlatsCommand implements CommandExecutor {
 
     private final FlatsConfig flatsConfig = Flats.getInstance().getFlatsConfig();
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
         if (!command.getName().equalsIgnoreCase("flat")) {
             return true;
         }
@@ -181,9 +182,8 @@ public class FlatsCommand implements CommandExecutor {
                         }
                         for (Block block : selection.getBlockList()) {
                             p.sendBlockChange(block.getLocation(), Material.YELLOW_STAINED_GLASS.createBlockData());
-                            Bukkit.getScheduler().runTaskLater(Flats.getInstance(), () -> {
-                                p.sendBlockChange(block.getLocation(), block.getLocation().getBlock().getBlockData());
-                            }, 10 * 20);
+                            Bukkit.getScheduler().runTaskLater(Flats.getInstance(),
+                                    () -> p.sendBlockChange(block.getLocation(), block.getLocation().getBlock().getBlockData()), 10 * 20);
                         }
                     }
                 }

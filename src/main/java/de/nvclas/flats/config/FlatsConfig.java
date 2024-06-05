@@ -21,6 +21,11 @@ public class FlatsConfig extends Config {
         getConfig().set(getAreaPath(flatName), flats);
         saveConfig();
     }
+    
+    public void removeFlat(String flatName) {
+        getConfig().set(flatName, null);
+        saveConfig();
+    }
 
     public void setOwner(String flatName, Player owner) {
         if (owner == null) {
@@ -50,5 +55,4 @@ public class FlatsConfig extends Config {
     public String getOwnerPath(String flatName) {
         return flatName + ".owner";
     }
-
 }

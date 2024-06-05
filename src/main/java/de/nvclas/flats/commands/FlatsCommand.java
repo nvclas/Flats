@@ -83,8 +83,7 @@ public class FlatsCommand implements CommandExecutor {
                     p.sendMessage(Flats.PREFIX + "§cBruder, diese Wohnung gibt es nicht");
                     return true;
                 }
-                flatsConfig.getConfig().set(flatToRemove, null);
-                flatsConfig.saveConfig();
+                flatsConfig.removeFlat(flatToRemove);
                 p.sendMessage(Flats.PREFIX + "§aWohnung §e" + flatToRemove + " §awurde gelöscht");
             }
 

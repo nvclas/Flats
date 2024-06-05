@@ -6,7 +6,7 @@ import de.nvclas.flats.listener.StickInteractListener;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class Flats extends JavaPlugin {
+public class Flats extends JavaPlugin {
 
     public static final String PREFIX = "§7[§6Flats§7] §r";
     public static final String NO_PERM = PREFIX + "§cBruder, keine Rechte!";

@@ -69,12 +69,12 @@ public class Selection {
         double minX = Math.min(pos1.getX(), pos2.getX());
         double minY = Math.min(pos1.getY(), pos2.getY());
         double minZ = Math.min(pos1.getZ(), pos2.getZ());
-        double maxX = Math.max(pos1.getX(), pos2.getX());
+        double maxX = Math.max(pos1.getX(), pos2.getX()) + 1;
         double maxY = Math.max(pos1.getY(), pos2.getY());
-        double maxZ = Math.max(pos1.getZ(), pos2.getZ());
+        double maxZ = Math.max(pos1.getZ(), pos2.getZ()) + 1;
 
-        double x = location.getX() + 1; // Offset correction
-        double y = location.getY() - 1;
+        double x = location.getX(); // Offset correction
+        double y = location.getY();
         double z = location.getZ();
 
         return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;

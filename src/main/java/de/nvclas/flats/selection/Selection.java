@@ -1,13 +1,10 @@
-package de.nvclas.flats.utils;
+package de.nvclas.flats.selection;
 
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Selection {
 
@@ -79,9 +76,9 @@ public class Selection {
 
         return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
     }
-
-    public List<Block> getBlockList() {
-        List<Block> blocks = new ArrayList<>();
+    
+    public Set<Block> getBlockList() {
+        Set<Block> blocks = new HashSet<>();
         int topBlockX = (Math.max(pos1.getBlockX(), pos2.getBlockX()));
         int bottomBlockX = (Math.min(pos1.getBlockX(), pos2.getBlockX()));
 

@@ -2,7 +2,8 @@ package de.nvclas.flats.listener;
 
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.items.SelectionItem;
-import de.nvclas.flats.utils.Selection;
+import de.nvclas.flats.selection.Selection;
+import de.nvclas.flats.utils.Permissions;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,7 +17,7 @@ public class StickInteractListener implements Listener {
 
         if (event.getItem() == null) return;
         if (!event.getItem().isSimilar(SelectionItem.getItem())) return;
-        if (!p.hasPermission("flats.admin")) return;
+        if (!p.hasPermission(Permissions.ADMIN)) return;
 
         event.setCancelled(true);
         Selection selection = Selection.getSelection(p);

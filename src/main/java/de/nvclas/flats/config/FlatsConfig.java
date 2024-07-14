@@ -1,7 +1,7 @@
 package de.nvclas.flats.config;
 
+import de.nvclas.flats.selection.Selection;
 import de.nvclas.flats.utils.LocationConverter;
-import de.nvclas.flats.utils.Selection;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -21,7 +21,7 @@ public class FlatsConfig extends Config {
         getConfig().set(getAreaPath(flatName), flats);
         saveConfig();
     }
-    
+
     public void removeFlat(String flatName) {
         getConfig().set(flatName, null);
         saveConfig();

@@ -1,10 +1,14 @@
 package de.nvclas.flats.selection;
 
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class Selection {
 
@@ -70,7 +74,7 @@ public class Selection {
         double maxY = Math.max(pos1.getY(), pos2.getY());
         double maxZ = Math.max(pos1.getZ(), pos2.getZ()) + 1;
 
-        double x = location.getX(); // Offset correction
+        double x = location.getX();
         double y = location.getY();
         double z = location.getZ();
 
@@ -79,20 +83,25 @@ public class Selection {
     
     public Set<Block> getBlockList() {
         Set<Block> blocks = new HashSet<>();
-        int topBlockX = (Math.max(pos1.getBlockX(), pos2.getBlockX()));
-        int bottomBlockX = (Math.min(pos1.getBlockX(), pos2.getBlockX()));
+        int topBlockX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        int bottomBlockX = Math.min(pos1.getBlockX(), pos2.getBlockX());
 
-        int topBlockY = (Math.max(pos1.getBlockY(), pos2.getBlockY()));
-        int bottomBlockY = (Math.min(pos1.getBlockY(), pos2.getBlockY()));
+        int topBlockY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        int bottomBlockY = Math.min(pos1.getBlockY(), pos2.getBlockY());
 
-        int topBlockZ = (Math.max(pos1.getBlockZ(), pos2.getBlockZ()));
-        int bottomBlockZ = (Math.min(pos1.getBlockZ(), pos2.getBlockZ()));
+        int topBlockZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+        int bottomBlockZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
 
-        for (int x = bottomBlockX; x <= topBlockX; x++) {
-            for (int y = bottomBlockY; y <= topBlockY; y++) {
+        World world = pos1.getWorld();
+        
+        if (world == null)  {
+           return blocks; 
+        }
+
+        for (int y = bottomBlockY; y <= topBlockY; y++) {
+            for (int x = bottomBlockX; x <= topBlockX; x++) {
                 for (int z = bottomBlockZ; z <= topBlockZ; z++) {
-                    Block block = pos1.getWorld().getBlockAt(x, y, z);
-                    blocks.add(block);
+                    blocks.add(world.getBlockAt(x, y, z));
                 }
             }
         }

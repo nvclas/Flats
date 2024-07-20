@@ -1,0 +1,41 @@
+{
+  "messages": {
+    "no_permission": "§cBrother, you don't have permission for this!",
+    "nothing_selected": "§cBrother, you haven't selected anything!",
+    "use_command": "§cUse §6/flats add <flatname>",
+    "flat_created": "§aFlat §e%s §ahas been created",
+    "flat_intersect": "§cYour selection intersects another flat",
+    "flat_intersect_details": "§cFlat: §6%s §cat §6%s",
+    "flat_not_exist": "§cBrother, this flat does not exist",
+    "flat_deleted": "§aFlat §e%s §ahas been deleted",
+    "claim_success": "§aCongratulations on your new flat",
+    "already_your_flat": "§cBrother, this is already your flat",
+    "already_owned_by": "§cThe flat is already owned by §6%s",
+    "not_in_flat": "§cYou are currently not in any flat",
+    "unclaim_success": "§aCongratulations on losing your flat",
+    "not_your_flat": "§cThis is not your flat",
+    "flat_info_header": "§6§lFlat: §e§l%s",
+    "flat_info_owner": "§7├§6Owner: §e%s",
+    "flat_info_unoccupied": "§7├§6Owner: §eUnoccupied",
+    "flat_info_area": "§7└§6Current area: %s",
+    "flats_list_header": "§6§lFlat: §e§l%s",
+    "flats_list_owner": "§7├§6Owner: §e%s",
+    "flats_list_unoccupied": "§7├§6Owner: §eUnoccupied",
+    "flats_list_areas_header": "§7└§6Areas:",
+    "flats_list_area": "  §7└§6%s",
+    "flats_list_area_item": "  §7├§6%s"
+  },
+  "commands": {
+    "help": {
+      "header": "§bAvailable Commands§7:",
+      "select": "§6/flats select §7- §eGet selection tool",
+      "add": "§6/flats add <flatname> §7- §eAdd a flat",
+      "remove": "§6/flats remove <flatname> §7- §eRemove a flat",
+      "list": "§6/flats list §7- §eList all flats",
+      "claim": "§6/flats claim §7- §eClaim a flat",
+      "unclaim": "§6/flats unclaim §7- §eUnclaim a flat",
+      "info": "§6/flats info §7- §eShow information about the current flat",
+      "show": "§6/flats show §7- §eShow flats nearby"
+    }
+  }
+}

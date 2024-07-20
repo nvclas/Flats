@@ -1,5 +1,7 @@
 package de.nvclas.flats.selection;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -10,6 +12,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+@Setter
+@Getter
 public class Selection {
 
     private static final Map<Player, Selection> selections = new HashMap<>();
@@ -26,9 +30,7 @@ public class Selection {
     }
 
     public static Selection getSelection(Player p) {
-        if (!selections.containsKey(p)) {
-            selections.put(p, new Selection());
-        }
+        selections.putIfAbsent(p, new Selection());
         return selections.get(p);
     }
 
@@ -80,7 +82,7 @@ public class Selection {
 
         return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
     }
-    
+
     public Set<Block> getBlockList() {
         Set<Block> blocks = new HashSet<>();
         int topBlockX = Math.max(pos1.getBlockX(), pos2.getBlockX());
@@ -93,9 +95,9 @@ public class Selection {
         int bottomBlockZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
 
         World world = pos1.getWorld();
-        
-        if (world == null)  {
-           return blocks; 
+
+        if (world == null) {
+            return blocks;
         }
 
         for (int y = bottomBlockY; y <= topBlockY; y++) {
@@ -108,19 +110,4 @@ public class Selection {
         return blocks;
     }
 
-    public Location getPos1() {
-        return pos1;
-    }
-
-    public void setPos1(Location pos1) {
-        this.pos1 = pos1;
-    }
-
-    public Location getPos2() {
-        return pos2;
-    }
-
-    public void setPos2(Location pos2) {
-        this.pos2 = pos2;
-    }
 }

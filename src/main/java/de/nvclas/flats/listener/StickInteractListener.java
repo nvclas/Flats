@@ -7,6 +7,7 @@ import de.nvclas.flats.utils.Permissions;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class StickInteractListener implements Listener {
@@ -21,17 +22,14 @@ public class StickInteractListener implements Listener {
 
         event.setCancelled(true);
         Selection selection = Selection.getSelection(p);
-        switch (event.getAction()) {
-            case LEFT_CLICK_BLOCK -> {
-                selection.setPos1(event.getClickedBlock().getLocation());
-                p.sendMessage(Flats.PREFIX + "§aPosition 1 gesetzt (" + selection.calculateVolume() + ")");
-            }
-            case RIGHT_CLICK_BLOCK -> {
-                selection.setPos2(event.getClickedBlock().getLocation());
-                p.sendMessage(Flats.PREFIX + "§aPosition 2 gesetzt (" + selection.calculateVolume() + ")");
-            }
+        if (event.getAction() == Action.LEFT_CLICK_BLOCK && event.getClickedBlock() != null) {
+            selection.setPos1(event.getClickedBlock().getLocation());
+            p.sendMessage(Flats.PREFIX + "§aPosition 1 gesetzt (" + selection.calculateVolume() + ")");
         }
-
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
+            selection.setPos2(event.getClickedBlock().getLocation());
+            p.sendMessage(Flats.PREFIX + "§aPosition 2 gesetzt (" + selection.calculateVolume() + ")");
+        }
     }
 
 }

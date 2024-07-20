@@ -1,5 +1,6 @@
 package de.nvclas.flats.config;
 
+import de.nvclas.flats.Flats;
 import de.nvclas.flats.selection.Selection;
 import de.nvclas.flats.utils.LocationConverter;
 import org.bukkit.Bukkit;
@@ -11,33 +12,33 @@ import java.util.UUID;
 
 public class FlatsConfig extends Config {
 
-    public FlatsConfig(String fileName) {
-        super(fileName);
+    public FlatsConfig(Flats plugin, String fileName) {
+        super(plugin, fileName);
     }
 
     public void addSelection(String flatName, Selection selection) {
         List<String> flats = getAreas(flatName);
         flats.add(LocationConverter.getStringFromSelection(selection));
-        getConfig().set(getAreaPath(flatName), flats);
+        getConfigFile().set(getAreaPath(flatName), flats);
         saveConfig();
     }
 
     public void removeFlat(String flatName) {
-        getConfig().set(flatName, null);
+        getConfigFile().set(flatName, null);
         saveConfig();
     }
 
     public void setOwner(String flatName, Player owner) {
         if (owner == null) {
-            config.set(getOwnerPath(flatName), null);
+            configFile.set(getOwnerPath(flatName), null);
             return;
         }
-        config.set(getOwnerPath(flatName), owner.getUniqueId().toString());
+        configFile.set(getOwnerPath(flatName), owner.getUniqueId().toString());
         saveConfig();
     }
 
     public OfflinePlayer getOwner(String flatName) {
-        String ownerUUID = config.getString(getOwnerPath(flatName));
+        String ownerUUID = configFile.getString(getOwnerPath(flatName));
         if (ownerUUID == null) {
             return null;
         }
@@ -45,7 +46,7 @@ public class FlatsConfig extends Config {
     }
 
     public List<String> getAreas(String flatName) {
-        return config.getStringList(getAreaPath(flatName));
+        return configFile.getStringList(getAreaPath(flatName));
     }
 
     public String getAreaPath(String flatName) {

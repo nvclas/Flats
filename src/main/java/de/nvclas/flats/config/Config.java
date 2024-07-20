@@ -1,6 +1,7 @@
 package de.nvclas.flats.config;
 
 import de.nvclas.flats.Flats;
+import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -10,36 +11,34 @@ import java.io.IOException;
 public abstract class Config {
 
     protected final File file;
-    protected FileConfiguration config;
+    @Getter
+    protected FileConfiguration configFile;
+    protected final Flats plugin;
 
-    public Config(String fileName) {
-        this.file = new File(Flats.getInstance().getDataFolder(), fileName);
+    protected Config(Flats plugin, String fileName) {
+        this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder(), fileName);
         createConfig();
     }
 
-    public FileConfiguration getConfig() {
-        return config;
-    }
-
     private void createConfig() {
-        if (!file.exists()) {
-            Flats.getInstance().getDataFolder().mkdir();
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
+        try {
+            if(!plugin.getDataFolder().mkdir() && !file.createNewFile()) {
+                plugin.getLogger().info(() -> "File " + file.getName() + " already exists");
             }
+        } catch (IOException e) {
+            plugin.getLogger().severe(() -> "Failed to create file " + file.getName() + ": " + e.getMessage());
         }
-        config = YamlConfiguration.loadConfiguration(file);
+        configFile = YamlConfiguration.loadConfiguration(file);
     }
 
     public void saveConfig() {
         try {
-            config.save(file);
+            configFile.save(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            plugin.getLogger().severe(() -> "Failed to save file " + file.getName() + ": " + e.getMessage());
         }
-        config = YamlConfiguration.loadConfiguration(file);
+        configFile = YamlConfiguration.loadConfiguration(file);
     }
 
 }

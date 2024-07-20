@@ -6,14 +6,20 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class SelectionItem {
 
-    private static final String displayName = "§6Selection";
-    private static final Material material = Material.STICK;
+    private static final String DISPLAY_NAME = "§6Selection";
+    private static final Material MATERIAL = Material.STICK;
 
+    private SelectionItem() {
+        throw new IllegalStateException("Utility class");
+    }
+    
     public static ItemStack getItem() {
-        ItemStack is = new ItemStack(material);
+        ItemStack is = new ItemStack(MATERIAL);
         ItemMeta im = is.getItemMeta();
-        im.setDisplayName(displayName);
-        is.setItemMeta(im);
+        if(im != null) {
+            im.setDisplayName(DISPLAY_NAME);
+            is.setItemMeta(im);
+        }
         return is;
     }
 

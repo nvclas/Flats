@@ -7,6 +7,10 @@ import org.bukkit.World;
 
 public class LocationConverter {
 
+    private LocationConverter() {
+        throw new IllegalStateException("Utility class");
+    }
+    
     public static String getStringFromSelection(Selection selection) {
         String pos1String = selection.getPos1().getBlockX() + "," + selection.getPos1().getBlockY() + "," + selection.getPos1().getBlockZ();
         String pos2String = selection.getPos2().getBlockX() + "," + selection.getPos2().getBlockY() + "," + selection.getPos2().getBlockZ();

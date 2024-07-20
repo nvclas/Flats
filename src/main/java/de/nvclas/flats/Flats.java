@@ -3,8 +3,8 @@ package de.nvclas.flats;
 import de.nvclas.flats.commands.FlatsCommand;
 import de.nvclas.flats.config.FlatsConfig;
 import de.nvclas.flats.config.SettingsConfig;
-import de.nvclas.flats.listener.PlayerChangedWorldListener;
-import de.nvclas.flats.listener.StickInteractListener;
+import de.nvclas.flats.listeners.PlayerChangedWorldListener;
+import de.nvclas.flats.listeners.StickInteractListener;
 import de.nvclas.flats.utils.I18n;
 import lombok.Getter;
 import org.bukkit.entity.Player;
@@ -20,11 +20,19 @@ public class Flats extends JavaPlugin {
     private FlatsConfig flatsConfig;
     private SettingsConfig settingsConfig;
 
+    public static boolean hasNoPermission(Player p, String permission) {
+        if (!p.hasPermission(permission)) {
+            p.sendMessage(PREFIX + I18n.translate("messages.no_permission"));
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public void onEnable() {
-        flatsConfig = new FlatsConfig(this,"flats.yml");
+        flatsConfig = new FlatsConfig(this, "flats.yml");
         settingsConfig = new SettingsConfig(this, "settings.yml");
-        
+
         Objects.requireNonNull(getCommand("flat")).setExecutor(new FlatsCommand(this));
 
         getServer().getPluginManager().registerEvents(new StickInteractListener(), this);
@@ -32,14 +40,6 @@ public class Flats extends JavaPlugin {
 
         I18n.initialize(this);
         I18n.loadTranslations(settingsConfig.getLanguage());
-    }
-
-    public static boolean hasNoPermission(Player p, String permission) {
-        if (!p.hasPermission(permission)) {
-            p.sendMessage(PREFIX + I18n.translate("messages.no_permission"));
-            return true;
-        }
-        return false;
     }
 
 }

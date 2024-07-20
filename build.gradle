@@ -3,13 +3,13 @@ plugins {
 }
 
 group = 'de.nvclas'
-version = '0.23'
+version = '0.24'
 
 repositories {
     mavenCentral()
     maven {
-        name = "spigotmc-repo"
-        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+        name = "papermc-repo"
+        url = "https://repo.papermc.io/repository/maven-public/"
     }
     maven {
         name = "sonatype"
@@ -25,10 +25,10 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok:1.18.34'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
 
-    compileOnly "org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT"
+    compileOnly 'io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT'
 }
 
-def targetJavaVersion = 17
+def targetJavaVersion = 21
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
     sourceCompatibility = javaVersion
@@ -54,7 +54,7 @@ processResources {
     }
 }
 
-def serverPluginsDir = 'C:\\Users\\Niclas\\Desktop\\Development\\Server\\plugins'
+def serverPluginsDir = 'run/plugins'
 tasks.register('copyJarToServer', Copy) {
     dependsOn build
     from jar.archiveFile.get().getAsFile()

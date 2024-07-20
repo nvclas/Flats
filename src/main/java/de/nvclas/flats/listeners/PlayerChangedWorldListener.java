@@ -1,4 +1,4 @@
-package de.nvclas.flats.listener;
+package de.nvclas.flats.listeners;
 
 import de.nvclas.flats.selection.Selection;
 import org.bukkit.entity.Player;

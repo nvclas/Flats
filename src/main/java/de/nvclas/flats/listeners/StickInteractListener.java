@@ -1,4 +1,4 @@
-package de.nvclas.flats.listener;
+package de.nvclas.flats.listeners;
 
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.items.SelectionItem;

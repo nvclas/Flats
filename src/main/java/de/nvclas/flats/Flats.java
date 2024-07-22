@@ -3,6 +3,7 @@ package de.nvclas.flats;
 import de.nvclas.flats.commands.FlatsCommand;
 import de.nvclas.flats.config.FlatsConfig;
 import de.nvclas.flats.config.SettingsConfig;
+import de.nvclas.flats.listener.PlayerChangedWorldListener;
 import de.nvclas.flats.listener.StickInteractListener;
 import de.nvclas.flats.utils.I18n;
 import lombok.Getter;
@@ -21,10 +22,11 @@ public class Flats extends JavaPlugin {
     public void onEnable() {
         flatsConfig = new FlatsConfig(this,"flats.yml");
         settingsConfig = new SettingsConfig(this, "settings.yml");
-
+        
         getCommand("flat").setExecutor(new FlatsCommand(this));
 
         getServer().getPluginManager().registerEvents(new StickInteractListener(), this);
+        getServer().getPluginManager().registerEvents(new PlayerChangedWorldListener(), this);
 
         I18n.initialize(this);
         I18n.loadTranslations(settingsConfig.getLanguage());

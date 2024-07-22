@@ -110,4 +110,9 @@ public class Selection {
         return blocks;
     }
 
+    public void clear() {
+        pos1 = null;
+        pos2 = null;
+    }
+    
 }

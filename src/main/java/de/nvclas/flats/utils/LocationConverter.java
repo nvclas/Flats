@@ -12,6 +12,9 @@ public class LocationConverter {
     }
     
     public static String getStringFromSelection(Selection selection) {
+        if(selection.getPos1().getWorld() == null || selection.getPos2().getWorld() == null) {
+            return null;
+        }
         String pos1String = selection.getPos1().getBlockX() + "," + selection.getPos1().getBlockY() + "," + selection.getPos1().getBlockZ();
         String pos2String = selection.getPos2().getBlockX() + "," + selection.getPos2().getBlockY() + "," + selection.getPos2().getBlockZ();
         return selection.getPos1().getWorld().getName() + ":" + pos1String + ";" + pos2String;

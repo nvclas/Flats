@@ -10,6 +10,8 @@ import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Objects;
+
 @Getter
 public class Flats extends JavaPlugin {
 
@@ -23,7 +25,7 @@ public class Flats extends JavaPlugin {
         flatsConfig = new FlatsConfig(this,"flats.yml");
         settingsConfig = new SettingsConfig(this, "settings.yml");
         
-        getCommand("flat").setExecutor(new FlatsCommand(this));
+        Objects.requireNonNull(getCommand("flat")).setExecutor(new FlatsCommand(this));
 
         getServer().getPluginManager().registerEvents(new StickInteractListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerChangedWorldListener(), this);

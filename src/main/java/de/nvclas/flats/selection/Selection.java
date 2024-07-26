@@ -47,19 +47,19 @@ public class Selection {
     }
 
     public boolean intersects(Selection other) {
-        double minX1 = Math.min(pos1.getX(), pos2.getX());
-        double minY1 = Math.min(pos1.getY(), pos2.getY());
-        double minZ1 = Math.min(pos1.getZ(), pos2.getZ());
         double maxX1 = Math.max(pos1.getX(), pos2.getX());
+        double minX1 = Math.min(pos1.getX(), pos2.getX());
         double maxY1 = Math.max(pos1.getY(), pos2.getY());
+        double minY1 = Math.min(pos1.getY(), pos2.getY());
         double maxZ1 = Math.max(pos1.getZ(), pos2.getZ());
+        double minZ1 = Math.min(pos1.getZ(), pos2.getZ());
 
-        double minX2 = Math.min(other.pos1.getX(), other.pos2.getX());
-        double minY2 = Math.min(other.pos1.getY(), other.pos2.getY());
-        double minZ2 = Math.min(other.pos1.getZ(), other.pos2.getZ());
         double maxX2 = Math.max(other.pos1.getX(), other.pos2.getX());
+        double minX2 = Math.min(other.pos1.getX(), other.pos2.getX());
         double maxY2 = Math.max(other.pos1.getY(), other.pos2.getY());
+        double minY2 = Math.min(other.pos1.getY(), other.pos2.getY());
         double maxZ2 = Math.max(other.pos1.getZ(), other.pos2.getZ());
+        double minZ2 = Math.min(other.pos1.getZ(), other.pos2.getZ());
 
         boolean intersectsX = minX1 <= maxX2 && maxX1 >= minX2;
         boolean intersectsY = minY1 <= maxY2 && maxY1 >= minY2;
@@ -69,12 +69,14 @@ public class Selection {
     }
 
     public boolean intersects(Location location) {
-        double minX = Math.min(pos1.getX(), pos2.getX());
-        double minY = Math.min(pos1.getY(), pos2.getY());
-        double minZ = Math.min(pos1.getZ(), pos2.getZ());
         double maxX = Math.max(pos1.getX(), pos2.getX()) + 1;
+        double minX = Math.min(pos1.getX(), pos2.getX());
+
         double maxY = Math.max(pos1.getY(), pos2.getY());
+        double minY = Math.min(pos1.getY(), pos2.getY());
+
         double maxZ = Math.max(pos1.getZ(), pos2.getZ()) + 1;
+        double minZ = Math.min(pos1.getZ(), pos2.getZ());
 
         double x = location.getX();
         double y = location.getY();
@@ -85,24 +87,23 @@ public class Selection {
 
     public Set<Block> getBlockList() {
         Set<Block> blocks = new HashSet<>();
-        int topBlockX = Math.max(pos1.getBlockX(), pos2.getBlockX());
-        int bottomBlockX = Math.min(pos1.getBlockX(), pos2.getBlockX());
-
-        int topBlockY = Math.max(pos1.getBlockY(), pos2.getBlockY());
-        int bottomBlockY = Math.min(pos1.getBlockY(), pos2.getBlockY());
-
-        int topBlockZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
-        int bottomBlockZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
-
         World world = pos1.getWorld();
 
         if (world == null) {
             return blocks;
         }
+        int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
 
-        for (int y = bottomBlockY; y <= topBlockY; y++) {
-            for (int x = bottomBlockX; x <= topBlockX; x++) {
-                for (int z = bottomBlockZ; z <= topBlockZ; z++) {
+        int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        int minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+
+        int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+        int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+
+        for (int y = minY; y <= maxY; y++) {
+            for (int x = minX; x <= maxX; x++) {
+                for (int z = minZ; z <= maxZ; z++) {
                     blocks.add(world.getBlockAt(x, y, z));
                 }
             }

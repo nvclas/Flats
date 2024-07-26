@@ -1,8 +1,10 @@
 {
   "messages": {
+    "position_set": "§aPosition %1$s gesetzt (%2$s)",
     "no_permission": "§cBruder, du hast keine Berechtigung dafür!",
     "nothing_selected": "§cBruder, du hast nichts markiert!",
     "use_command": "§cNutze §6/flats add <wohnungsname>",
+    "selection_too_large": "§cBruder, übertreib doch nicht mit der Größe",
     "flat_created": "§aWohnung §e%s §awurde erstellt",
     "flat_intersect": "§cDeine Auswahl schneidet eine andere Wohnung",
     "flat_intersect_details": "§cWohnung: §6%1$s §cbei §6%2$s",

@@ -2,6 +2,7 @@ package de.nvclas.flats.commands;
 
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.config.FlatsConfig;
+import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.items.SelectionItem;
 import de.nvclas.flats.selection.Selection;
 import de.nvclas.flats.utils.I18n;
@@ -17,26 +18,35 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class FlatsCommand implements CommandExecutor {
 
     private static final String NOT_IN_FLAT = "messages.not_in_flat";
-    
+
     private final FlatsConfig flatsConfig;
+    private final SettingsConfig settingsConfig;
     private final Flats plugin;
+    
+    private Player player;
 
     public FlatsCommand(Flats plugin) {
         this.plugin = plugin;
         this.flatsConfig = plugin.getFlatsConfig();
+        this.settingsConfig = plugin.getSettingsConfig();
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
-        if (!command.getName().equalsIgnoreCase("flat") || !(sender instanceof Player player)) {
+        if (!command.getName().equalsIgnoreCase("flat") || !(sender instanceof Player p)) {
             return false;
         }
-
+        
+        player = p;
+        
         if (args.length == 0) {
-            sendHelpMessage(player);
+            sendHelpMessage();
             return true;
         }
 
@@ -44,44 +54,44 @@ public class FlatsCommand implements CommandExecutor {
 
         switch (subCommand) {
             case "select":
-                handleSelectCommand(player);
+                handleSelectCommand();
                 break;
             case "add":
-                handleAddCommand(player, args);
+                handleAddCommand(args);
                 break;
             case "remove":
-                handleRemoveCommand(player, args);
+                handleRemoveCommand(args);
                 break;
             case "claim":
-                handleClaimCommand(player);
+                handleClaimCommand();
                 break;
             case "unclaim":
-                handleUnclaimCommand(player);
+                handleUnclaimCommand();
                 break;
             case "info":
-                handleInfoCommand(player);
+                handleInfoCommand();
                 break;
             case "list":
-                handleListCommand(player);
+                handleListCommand();
                 break;
             case "show":
-                handleShowCommand(player);
+                handleShowCommand();
                 break;
             default:
-                sendHelpMessage(player);
+                sendHelpMessage();
                 break;
         }
         return true;
     }
 
-    private void handleSelectCommand(Player player) {
+    private void handleSelectCommand() {
         if (Flats.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
         player.getInventory().addItem(SelectionItem.getItem());
     }
 
-    private void handleAddCommand(Player player, String[] args) {
+    private void handleAddCommand(String[] args) {
         if (Flats.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
@@ -89,19 +99,23 @@ public class FlatsCommand implements CommandExecutor {
             player.sendMessage(Flats.PREFIX + I18n.translate("messages.nothing_selected"));
             return;
         }
+        if (Selection.getSelection(player).calculateVolume() > settingsConfig.getMaxFlatSize()) {
+            player.sendMessage(Flats.PREFIX + I18n.translate("messages.selection_too_large"));
+            return;
+        }
         if (args.length < 2) {
             player.sendMessage(Flats.PREFIX + I18n.translate("messages.use_command"));
             return;
         }
         String flatName = args[1];
-        if (doesSelectionIntersect(player)) {
+        if (doesSelectionIntersect()) {
             return;
         }
         flatsConfig.addSelection(flatName, Selection.getSelection(player));
         player.sendMessage(Flats.PREFIX + I18n.translate("messages.flat_created", flatName));
     }
 
-    private boolean doesSelectionIntersect(Player player) {
+    private boolean doesSelectionIntersect() {
         for (String flat : flatsConfig.getConfigFile().getKeys(false)) {
             for (String selectionString : flatsConfig.getAreas(flat)) {
                 Selection selection = LocationConverter.getSelectionFromString(selectionString);
@@ -115,7 +129,7 @@ public class FlatsCommand implements CommandExecutor {
         return false;
     }
 
-    private void handleRemoveCommand(Player player, String[] args) {
+    private void handleRemoveCommand(String[] args) {
         if (Flats.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
@@ -132,7 +146,7 @@ public class FlatsCommand implements CommandExecutor {
         player.sendMessage(Flats.PREFIX + I18n.translate("messages.flat_deleted", flatToRemove));
     }
 
-    private void handleClaimCommand(Player player) {
+    private void handleClaimCommand() {
         for (String flat : flatsConfig.getConfigFile().getKeys(false)) {
             for (String selectionString : flatsConfig.getAreas(flat)) {
                 Selection selection = LocationConverter.getSelectionFromString(selectionString);
@@ -155,7 +169,7 @@ public class FlatsCommand implements CommandExecutor {
         player.sendMessage(Flats.PREFIX + I18n.translate(NOT_IN_FLAT));
     }
 
-    private void handleUnclaimCommand(Player player) {
+    private void handleUnclaimCommand() {
         for (String flat : flatsConfig.getConfigFile().getKeys(false)) {
             for (String selectionString : flatsConfig.getAreas(flat)) {
                 Selection selection = LocationConverter.getSelectionFromString(selectionString);
@@ -174,7 +188,7 @@ public class FlatsCommand implements CommandExecutor {
         player.sendMessage(Flats.PREFIX + I18n.translate(NOT_IN_FLAT));
     }
 
-    private void handleInfoCommand(Player player) {
+    private void handleInfoCommand() {
         for (String flat : flatsConfig.getConfigFile().getKeys(false)) {
             for (String selectionString : flatsConfig.getAreas(flat)) {
                 Selection selection = LocationConverter.getSelectionFromString(selectionString);
@@ -194,7 +208,7 @@ public class FlatsCommand implements CommandExecutor {
         player.sendMessage(Flats.PREFIX + I18n.translate(NOT_IN_FLAT));
     }
 
-    private void handleListCommand(Player player) {
+    private void handleListCommand() {
         if (Flats.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
@@ -217,22 +231,38 @@ public class FlatsCommand implements CommandExecutor {
         }
     }
 
-    private void handleShowCommand(Player player) {
+    public void handleShowCommand() {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            Set<Block> blocksToChange = getBlocksToChange();
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                for (Block block : blocksToChange) {
+                    player.sendBlockChange(block.getLocation(), Material.YELLOW_STAINED_GLASS.createBlockData());
+                }
+
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    for (Block block : blocksToChange) {
+                        player.sendBlockChange(block.getLocation(), block.getBlockData());
+                    }
+                }, 200L); // 200 Ticks = 10 Sekunden
+            });
+        });
+    }
+
+    private Set<Block> getBlocksToChange() {
+        Set<Block> blocksToChange = new HashSet<>();
         for (String flat : flatsConfig.getConfigFile().getKeys(false)) {
             for (String selectionString : flatsConfig.getAreas(flat)) {
                 Selection selection = LocationConverter.getSelectionFromString(selectionString);
                 if (selection.getPos1().distance(player.getLocation()) > 100 && selection.getPos2().distance(player.getLocation()) > 100) {
                     continue;
                 }
-                for (Block block : selection.getBlockList()) {
-                    player.sendBlockChange(block.getLocation(), Material.YELLOW_STAINED_GLASS.createBlockData());
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> player.sendBlockChange(block.getLocation(), block.getLocation().getBlock().getBlockData()), (long) 10 * 20);
-                }
+                blocksToChange.addAll(selection.getBlockList());
             }
         }
+        return blocksToChange;
     }
-
-    private void sendHelpMessage(Player player) {
+    
+    private void sendHelpMessage() {
         player.sendMessage(Flats.PREFIX + I18n.translate("commands.help.header"));
         if (player.hasPermission(Permissions.ADMIN)) {
             player.sendMessage(I18n.translate("commands.help.select"));

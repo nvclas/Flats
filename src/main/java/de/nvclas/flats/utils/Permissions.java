@@ -7,5 +7,4 @@ public class Permissions {
     }
     
     public static final String ADMIN = "flats.admin";
-
 }

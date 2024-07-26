@@ -21,9 +21,9 @@ public abstract class Config {
         createConfig();
     }
 
-    private void createConfig() {
+    protected void createConfig() {
         try {
-            if(!plugin.getDataFolder().mkdir() && !file.createNewFile()) {
+            if (!plugin.getDataFolder().mkdir() && !file.createNewFile()) {
                 plugin.getLogger().info(() -> "File " + file.getName() + " already exists");
             }
         } catch (IOException e) {

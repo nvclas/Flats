@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'de.nvclas'
-version = '0.21'
+version = '0.23'
 
 repositories {
     mavenCentral()
@@ -24,7 +24,7 @@ dependencies {
 
     testCompileOnly 'org.projectlombok:lombok:1.18.34'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
-    
+
     compileOnly "org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT"
 }
 
@@ -53,3 +53,11 @@ processResources {
         expand props
     }
 }
+
+def serverPluginsDir = 'C:\\Users\\Niclas\\Desktop\\Development\\Server\\plugins'
+tasks.register('copyJarToServer', Copy) {
+    dependsOn build
+    from jar.archiveFile.get().getAsFile()
+    into serverPluginsDir
+}
+processResources.finalizedBy(copyJarToServer)

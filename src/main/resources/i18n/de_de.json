@@ -25,7 +25,11 @@
     "flats_list_unoccupied": "§7├§6Owner: §eNicht besetzt",
     "flats_list_areas_header": "§7└§6Flächen:",
     "flats_list_area": "  §7└§6%s",
-    "flats_list_area_item": "  §7├§6%s"
+    "flats_list_area_item": "  §7├§6%s",
+    "flats_show": "§eWohnungen in der Nähe für %s Sekunden sichtbar",
+    "update_success": "§aDie neuste Version von Flats wurde heruntergeladen! Bitte starte den Server neu",
+    "update_notfound": "§cDie neuste Version von Flats konnte nicht gefunden werden",
+    "update_failed": "§cBeim Herunterladen der neusten Version von Flats ist ein Fehler aufgetreten"
   },
   "commands": {
     "help": {

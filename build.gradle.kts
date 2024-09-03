@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "de.nvclas"
-version = "0.25"
+version = "0.3"
 
 repositories {
     mavenCentral()

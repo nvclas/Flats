@@ -24,7 +24,7 @@ public class Flats extends JavaPlugin {
         flatsConfig = new FlatsConfig(this, "flats.yml");
         settingsConfig = new SettingsConfig(this, "settings.yml");
 
-        Objects.requireNonNull(getCommand("flat")).setExecutor(new FlatsCommand(this));
+        Objects.requireNonNull(getCommand("flats")).setExecutor(new FlatsCommand(this));
 
         getServer().getPluginManager().registerEvents(new StickInteractListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerChangedWorldListener(), this);

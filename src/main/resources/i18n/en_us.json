@@ -25,7 +25,11 @@
     "flats_list_unoccupied": "§7├§6Owner: §eUnoccupied",
     "flats_list_areas_header": "§7└§6Areas:",
     "flats_list_area": "  §7└§6%s",
-    "flats_list_area_item": "  §7├§6%s"
+    "flats_list_area_item": "  §7├§6%s",
+    "flats_show": "§eFlats nearby visible for %s seconds",
+    "update_success": "§aThe latest version of Flats has been downloaded! Please restart the server",
+    "update_notfound": "§cThe latest version of Flats could not be found",
+    "update_failed": "§cAn error occurred while downloading the latest version of Flats"
   },
   "commands": {
     "help": {

@@ -6,5 +6,5 @@ authors: [nvclas]
 description: Creating flats with build permission
 
 commands:
-  flat:
+  flats:
     description: Plugin base command

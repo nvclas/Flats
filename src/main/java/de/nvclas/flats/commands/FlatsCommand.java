@@ -8,6 +8,7 @@ import de.nvclas.flats.selection.Selection;
 import de.nvclas.flats.utils.I18n;
 import de.nvclas.flats.utils.LocationConverter;
 import de.nvclas.flats.utils.Permissions;
+import de.nvclas.flats.utils.ReleaseDownloader;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -18,6 +19,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,7 +41,7 @@ public class FlatsCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
-        if (!command.getName().equalsIgnoreCase("flat") || !(sender instanceof Player p)) {
+        if (!command.getName().equalsIgnoreCase("flats") || !(sender instanceof Player p)) {
             return false;
         }
 
@@ -53,33 +55,16 @@ public class FlatsCommand implements CommandExecutor {
         String subCommand = args[0].toLowerCase();
 
         switch (subCommand) {
-            case "select":
-                handleSelectCommand();
-                break;
-            case "add":
-                handleAddCommand(args);
-                break;
-            case "remove":
-                handleRemoveCommand(args);
-                break;
-            case "claim":
-                handleClaimCommand();
-                break;
-            case "unclaim":
-                handleUnclaimCommand();
-                break;
-            case "info":
-                handleInfoCommand();
-                break;
-            case "list":
-                handleListCommand();
-                break;
-            case "show":
-                handleShowCommand();
-                break;
-            default:
-                sendHelpMessage();
-                break;
+            case "select" -> handleSelectCommand();
+            case "add" -> handleAddCommand(args);
+            case "remove" -> handleRemoveCommand(args);
+            case "claim" -> handleClaimCommand();
+            case "unclaim" -> handleUnclaimCommand();
+            case "info" -> handleInfoCommand();
+            case "list" -> handleListCommand();
+            case "show" -> handleShowCommand();
+            case "update" -> handleUpdateCommand();
+            default -> sendHelpMessage();
         }
         return true;
     }
@@ -232,6 +217,8 @@ public class FlatsCommand implements CommandExecutor {
     }
 
     public void handleShowCommand() {
+        byte showTime = 10;
+        player.sendMessage(Flats.PREFIX + I18n.translate("messages.flats_show", showTime));
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Set<Block> blocksToChange = getBlocksToChange();
             Bukkit.getScheduler().runTask(plugin, () -> {
@@ -243,9 +230,28 @@ public class FlatsCommand implements CommandExecutor {
                     for (Block block : blocksToChange) {
                         player.sendBlockChange(block.getLocation(), block.getBlockData());
                     }
-                }, 20L * 10);
+                }, 20L * showTime);
             });
         });
+    }
+
+    public void handleUpdateCommand() {
+        ReleaseDownloader releaseDownloader = new ReleaseDownloader(plugin);
+        String fileName = "Flats-latest.jar";
+        try {
+            String downloadUrl = releaseDownloader.fetchLatestReleaseUrl();
+            if (downloadUrl != null) {
+                releaseDownloader.downloadFile(downloadUrl, fileName);
+                releaseDownloader.deletePreviousJar();
+                releaseDownloader.moveJarToPlugins(fileName);
+                player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_success"));
+            } else {
+                player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_notfound"));
+            }
+        } catch (IOException | InterruptedException e) {
+            player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_failed"));
+            plugin.getLogger().severe("An error occurred while downloading the latest release: " + e.getMessage());
+        }
     }
 
     private Set<Block> getBlocksToChange() {

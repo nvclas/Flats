@@ -28,7 +28,7 @@ public class FlatsCommand implements CommandExecutor {
     private final FlatsConfig flatsConfig;
     private final SettingsConfig settingsConfig;
     private final Flats plugin;
-    
+
     private Player player;
 
     public FlatsCommand(Flats plugin) {
@@ -42,9 +42,9 @@ public class FlatsCommand implements CommandExecutor {
         if (!command.getName().equalsIgnoreCase("flat") || !(sender instanceof Player p)) {
             return false;
         }
-        
+
         player = p;
-        
+
         if (args.length == 0) {
             sendHelpMessage();
             return true;
@@ -85,14 +85,14 @@ public class FlatsCommand implements CommandExecutor {
     }
 
     private void handleSelectCommand() {
-        if (Flats.hasNoPermission(player, Permissions.ADMIN)) {
+        if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
         player.getInventory().addItem(SelectionItem.getItem());
     }
 
     private void handleAddCommand(String[] args) {
-        if (Flats.hasNoPermission(player, Permissions.ADMIN)) {
+        if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
         if (Selection.getSelection(player).calculateVolume() == 0) {
@@ -130,7 +130,7 @@ public class FlatsCommand implements CommandExecutor {
     }
 
     private void handleRemoveCommand(String[] args) {
-        if (Flats.hasNoPermission(player, Permissions.ADMIN)) {
+        if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
         if (args.length < 2) {
@@ -209,7 +209,7 @@ public class FlatsCommand implements CommandExecutor {
     }
 
     private void handleListCommand() {
-        if (Flats.hasNoPermission(player, Permissions.ADMIN)) {
+        if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
         for (String flat : flatsConfig.getConfigFile().getKeys(false)) {
@@ -243,7 +243,7 @@ public class FlatsCommand implements CommandExecutor {
                     for (Block block : blocksToChange) {
                         player.sendBlockChange(block.getLocation(), block.getBlockData());
                     }
-                }, 200L); // 200 Ticks = 10 Sekunden
+                }, 20L * 10);
             });
         });
     }
@@ -261,7 +261,7 @@ public class FlatsCommand implements CommandExecutor {
         }
         return blocksToChange;
     }
-    
+
     private void sendHelpMessage() {
         player.sendMessage(Flats.PREFIX + I18n.translate("commands.help.header"));
         if (player.hasPermission(Permissions.ADMIN)) {

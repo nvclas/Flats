@@ -1,0 +1,14 @@
+[versions]
+annotations = "24.0.0"
+lombok = "1.18.34"
+runPaper = "2.3.0"
+paperweight = "1.7.1"
+paper = "1.20.6-R0.1-SNAPSHOT"
+
+[libraries]
+annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
+lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+
+[plugins]
+runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
+paperweight-userdev = { id = "io.papermc.paperweight.userdev", version.ref = "paperweight" }

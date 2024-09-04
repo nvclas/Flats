@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import de.nvclas.flats.Flats;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
 
 import java.io.*;
 import java.net.URI;
@@ -13,6 +15,7 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.concurrent.CompletableFuture;
 
 public class ReleaseDownloader {
 
@@ -27,81 +30,89 @@ public class ReleaseDownloader {
         this.plugin = plugin;
     }
 
-    public String fetchLatestReleaseUrl() throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL))
-                .header("Accept", "application/vnd.github+json")
-                .GET()
-                .build();
+    public CompletableFuture<String> fetchLatestReleaseUrlAsync() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(API_URL))
+                        .header("Accept", "application/vnd.github+json")
+                        .GET()
+                        .build();
 
-        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
 
-        if (response.statusCode() == 200) {
-            JsonObject jsonResponse = GSON.fromJson(response.body(), JsonObject.class);
-            JsonArray assets = jsonResponse.getAsJsonArray("assets");
+                if (response.statusCode() == 200) {
+                    JsonObject jsonResponse = GSON.fromJson(response.body(), JsonObject.class);
+                    JsonArray assets = jsonResponse.getAsJsonArray("assets");
 
-            for (int i = 0; i < assets.size(); i++) {
-                JsonObject asset = assets.get(i).getAsJsonObject();
-                String name = asset.get("name").getAsString();
-                if (name.endsWith(".jar")) {
-                    plugin.getLogger().info("Fetched latest release URL: " + asset.get("browser_download_url").getAsString());
-                    return asset.get("browser_download_url").getAsString();
+                    for (int i = 0; i < assets.size(); i++) {
+                        JsonObject asset = assets.get(i).getAsJsonObject();
+                        String name = asset.get("name").getAsString();
+                        if (name.endsWith(".jar")) {
+                            Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().info("Fetched latest release URL: " + asset.get("browser_download_url").getAsString()));
+                            return asset.get("browser_download_url").getAsString();
+                        }
+                    }
+                    Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().warning("No JAR asset found in the latest release."));
+                } else {
+                    Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Failed to fetch latest release: HTTP " + response.statusCode()));
                 }
+            } catch (IOException | InterruptedException e) {
+                Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Error fetching latest release URL: " + e.getMessage()));
             }
-            plugin.getLogger().warning("No JAR asset found in the latest release.");
-        } else {
-            plugin.getLogger().severe("Failed to fetch latest release: HTTP " + response.statusCode());
-        }
-        return null;
+            return null;
+        });
     }
 
-    public void downloadFile(String downloadUrl, String fileName) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(downloadUrl))
-                .header("Accept", "application/vnd.github+json") // Richtiger Header für GitHub API
-                .header("User-Agent", "Java-HttpClient") // Einfache User-Agent Einstellung
-                .GET()
-                .build();
+    public CompletableFuture<Void> downloadFileAsync(String downloadUrl, String fileName) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(downloadUrl))
+                        .header("Accept", "application/vnd.github+json")
+                        .header("User-Agent", "Java-HttpClient")
+                        .GET()
+                        .build();
 
-        HttpResponse<InputStream> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
+                HttpResponse<InputStream> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
-        // Überprüfen des HTTP-Statuscodes
-        if (response.statusCode() != 200) {
-            plugin.getLogger().severe("Fehler beim Herunterladen: HTTP-Status " + response.statusCode());
-            return;
-        }
+                if (response.statusCode() != 200) {
+                    Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Failed to download file: HTTP Status " + response.statusCode()));
+                    return;
+                }
 
-        try (InputStream inputStream = response.body();
-             BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-             FileOutputStream fileOutputStream = new FileOutputStream(fileName)) {
+                try (InputStream inputStream = response.body();
+                     BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+                     FileOutputStream fileOutputStream = new FileOutputStream(fileName)) {
 
-            byte[] dataBuffer = new byte[1024];
-            int bytesRead;
-            long totalBytesRead = 0;
+                    byte[] dataBuffer = new byte[1024];
+                    int bytesRead;
+                    long totalBytesRead = 0;
 
-            while ((bytesRead = bufferedInputStream.read(dataBuffer, 0, dataBuffer.length)) != -1) {
-                fileOutputStream.write(dataBuffer, 0, bytesRead);
-                totalBytesRead += bytesRead;
+                    while ((bytesRead = bufferedInputStream.read(dataBuffer, 0, dataBuffer.length)) != -1) {
+                        fileOutputStream.write(dataBuffer, 0, bytesRead);
+                        totalBytesRead += bytesRead;
+                    }
+
+                    long expectedLength = response.headers().firstValueAsLong("Content-Length").orElse(-1);
+                    if (expectedLength != -1 && totalBytesRead != expectedLength) {
+                        long finalTotalBytesRead = totalBytesRead;
+                        Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Downloaded file is incomplete. Expected: " + expectedLength + " bytes, received: " + finalTotalBytesRead + " bytes."));
+                    } else {
+                        Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().info("Download completed: " + fileName));
+                    }
+                }
+            } catch (IOException | InterruptedException e) {
+                Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Error downloading file: " + e.getMessage()));
             }
-            fileOutputStream.flush();
-
-            long expectedLength = response.headers().firstValueAsLong("Content-Length").orElse(-1);
-            if (expectedLength != -1 && totalBytesRead != expectedLength) {
-                plugin.getLogger().severe("Die heruntergeladene Datei ist unvollständig. Erwartet: " + expectedLength + " Bytes, erhalten: " + totalBytesRead + " Bytes.");
-            } else {
-                plugin.getLogger().info("Download abgeschlossen: " + fileName);
-            }
-        } catch (IOException e) {
-            plugin.getLogger().severe("Fehler beim Herunterladen der Datei: " + e.getMessage());
-            throw e;
-        }
+        });
     }
 
-    public void deletePreviousJar() {
+    private void deletePreviousJar() {
         File pluginsDir = new File(PLUGINS_DIR);
         File[] jarFiles = pluginsDir.listFiles((dir, name) -> name.startsWith("Flats") && name.endsWith(".jar"));
 
-        if (jarFiles != null && jarFiles.length > 0) {
+        if (jarFiles != null) {
             for (File file : jarFiles) {
                 if (file.delete()) {
                     plugin.getLogger().info("Deleted previous jar file: " + file.getName());
@@ -114,16 +125,25 @@ public class ReleaseDownloader {
         }
     }
 
-    public void moveJarToPlugins(String fileName) throws IOException {
-        Path sourcePath = Path.of(fileName);
-        Path targetPath = Path.of(PLUGINS_DIR, fileName);
-
-        try {
-            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-            plugin.getLogger().info("Moved file to plugins directory: " + targetPath);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Failed to move file to plugins directory: " + e.getMessage());
-            throw e;
+    public void unloadPluginAndDeleteJar() {
+        Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(plugin.getName());
+        if (targetPlugin != null) {
+            Bukkit.getPluginManager().disablePlugin(targetPlugin);
         }
+        deletePreviousJar();
+    }
+
+    public void moveJarToPluginsAsync(String fileName) {
+        CompletableFuture.runAsync(() -> {
+            Path sourcePath = Path.of(fileName);
+            Path targetPath = Path.of(PLUGINS_DIR, fileName);
+
+            try {
+                Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().info("Moved file to plugins directory: " + targetPath));
+            } catch (IOException e) {
+                Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Failed to move file to plugins directory: " + e.getMessage()));
+            }
+        });
     }
 }

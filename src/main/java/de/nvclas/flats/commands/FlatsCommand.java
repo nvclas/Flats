@@ -19,7 +19,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -238,20 +237,21 @@ public class FlatsCommand implements CommandExecutor {
     public void handleUpdateCommand() {
         ReleaseDownloader releaseDownloader = new ReleaseDownloader(plugin);
         String fileName = "Flats-latest.jar";
-        try {
-            String downloadUrl = releaseDownloader.fetchLatestReleaseUrl();
+        releaseDownloader.fetchLatestReleaseUrlAsync().thenAcceptAsync(downloadUrl -> {
             if (downloadUrl != null) {
-                releaseDownloader.downloadFile(downloadUrl, fileName);
-                releaseDownloader.deletePreviousJar();
-                releaseDownloader.moveJarToPlugins(fileName);
-                player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_success"));
+                releaseDownloader.downloadFileAsync(downloadUrl, fileName).thenRunAsync(() -> {
+                    releaseDownloader.unloadPluginAndDeleteJar();
+                    releaseDownloader.moveJarToPluginsAsync(fileName);
+                    player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_success"));
+                });
             } else {
                 player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_notfound"));
             }
-        } catch (IOException | InterruptedException e) {
+        }).exceptionally(e -> {
             player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_failed"));
             plugin.getLogger().severe("An error occurred while downloading the latest release: " + e.getMessage());
-        }
+            return null;
+        });
     }
 
     private @NotNull Set<Block> getBlocksToChange() {

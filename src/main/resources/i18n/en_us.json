@@ -41,7 +41,8 @@
       "claim": "§6/flats claim §7- §eClaim a flat",
       "unclaim": "§6/flats unclaim §7- §eUnclaim a flat",
       "info": "§6/flats info §7- §eShow information about the current flat",
-      "show": "§6/flats show §7- §eShow flats nearby"
+      "show": "§6/flats show §7- §eShow flats nearby",
+      "update": "§6/flats update §7- §eUpdate the Flats plugin"
     }
   }
 }

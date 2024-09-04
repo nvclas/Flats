@@ -41,7 +41,8 @@
       "claim": "§6/flats claim §7- §eWohnung beanspruchen",
       "unclaim": "§6/flats unclaim §7- §eWohnung freigeben",
       "info": "§6/flats info §7- §eInformationen zur aktuellen Wohnung anzeigen",
-      "show": "§6/flats show §7- §eWohnungen in der Nähe anzeigen"
+      "show": "§6/flats show §7- §eWohnungen in der Nähe anzeigen",
+      "update": "§6/flats update §7- §eDas Flats-Plugin aktualisieren"
     }
   }
 }

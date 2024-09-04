@@ -275,6 +275,7 @@ public class FlatsCommand implements CommandExecutor {
             player.sendMessage(I18n.translate("commands.help.add"));
             player.sendMessage(I18n.translate("commands.help.remove"));
             player.sendMessage(I18n.translate("commands.help.list"));
+            player.sendMessage(I18n.translate("commands.help.update"));
         }
         player.sendMessage(I18n.translate("commands.help.claim"));
         player.sendMessage(I18n.translate("commands.help.unclaim"));

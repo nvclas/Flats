@@ -3,6 +3,8 @@ package de.nvclas.flats.utils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import de.nvclas.flats.Flats;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -69,19 +71,19 @@ public class I18n {
         return translated != null ? translated : key;
     }
 
-    private static String getTranslation(String key, Object... args) {
+    private static @Nullable String getTranslation(String key, Object... args) {
         String translation = translations.getOrDefault(key, fallbackTranslations.get(key));
         return translation != null ? String.format(translation, args) : null;
     }
 
-    private static Map<String, String> flattenMap(Map<String, Object> map) {
+    private static @NotNull Map<String, String> flattenMap(Map<String, Object> map) {
         Map<String, String> flatMap = new HashMap<>();
         flattenMapHelper("", map, flatMap);
         return flatMap;
     }
 
     @SuppressWarnings("unchecked")
-    private static void flattenMapHelper(String prefix, Map<String, Object> map, Map<String, String> flatMap) {
+    private static void flattenMapHelper(String prefix, @NotNull Map<String, Object> map, Map<String, String> flatMap) {
         map.forEach((key, value) -> {
             String fullKey = prefix.isEmpty() ? key : prefix + "." + key;
             if (value instanceof Map) {
@@ -92,7 +94,7 @@ public class I18n {
         });
     }
 
-    private static Logger getLogger() {
+    private static @NotNull Logger getLogger() {
         return plugin.getLogger();
     }
 }

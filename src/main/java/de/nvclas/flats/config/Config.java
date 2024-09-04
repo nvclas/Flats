@@ -4,6 +4,7 @@ import de.nvclas.flats.Flats;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +16,7 @@ public abstract class Config {
     protected FileConfiguration configFile;
     protected final Flats plugin;
 
-    protected Config(Flats plugin, String fileName) {
+    protected Config(@NotNull Flats plugin, String fileName) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), fileName);
         createConfig();

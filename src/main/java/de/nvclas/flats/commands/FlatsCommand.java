@@ -33,14 +33,14 @@ public class FlatsCommand implements CommandExecutor {
 
     private Player player;
 
-    public FlatsCommand(Flats plugin) {
+    public FlatsCommand(@NotNull Flats plugin) {
         this.plugin = plugin;
         this.flatsConfig = plugin.getFlatsConfig();
         this.settingsConfig = plugin.getSettingsConfig();
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (!command.getName().equalsIgnoreCase("flats") || !(sender instanceof Player p)) {
             return false;
         }
@@ -254,7 +254,7 @@ public class FlatsCommand implements CommandExecutor {
         }
     }
 
-    private Set<Block> getBlocksToChange() {
+    private @NotNull Set<Block> getBlocksToChange() {
         Set<Block> blocksToChange = new HashSet<>();
         for (String flat : flatsConfig.getConfigFile().getKeys(false)) {
             for (String selectionString : flatsConfig.getAreas(flat)) {

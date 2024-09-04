@@ -5,6 +5,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 public class SelectionItem {
 
@@ -15,7 +16,7 @@ public class SelectionItem {
         throw new IllegalStateException("Utility class");
     }
     
-    public static ItemStack getItem() {
+    public static @NotNull ItemStack getItem() {
         ItemStack is = new ItemStack(MATERIAL);
         is.editMeta(im -> im.displayName(
                 Component.text(DISPLAY_NAME)

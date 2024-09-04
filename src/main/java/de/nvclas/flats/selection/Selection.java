@@ -6,6 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,7 +47,7 @@ public class Selection {
         return length * height * width;
     }
 
-    public boolean intersects(Selection other) {
+    public boolean intersects(@NotNull Selection other) {
         double maxX1 = Math.max(pos1.getX(), pos2.getX());
         double minX1 = Math.min(pos1.getX(), pos2.getX());
         double maxY1 = Math.max(pos1.getY(), pos2.getY());
@@ -68,7 +69,7 @@ public class Selection {
         return intersectsX && intersectsY && intersectsZ;
     }
 
-    public boolean intersects(Location location) {
+    public boolean intersects(@NotNull Location location) {
         double maxX = Math.max(pos1.getX(), pos2.getX()) + 1;
         double minX = Math.min(pos1.getX(), pos2.getX());
 

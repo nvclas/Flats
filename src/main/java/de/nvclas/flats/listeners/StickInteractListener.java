@@ -10,11 +10,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.jetbrains.annotations.NotNull;
 
 public class StickInteractListener implements Listener {
 
     @EventHandler
-    public void onStickIneraction(PlayerInteractEvent event) {
+    public void onStickIneraction(@NotNull PlayerInteractEvent event) {
         Player p = event.getPlayer();
 
         if (event.getItem() == null) return;

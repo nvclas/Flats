@@ -31,7 +31,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}
           restore-keys: ${{ runner.os }}-gradle
 
       - name: Grant execute permission for gradlew
@@ -60,13 +60,17 @@ jobs:
           name: build-artifacts
           path: build/libs/
 
+      - name: Extract version
+        id: extract_version
+        run: echo "VERSION=$(grep '^version' build.gradle.kts | sed -E 's/^version[[:space:]]*=[[:space:]]*\"([^\"]+)\"/\1/')" >> $GITHUB_ENV
+
       - name: Create Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.sha }}
-          release_name: Release ${{ github.sha }}
+          tag_name: ${{ env.VERSION }}
+          release_name: Release ${{ env.VERSION }}
           body: ${{ github.event.head_commit.message }}
           draft: false
           prerelease: false

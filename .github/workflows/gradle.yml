@@ -70,7 +70,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.VERSION }}
-          release_name: Release ${{ env.VERSION }}
+          release_name: Flats v${{ env.VERSION }}
           body: ${{ github.event.head_commit.message }}
           draft: false
           prerelease: false
+          files: build/libs/*.jar

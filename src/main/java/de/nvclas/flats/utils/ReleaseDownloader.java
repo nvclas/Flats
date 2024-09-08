@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import de.nvclas.flats.Flats;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
@@ -25,6 +26,8 @@ public class ReleaseDownloader {
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
 
     private final Flats plugin;
+    @Getter
+    private String fileName;
 
     public ReleaseDownloader(Flats plugin) {
         this.plugin = plugin;
@@ -64,7 +67,7 @@ public class ReleaseDownloader {
         });
     }
 
-    public CompletableFuture<Void> downloadFileAsync(String downloadUrl, String fileName) {
+    public CompletableFuture<Void> downloadFileAsync(String downloadUrl) {
         return CompletableFuture.runAsync(() -> {
             try {
                 HttpRequest request = HttpRequest.newBuilder()
@@ -80,6 +83,13 @@ public class ReleaseDownloader {
                     Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Failed to download file: HTTP Status " + response.statusCode()));
                     return;
                 }
+
+                fileName = response.headers().firstValue("Content-Disposition")
+                        .map(header -> header.replaceFirst("(?i)^.*filename=\"?([^\"]+)\"?.*$", "$1"))
+                        .orElseGet(() -> {
+                            String[] parts = downloadUrl.split("/");
+                            return parts[parts.length - 1];
+                        });
 
                 try (InputStream inputStream = response.body();
                      BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
@@ -133,7 +143,7 @@ public class ReleaseDownloader {
         deletePreviousJar();
     }
 
-    public void moveJarToPluginsAsync(String fileName) {
+    public void moveJarToPluginsAsync() {
         CompletableFuture.runAsync(() -> {
             Path sourcePath = Path.of(fileName);
             Path targetPath = Path.of(PLUGINS_DIR, fileName);

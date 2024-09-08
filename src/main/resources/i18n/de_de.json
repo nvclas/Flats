@@ -27,7 +27,7 @@
     "flats_list_area": "  §7└§6%s",
     "flats_list_area_item": "  §7├§6%s",
     "flats_show": "§eWohnungen in der Nähe für %s Sekunden sichtbar",
-    "update_success": "§aDie neuste Version von Flats wurde heruntergeladen! Bitte starte den Server neu",
+    "update_success": "§a%s wurde heruntergeladen! Bitte starte den Server neu",
     "update_notfound": "§cDie neuste Version von Flats konnte nicht gefunden werden",
     "update_failed": "§cBeim Herunterladen der neusten Version von Flats ist ein Fehler aufgetreten"
   },

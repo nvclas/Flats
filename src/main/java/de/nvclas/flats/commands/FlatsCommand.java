@@ -236,13 +236,12 @@ public class FlatsCommand implements CommandExecutor {
 
     public void handleUpdateCommand() {
         ReleaseDownloader releaseDownloader = new ReleaseDownloader(plugin);
-        String fileName = "Flats-latest.jar";
         releaseDownloader.fetchLatestReleaseUrlAsync().thenAcceptAsync(downloadUrl -> {
             if (downloadUrl != null) {
-                releaseDownloader.downloadFileAsync(downloadUrl, fileName).thenRunAsync(() -> {
+                releaseDownloader.downloadFileAsync(downloadUrl).thenRunAsync(() -> {
                     releaseDownloader.unloadPluginAndDeleteJar();
-                    releaseDownloader.moveJarToPluginsAsync(fileName);
-                    player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_success"));
+                    releaseDownloader.moveJarToPluginsAsync();
+                    player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_success", releaseDownloader.getFileName()));
                 });
             } else {
                 player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_notfound"));

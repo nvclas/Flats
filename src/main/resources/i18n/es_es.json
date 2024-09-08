@@ -27,7 +27,7 @@
     "flats_list_area": "  §7└§6%s",
     "flats_list_area_item": "  §7├§6%s",
     "flats_show": "§ePlanos cercanos visibles por %s segundos",
-    "update_success": "§a¡La última versión de Flats ha sido descargada! Por favor, reinicia el servidor",
+    "update_success": "§a¡%s ha sido descargada! Por favor, reinicia el servidor",
     "update_notfound": "§cNo se pudo encontrar la última versión de Flats",
     "update_failed": "§cOcurrió un error al descargar la última versión de Flats"
   },

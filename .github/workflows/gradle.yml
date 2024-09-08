@@ -70,4 +70,3 @@ jobs:
           body: ${{ github.event.head_commit.message }}
           draft: false
           prerelease: false
-          files: build/libs/*

@@ -1,17 +1,21 @@
-name: Build plugin
+name: Build and Release
 
 on:
   push:
     branches:
-      - master
       - main
+      - master
   pull_request:
     branches:
-      - master
       - main
+      - master
+
+permissions:
+  contents: write
 
 jobs:
   build:
+    name: Build Project
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -36,8 +40,34 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-      - name: Upload jar
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Artifacts
+          name: build-artifacts
           path: build/libs/
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: build/libs/
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.sha }}
+          release_name: Release ${{ github.sha }}
+          body: ${{ github.event.head_commit.message }}
+          draft: false
+          prerelease: false
+          files: build/libs/*

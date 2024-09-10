@@ -65,6 +65,7 @@ jobs:
         run: echo "VERSION=$(grep '^version' build.gradle.kts | sed -E 's/^version[[:space:]]*=[[:space:]]*\"([^\"]+)\"/\1/')" >> $GITHUB_ENV
 
       - name: Create Release
+        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -72,5 +73,15 @@ jobs:
           tag_name: ${{ env.VERSION }}
           release_name: Flats v${{ env.VERSION }}
           body: ${{ github.event.head_commit.message }}
-          draft: false
+          draft: true
           prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/libs/Flats-${{ env.VERSION }}.jar
+          asset_name: Flats-${{ env.VERSION }}.jar
+          asset_content_type: application/java-archive

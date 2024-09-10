@@ -1,5 +1,8 @@
 # Flats Plugin
 
+![Latest Release](https://img.shields.io/github/v/release/nvclas/Flats)
+![License](https://img.shields.io/github/license/nvclas/Flats)
+
 Flats is a Minecraft plugin for Paper that allows you to create areas and assign them to players. It provides an easy way to manage plots and ensure that players have their own designated areas to build and interact in.
 
 ## Features
@@ -53,4 +56,4 @@ Flats was developed by [nvclas](https://github.com/nvclas).
 
 ## License
 
-This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International Public License.
+This project is licensed under the [Creative Commons Attribution-NonCommercial 4.0 International Public License](https://github.com/nvclas/Flats/LICENSE.md).

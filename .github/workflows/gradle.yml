@@ -72,5 +72,5 @@ jobs:
           tag_name: ${{ env.VERSION }}
           release_name: Flats v${{ env.VERSION }}
           body: ${{ github.event.head_commit.message }}
-          draft: false
+          draft: true
           prerelease: false

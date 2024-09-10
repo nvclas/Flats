@@ -8,7 +8,7 @@ import de.nvclas.flats.selection.Selection;
 import de.nvclas.flats.utils.I18n;
 import de.nvclas.flats.utils.LocationConverter;
 import de.nvclas.flats.utils.Permissions;
-import de.nvclas.flats.utils.ReleaseDownloader;
+import de.nvclas.flats.updater.UpdateDownloader;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -235,13 +235,13 @@ public class FlatsCommand implements CommandExecutor {
     }
 
     public void handleUpdateCommand() {
-        ReleaseDownloader releaseDownloader = new ReleaseDownloader(plugin);
-        releaseDownloader.fetchLatestReleaseUrlAsync().thenAcceptAsync(downloadUrl -> {
+        UpdateDownloader updateDownloader = new UpdateDownloader(plugin);
+        updateDownloader.fetchLatestReleaseUrlAsync().thenAcceptAsync(downloadUrl -> {
             if (downloadUrl != null) {
-                releaseDownloader.downloadFileAsync(downloadUrl).thenRunAsync(() -> {
-                    releaseDownloader.unloadPluginAndDeleteJar();
-                    releaseDownloader.moveJarToPluginsAsync();
-                    player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_success", releaseDownloader.getFileName()));
+                updateDownloader.downloadFileAsync(downloadUrl).thenRunAsync(() -> {
+                    updateDownloader.unloadPluginAndDeleteJar();
+                    updateDownloader.moveJarToPluginsAsync();
+                    player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_success", updateDownloader.getFileName()));
                 });
             } else {
                 player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_notfound"));

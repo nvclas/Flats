@@ -57,4 +57,4 @@ Flats was developed by [nvclas](https://github.com/nvclas).
 
 ## License
 
-This project is licensed under the [Creative Commons Attribution-NonCommercial 4.0 International Public License](https://github.com/nvclas/Flats/blob/main/LICENSE.md).
+This project is licensed under the [GNU General Public License v3.0](https://github.com/nvclas/Flats/blob/main/LICENSE).

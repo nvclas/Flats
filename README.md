@@ -41,14 +41,15 @@ The plugin provides several commands to interact with the areas:
 - `/flats unclaim` - Unclaims the area the player is currently in.
 - `/flats info` - Shows information about the area the player is currently in.
 - `/flats list` - Lists all available areas and their owners.
+- `/flats show` - Show every area my marking it with yellow glass. 
 - `/flats update` - Easily update the plugin to the latest version.
-- Additional features...
+- And more
 
 ## Permissions
 
 The plugin uses a permission system to control access to certain commands:
 
-- `flats.admin` - Permission for administrative commands like listing all areas.
+- `flats.admin` - Permission for administrative commands like creating and deleting areas.
 
 ## Developer
 

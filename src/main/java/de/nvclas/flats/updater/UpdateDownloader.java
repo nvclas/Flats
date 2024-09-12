@@ -1,4 +1,4 @@
-package de.nvclas.flats.utils;
+package de.nvclas.flats.updater;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -18,7 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.CompletableFuture;
 
-public class ReleaseDownloader {
+public class UpdateDownloader {
 
     private static final String API_URL = "https://api.github.com/repos/nvclas/Flats/releases/latest";
     private static final String PLUGINS_DIR = "plugins";
@@ -29,7 +29,7 @@ public class ReleaseDownloader {
     @Getter
     private String fileName;
 
-    public ReleaseDownloader(Flats plugin) {
+    public UpdateDownloader(Flats plugin) {
         this.plugin = plugin;
     }
 

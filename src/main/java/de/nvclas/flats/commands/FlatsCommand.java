@@ -5,10 +5,11 @@ import de.nvclas.flats.config.FlatsConfig;
 import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.items.SelectionItem;
 import de.nvclas.flats.selection.Selection;
+import de.nvclas.flats.updater.UpdateDownloader;
+import de.nvclas.flats.updater.UpdateResponse;
 import de.nvclas.flats.utils.I18n;
 import de.nvclas.flats.utils.LocationConverter;
 import de.nvclas.flats.utils.Permissions;
-import de.nvclas.flats.updater.UpdateDownloader;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -235,22 +236,15 @@ public class FlatsCommand implements CommandExecutor {
     }
 
     public void handleUpdateCommand() {
-        UpdateDownloader updateDownloader = new UpdateDownloader(plugin);
-        updateDownloader.fetchLatestReleaseUrlAsync().thenAcceptAsync(downloadUrl -> {
-            if (downloadUrl != null) {
-                updateDownloader.downloadFileAsync(downloadUrl).thenRunAsync(() -> {
-                    updateDownloader.unloadPluginAndDeleteJar();
-                    updateDownloader.moveJarToPluginsAsync();
-                    player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_success", updateDownloader.getFileName()));
-                });
-            } else {
-                player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_notfound"));
-            }
-        }).exceptionally(e -> {
+        UpdateDownloader downloader = new UpdateDownloader(plugin);
+        UpdateResponse response = downloader.updatePlugin();
+        if(response == UpdateResponse.SUCCESS) {
+            player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_success"));
+        } else if(response == UpdateResponse.NOT_FOUND) {
+            player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_notfound"));
+        } else {
             player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_failed"));
-            plugin.getLogger().severe("An error occurred while downloading the latest release: " + e.getMessage());
-            return null;
-        });
+        }
     }
 
     private @NotNull Set<Block> getBlocksToChange() {

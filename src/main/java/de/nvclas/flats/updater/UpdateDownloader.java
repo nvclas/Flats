@@ -33,6 +33,23 @@ public class UpdateDownloader {
         this.plugin = plugin;
     }
 
+    public UpdateResponse updatePlugin() {
+        try {
+            String downloadUrl = fetchLatestReleaseUrlAsync().get();
+            if (downloadUrl != null) {
+                downloadFileAsync(downloadUrl).get();
+                unloadPluginAndDeleteJar();
+                moveJarToPluginsAsync().get();
+                return UpdateResponse.SUCCESS;
+            } else {
+                return UpdateResponse.NOT_FOUND;
+            }
+        } catch (Exception e) {
+            plugin.getLogger().severe("An error occurred while updating the plugin: " + e.getMessage());
+            return UpdateResponse.FAILURE;
+        }
+    }
+
     public CompletableFuture<String> fetchLatestReleaseUrlAsync() {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -143,8 +160,8 @@ public class UpdateDownloader {
         deletePreviousJar();
     }
 
-    public void moveJarToPluginsAsync() {
-        CompletableFuture.runAsync(() -> {
+    public CompletableFuture<Void> moveJarToPluginsAsync() {
+        return CompletableFuture.runAsync(() -> {
             Path sourcePath = Path.of(fileName);
             Path targetPath = Path.of(PLUGINS_DIR, fileName);
 

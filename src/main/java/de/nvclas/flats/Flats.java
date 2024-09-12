@@ -21,14 +21,18 @@ public class Flats extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        //Configs
         flatsConfig = new FlatsConfig(this, "flats.yml");
         settingsConfig = new SettingsConfig(this, "settings.yml");
 
+        //Commands
         Objects.requireNonNull(getCommand("flats")).setExecutor(new FlatsCommand(this));
 
+        //Listeners
         getServer().getPluginManager().registerEvents(new StickInteractListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerChangedWorldListener(), this);
 
+        //Translations
         I18n.initialize(this);
         I18n.loadTranslations(settingsConfig.getLanguage());
     }

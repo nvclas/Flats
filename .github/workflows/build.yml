@@ -2,8 +2,9 @@ name: Build
 
 on:
   push:
-    branches:
-      - '*'
+    branches-ignore:
+      - main
+      - master
 
 jobs:
   build:

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "de.nvclas"
-version = "0.36"
+version = "0.40"
 
 repositories {
     mavenCentral()
@@ -19,6 +19,7 @@ dependencies {
     implementation(libs.annotations)
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
+    
     paperweight.paperDevBundle(libs.versions.paper)
 
     testCompileOnly(libs.lombok)

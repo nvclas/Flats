@@ -13,9 +13,9 @@ public class LocationConverter {
     private LocationConverter() {
         throw new IllegalStateException("Utility class");
     }
-    
+
     public static @Nullable String getStringFromSelection(@NotNull Selection selection) {
-        if(selection.getPos1().getWorld() == null || selection.getPos2().getWorld() == null) {
+        if (selection.getPos1().getWorld() == null || selection.getPos2().getWorld() == null) {
             return null;
         }
         String pos1String = selection.getPos1().getBlockX() + "," + selection.getPos1().getBlockY() + "," + selection.getPos1().getBlockZ();

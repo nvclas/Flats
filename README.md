@@ -3,13 +3,13 @@
 ![Latest Release](https://img.shields.io/github/v/release/nvclas/Flats)
 ![License](https://img.shields.io/github/license/nvclas/Flats)
 
-Flats is a Minecraft plugin for Paper that allows you to create areas and assign them to players. It provides an easy way to manage plots and ensure that players have their own designated areas to build and interact in.
+Flats is a Minecraft plugin for Paper that allows you to create areas and let your players claim them. It provides an easy way to manage plots and ensure that players have their own designated areas to build and interact in.
 
 ## Features
 
-- **Create Areas:** Easily create new areas that can be assigned to players.
-- **Assign Areas:** Assign specific areas to players, allowing them to build only in their designated plots.
-- **Manage Areas:** Delete or reassign areas as needed.
+- **Create Flats:** Easily create areas with the selection tool and commands.
+- **Claim Flats:** Let players claim areas, allowing them to build only in their designated flats.
+- **Manage Flats:** Add or remove trusted players to allow them building in your flat.
 - **Interactive Commands:** Use simple commands to interact with the plugin.
 
 ## Installation
@@ -25,7 +25,7 @@ After installation, the plugin will automatically create the configuration files
 ## Supported Languages
 
 You can change the active language by editing the language code inside the `settings.yml`.
-Currently the plugin supports the following languages:
+Currently, the plugin supports the following languages:
 
 - `de_de` - Deutsch (Deutschland)
 - `en_us` - English (USA)

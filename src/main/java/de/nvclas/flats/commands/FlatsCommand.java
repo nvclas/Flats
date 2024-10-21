@@ -6,7 +6,7 @@ import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.items.SelectionItem;
 import de.nvclas.flats.selection.Selection;
 import de.nvclas.flats.updater.UpdateDownloader;
-import de.nvclas.flats.updater.UpdateResponse;
+import de.nvclas.flats.updater.UpdateStatus;
 import de.nvclas.flats.utils.I18n;
 import de.nvclas.flats.utils.LocationConverter;
 import de.nvclas.flats.utils.Permissions;
@@ -17,13 +17,17 @@ import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-public class FlatsCommand implements CommandExecutor {
+public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private static final String NOT_IN_FLAT = "messages.not_in_flat";
 
@@ -197,6 +201,10 @@ public class FlatsCommand implements CommandExecutor {
         if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
+        if (flatsConfig.getConfigFile().getKeys(false).isEmpty()) {
+            player.sendMessage(Flats.PREFIX + I18n.translate("messages.flats_list_empty"));
+            return;
+        }
         for (String flat : flatsConfig.getConfigFile().getKeys(false)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("messages.flats_list_header", flat));
             OfflinePlayer owner = flatsConfig.getOwner(flat);
@@ -236,14 +244,15 @@ public class FlatsCommand implements CommandExecutor {
     }
 
     public void handleUpdateCommand() {
-        UpdateDownloader downloader = new UpdateDownloader(plugin);
-        UpdateResponse response = downloader.updatePlugin();
-        if(response == UpdateResponse.SUCCESS) {
-            player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_success"));
-        } else if(response == UpdateResponse.NOT_FOUND) {
-            player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_notfound"));
-        } else {
-            player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_failed"));
+        UpdateDownloader updateDownloader = new UpdateDownloader(plugin);
+        UpdateStatus status = updateDownloader.downloadLatestRelease();
+        switch (status) {
+            case SUCCESS -> {
+                updateDownloader.unloadPluginAndDeleteJar();
+                player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_success", updateDownloader.getFileName()));
+            }
+            case NOT_FOUND -> player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_notfound"));
+            case FAILED -> player.sendMessage(Flats.PREFIX + I18n.translate("messages.update_failed"));
         }
     }
 
@@ -274,5 +283,30 @@ public class FlatsCommand implements CommandExecutor {
         player.sendMessage(I18n.translate("commands.help.unclaim"));
         player.sendMessage(I18n.translate("commands.help.info"));
         player.sendMessage(I18n.translate("commands.help.show"));
+    }
+
+    @Override
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (!command.getName().equalsIgnoreCase("flats")) {
+            return null;
+        }
+
+        List<String> completions = new ArrayList<>();
+        if (args.length == 1) {
+            if (sender.hasPermission(Permissions.ADMIN)) {
+                completions.add("select");
+                completions.add("add");
+                completions.add("remove");
+                completions.add("list");
+                completions.add("update");
+            }
+            completions.add("claim");
+            completions.add("unclaim");
+            completions.add("info");
+            completions.add("show");
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("remove") && sender.hasPermission(Permissions.ADMIN)) {
+            completions.addAll(flatsConfig.getConfigFile().getKeys(false));
+        }
+        return completions;
     }
 }

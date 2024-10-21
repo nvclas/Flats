@@ -86,7 +86,7 @@ public class Selection {
         return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
     }
 
-    public Set<Block> getBlockList() {
+    public @NotNull Set<Block> getBlockList() {
         Set<Block> blocks = new HashSet<>();
         World world = pos1.getWorld();
 
@@ -116,5 +116,5 @@ public class Selection {
         pos1 = null;
         pos2 = null;
     }
-    
+
 }

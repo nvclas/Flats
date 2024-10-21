@@ -1,7 +1,7 @@
 package de.nvclas.flats.updater;
 
-public enum UpdateResponse {
+public enum UpdateStatus {
     SUCCESS,
     NOT_FOUND,
-    FAILURE
+    FAILED
 }

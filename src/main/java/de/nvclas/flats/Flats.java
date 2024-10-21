@@ -27,6 +27,7 @@ public class Flats extends JavaPlugin {
 
         //Commands
         Objects.requireNonNull(getCommand("flats")).setExecutor(new FlatsCommand(this));
+        Objects.requireNonNull(getCommand("flats")).setTabCompleter(new FlatsCommand(this));
 
         //Listeners
         getServer().getPluginManager().registerEvents(new StickInteractListener(), this);

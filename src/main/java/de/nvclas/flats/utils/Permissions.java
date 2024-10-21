@@ -5,11 +5,11 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class Permissions {
-    
+
     private Permissions() {
         throw new IllegalStateException("Utility class");
     }
-    
+
     public static final String ADMIN = "flats.admin";
 
     public static boolean hasNoPermission(@NotNull Player p, String permission) {

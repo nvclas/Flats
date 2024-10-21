@@ -2,7 +2,7 @@ name: Flats
 version: '${version}'
 main: de.nvclas.flats.Flats
 api-version: '1.20.6'
-authors: [nvclas]
+authors: [ nvclas ]
 description: Creating flats with build permission
 
 commands:

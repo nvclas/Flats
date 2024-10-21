@@ -1,29 +1,23 @@
 package de.nvclas.flats.utils;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import de.nvclas.flats.Flats;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.PropertyKey;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
 public class I18n {
 
-    private static final Gson gson = new Gson();
-    private static final String BASE_PATH = "i18n/";
-    private static final String FILE_EXTENSION = ".json";
-    private static final String FALLBACK_LOCALE = "en_us";
+    private static final String BUNDLE_NAME = "i18n.lang";
+    private static final String FALLBACK_LOCALE = "en_US";
 
     private static String currentLocale;
-    private static Map<String, String> translations = new HashMap<>();
-    private static Map<String, String> fallbackTranslations = new HashMap<>();
+    private static ResourceBundle translations;
+    private static ResourceBundle fallbackTranslations;
 
     private static Flats plugin;
 
@@ -41,57 +35,38 @@ public class I18n {
             return;
         }
 
-        String filePath = BASE_PATH + localeCode + FILE_EXTENSION;
-        InputStream resource = plugin.getResource(filePath);
-
-        if (resource == null) {
-            getLogger().warning(() -> "Translation file not found: " + filePath);
-            return;
-        }
-
-        try (InputStreamReader reader = new InputStreamReader(resource, StandardCharsets.UTF_8)) {
-            Type type = new TypeToken<Map<String, Object>>() {}.getType();
-            Map<String, Object> jsonMap = gson.fromJson(reader, type);
-            Map<String, String> flattenedMap = flattenMap(jsonMap);
+        try {
+            Locale locale = Locale.forLanguageTag(localeCode.replace("_", "-")); // Korrekte Methode für Locale-Objekte
+            translations = ResourceBundle.getBundle(BUNDLE_NAME, locale);
+            currentLocale = localeCode;
 
             if (FALLBACK_LOCALE.equals(localeCode)) {
-                fallbackTranslations = flattenedMap;
-            } else {
-                translations = flattenedMap;
+                fallbackTranslations = translations;
             }
-            currentLocale = localeCode;
-            getLogger().info(() -> "Loaded translation " + localeCode);
-        } catch (Exception e) {
-            getLogger().warning("Failed to load translations for " + localeCode + ": " + e.getMessage());
+
+            getLogger().info("Loaded translation " + localeCode);
+        } catch (MissingResourceException e) {
+            getLogger().warning("Translation file not found for locale: " + localeCode);
         }
     }
 
-    public static String translate(String key, Object... args) {
+    public static @NotNull String translate(@PropertyKey(resourceBundle = BUNDLE_NAME) String key, Object... args) {
         String translated = getTranslation(key, args);
         return translated != null ? translated : key;
     }
 
-    private static @Nullable String getTranslation(String key, Object... args) {
-        String translation = translations.getOrDefault(key, fallbackTranslations.get(key));
+    private static @Nullable String getTranslation(@PropertyKey(resourceBundle = BUNDLE_NAME) String key, Object... args) {
+        String translation = null;
+
+        if (translations != null && translations.containsKey(key)) {
+            translation = translations.getString(key);
+        }
+
+        if (translation == null && fallbackTranslations != null && fallbackTranslations.containsKey(key)) {
+            translation = fallbackTranslations.getString(key);
+        }
+
         return translation != null ? String.format(translation, args) : null;
-    }
-
-    private static @NotNull Map<String, String> flattenMap(Map<String, Object> map) {
-        Map<String, String> flatMap = new HashMap<>();
-        flattenMapHelper("", map, flatMap);
-        return flatMap;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void flattenMapHelper(String prefix, @NotNull Map<String, Object> map, Map<String, String> flatMap) {
-        map.forEach((key, value) -> {
-            String fullKey = prefix.isEmpty() ? key : prefix + "." + key;
-            if (value instanceof Map) {
-                flattenMapHelper(fullKey, (Map<String, Object>) value, flatMap);
-            } else {
-                flatMap.put(fullKey, value.toString());
-            }
-        });
     }
 
     private static @NotNull Logger getLogger() {

@@ -1,0 +1,5 @@
+# Sets the language for the plugin. Supported are: en_us, de_de, fr_fr, es_es
+language: en_us
+
+# Sets the maximum volume of a flat in blocks
+maxFlatSize: 10000

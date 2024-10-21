@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 public class UpdateDownloader {
 
@@ -33,24 +34,45 @@ public class UpdateDownloader {
         this.plugin = plugin;
     }
 
-    public UpdateResponse updatePlugin() {
+    public UpdateStatus downloadLatestRelease() {
         try {
-            String downloadUrl = fetchLatestReleaseUrlAsync().get();
-            if (downloadUrl != null) {
-                downloadFileAsync(downloadUrl).get();
-                unloadPluginAndDeleteJar();
-                moveJarToPluginsAsync().get();
-                return UpdateResponse.SUCCESS;
-            } else {
-                return UpdateResponse.NOT_FOUND;
-            }
+            return fetchLatestReleaseUrlAsync()
+                    .thenCompose(this::downloadFileAsync)
+                    .thenApply(v -> {
+                        moveJarToPlugins();
+                        return UpdateStatus.SUCCESS;
+                    })
+                    .exceptionally(e -> {
+                        plugin.getLogger().log(Level.SEVERE, "An error occurred during the update process: " + e.getMessage(), e);
+                        return UpdateStatus.FAILED;
+                    }).join();
         } catch (Exception e) {
-            plugin.getLogger().severe("An error occurred while updating the plugin: " + e.getMessage());
-            return UpdateResponse.FAILURE;
+            plugin.getLogger().log(Level.SEVERE, "An error occurred during the update process: " + e.getMessage(), e);
+            return UpdateStatus.FAILED;
         }
     }
 
-    public CompletableFuture<String> fetchLatestReleaseUrlAsync() {
+
+    public void unloadPluginAndDeleteJar() {
+        Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(plugin.getName());
+        if (targetPlugin != null) {
+            Bukkit.getPluginManager().disablePlugin(targetPlugin);
+        }
+        deleteCurrentJarAsync();
+    }
+
+    private void deleteCurrentJarAsync() {
+        File currentJar = new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
+        File pluginJar = new File(PLUGINS_DIR, currentJar.getName());
+        try {
+            Files.delete(pluginJar.toPath());
+            plugin.getLogger().info("Deleted current jar file " + pluginJar.getName());
+        } catch (IOException e) {
+            plugin.getLogger().warning("Failed to delete plugin jar file: " + e.getMessage());
+        }
+    }
+
+    private CompletableFuture<String> fetchLatestReleaseUrlAsync() {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 HttpRequest request = HttpRequest.newBuilder()
@@ -69,22 +91,23 @@ public class UpdateDownloader {
                         JsonObject asset = assets.get(i).getAsJsonObject();
                         String name = asset.get("name").getAsString();
                         if (name.endsWith(".jar")) {
-                            Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().info("Fetched latest release URL: " + asset.get("browser_download_url").getAsString()));
-                            return asset.get("browser_download_url").getAsString();
+                            String downloadUrl = asset.get("browser_download_url").getAsString();
+                            plugin.getLogger().info("Fetched latest release URL: " + downloadUrl);
+                            return downloadUrl;
                         }
                     }
-                    Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().warning("No JAR asset found in the latest release."));
+                    plugin.getLogger().warning("No JAR asset found in the latest release.");
                 } else {
-                    Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Failed to fetch latest release: HTTP " + response.statusCode()));
+                    plugin.getLogger().severe("Failed to fetch latest release: HTTP " + response.statusCode());
                 }
             } catch (IOException | InterruptedException e) {
-                Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Error fetching latest release URL: " + e.getMessage()));
+                plugin.getLogger().log(Level.SEVERE, "Error fetching latest release URL: " + e.getMessage(), e);
             }
             return null;
         });
     }
 
-    public CompletableFuture<Void> downloadFileAsync(String downloadUrl) {
+    private CompletableFuture<Void> downloadFileAsync(String downloadUrl) {
         return CompletableFuture.runAsync(() -> {
             try {
                 HttpRequest request = HttpRequest.newBuilder()
@@ -97,7 +120,7 @@ public class UpdateDownloader {
                 HttpResponse<InputStream> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
                 if (response.statusCode() != 200) {
-                    Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Failed to download file: HTTP Status " + response.statusCode()));
+                    plugin.getLogger().severe("Failed to download file: HTTP Status " + response.statusCode());
                     return;
                 }
 
@@ -123,54 +146,27 @@ public class UpdateDownloader {
 
                     long expectedLength = response.headers().firstValueAsLong("Content-Length").orElse(-1);
                     if (expectedLength != -1 && totalBytesRead != expectedLength) {
-                        long finalTotalBytesRead = totalBytesRead;
-                        Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Downloaded file is incomplete. Expected: " + expectedLength + " bytes, received: " + finalTotalBytesRead + " bytes."));
+                        plugin.getLogger().severe("Downloaded file is incomplete. Expected: " + expectedLength + " bytes, received: " + totalBytesRead + " bytes.");
                     } else {
-                        Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().info("Download completed: " + fileName));
+                        plugin.getLogger().info("Download completed: " + fileName);
                     }
                 }
             } catch (IOException | InterruptedException e) {
-                Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Error downloading file: " + e.getMessage()));
+                plugin.getLogger().log(Level.SEVERE, "Error downloading file: " + e.getMessage(), e);
             }
         });
     }
 
-    private void deletePreviousJar() {
-        File pluginsDir = new File(PLUGINS_DIR);
-        File[] jarFiles = pluginsDir.listFiles((dir, name) -> name.startsWith("Flats") && name.endsWith(".jar"));
 
-        if (jarFiles != null) {
-            for (File file : jarFiles) {
-                if (file.delete()) {
-                    plugin.getLogger().info("Deleted previous jar file: " + file.getName());
-                } else {
-                    plugin.getLogger().warning("Failed to delete file: " + file.getName());
-                }
-            }
-        } else {
-            plugin.getLogger().info("No previous jar files to delete.");
+    private void moveJarToPlugins() {
+        Path sourcePath = Path.of(fileName);
+        Path targetPath = Path.of(PLUGINS_DIR, fileName);
+
+        try {
+            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            plugin.getLogger().info("Moved file to plugins directory: " + targetPath);
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to move file to plugins directory: " + e.getMessage(), e);
         }
-    }
-
-    public void unloadPluginAndDeleteJar() {
-        Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(plugin.getName());
-        if (targetPlugin != null) {
-            Bukkit.getPluginManager().disablePlugin(targetPlugin);
-        }
-        deletePreviousJar();
-    }
-
-    public CompletableFuture<Void> moveJarToPluginsAsync() {
-        return CompletableFuture.runAsync(() -> {
-            Path sourcePath = Path.of(fileName);
-            Path targetPath = Path.of(PLUGINS_DIR, fileName);
-
-            try {
-                Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-                Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().info("Moved file to plugins directory: " + targetPath));
-            } catch (IOException e) {
-                Bukkit.getScheduler().runTask(plugin, () -> plugin.getLogger().severe("Failed to move file to plugins directory: " + e.getMessage()));
-            }
-        });
     }
 }

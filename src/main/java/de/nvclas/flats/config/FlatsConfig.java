@@ -6,7 +6,9 @@ import de.nvclas.flats.utils.LocationConverter;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,7 +39,7 @@ public class FlatsConfig extends Config {
         saveConfig();
     }
 
-    public OfflinePlayer getOwner(String flatName) {
+    public @Nullable OfflinePlayer getOwner(String flatName) {
         String ownerUUID = configFile.getString(getOwnerPath(flatName));
         if (ownerUUID == null) {
             return null;
@@ -45,15 +47,15 @@ public class FlatsConfig extends Config {
         return Bukkit.getOfflinePlayer(UUID.fromString(ownerUUID));
     }
 
-    public List<String> getAreas(String flatName) {
+    public @NotNull List<String> getAreas(String flatName) {
         return configFile.getStringList(getAreaPath(flatName));
     }
 
-    public String getAreaPath(String flatName) {
+    public @NotNull String getAreaPath(String flatName) {
         return flatName + ".areas";
     }
 
-    public String getOwnerPath(String flatName) {
+    public @NotNull String getOwnerPath(String flatName) {
         return flatName + ".owner";
     }
 }

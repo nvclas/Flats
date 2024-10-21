@@ -15,7 +15,7 @@ public class SelectionItem {
     private SelectionItem() {
         throw new IllegalStateException("Utility class");
     }
-    
+
     public static @NotNull ItemStack getItem() {
         ItemStack is = new ItemStack(MATERIAL);
         is.editMeta(im -> im.displayName(

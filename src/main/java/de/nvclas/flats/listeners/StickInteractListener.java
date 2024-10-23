@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 public class StickInteractListener implements Listener {
 
     @EventHandler
-    public void onStickIneraction(@NotNull PlayerInteractEvent event) {
+    public void onStickInteraction(@NotNull PlayerInteractEvent event) {
         Player p = event.getPlayer();
 
         if (event.getItem() == null) return;

@@ -4,6 +4,7 @@ import de.nvclas.flats.commands.FlatsCommand;
 import de.nvclas.flats.config.FlatsConfig;
 import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.listeners.PlayerChangedWorldListener;
+import de.nvclas.flats.listeners.PlayerMoveListener;
 import de.nvclas.flats.listeners.StickInteractListener;
 import de.nvclas.flats.utils.I18n;
 import lombok.Getter;
@@ -32,6 +33,7 @@ public class Flats extends JavaPlugin {
         //Listeners
         getServer().getPluginManager().registerEvents(new StickInteractListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerChangedWorldListener(), this);
+        getServer().getPluginManager().registerEvents(new PlayerMoveListener(flatsConfig), this);
 
         //Translations
         I18n.initialize(this);

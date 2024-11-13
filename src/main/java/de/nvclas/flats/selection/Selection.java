@@ -1,5 +1,6 @@
 package de.nvclas.flats.selection;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -15,6 +16,7 @@ import java.util.Set;
 
 @Setter
 @Getter
+@AllArgsConstructor
 public class Selection {
 
     private static final Map<Player, Selection> selections = new HashMap<>();
@@ -23,11 +25,6 @@ public class Selection {
     private Location pos2;
 
     public Selection() {
-    }
-
-    public Selection(Location pos1, Location pos2) {
-        this.pos1 = pos1;
-        this.pos2 = pos2;
     }
 
     public static Selection getSelection(Player p) {

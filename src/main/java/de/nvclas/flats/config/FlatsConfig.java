@@ -1,9 +1,11 @@
 package de.nvclas.flats.config;
 
 import de.nvclas.flats.Flats;
+import de.nvclas.flats.selection.Flat;
 import de.nvclas.flats.selection.Selection;
 import de.nvclas.flats.utils.LocationConverter;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -58,4 +60,17 @@ public class FlatsConfig extends Config {
     public @NotNull String getOwnerPath(String flatName) {
         return flatName + ".owner";
     }
+    
+    public @Nullable Flat getFlatByLocation(Location location) {
+        for (String flatName : getConfigFile().getKeys(false)) {
+            for (String selectionString : getAreas(flatName)) {
+                Selection selection = LocationConverter.getSelectionFromString(selectionString);
+                if (selection.intersects(location)) {
+                    return new Flat(selection, flatName);
+                }
+            }
+        }
+        return null;
+    }
+    
 }

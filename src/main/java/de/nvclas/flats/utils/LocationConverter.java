@@ -40,5 +40,4 @@ public class LocationConverter {
         int z = Integer.parseInt(parts[2]);
         return new Location(w, x, y, z);
     }
-
 }

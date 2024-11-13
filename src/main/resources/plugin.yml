@@ -1,4 +1,5 @@
 name: Flats
+api-version: 1.13
 version: '${version}'
 main: de.nvclas.flats.Flats
 authors: [ nvclas ]

@@ -30,6 +30,7 @@ Currently, the plugin supports the following languages:
 - `de_de` - Deutsch (Deutschland)
 - `en_us` - English (USA)
 - `es_es` - Español (España)
+- `fr_fr` - Français (France)
 
 ## Commands
 

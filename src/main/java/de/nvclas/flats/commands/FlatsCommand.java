@@ -31,17 +31,11 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private static final String NOT_IN_FLAT = "messages.not_in_flat";
 
-    private final FlatsConfig flatsConfig;
-    private final SettingsConfig settingsConfig;
-    private final Flats plugin;
+    private final FlatsConfig flatsConfig = Flats.getInstance().getFlatsConfig();
+    private final SettingsConfig settingsConfig = Flats.getInstance().getSettingsConfig();
+    private final Flats plugin = Flats.getInstance();
 
     private Player player;
-
-    public FlatsCommand(@NotNull Flats plugin) {
-        this.plugin = plugin;
-        this.flatsConfig = plugin.getFlatsConfig();
-        this.settingsConfig = plugin.getSettingsConfig();
-    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
@@ -244,7 +238,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     }
 
     public void handleUpdateCommand() {
-        UpdateDownloader updateDownloader = new UpdateDownloader(plugin);
+        UpdateDownloader updateDownloader = new UpdateDownloader(plugin, "https://api.github.com/repos/nvclas/Flats/releases/latest");
         UpdateStatus status = updateDownloader.downloadLatestRelease();
         switch (status) {
             case SUCCESS -> {

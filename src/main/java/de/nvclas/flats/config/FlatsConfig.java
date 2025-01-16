@@ -1,13 +1,9 @@
 package de.nvclas.flats.config;
 
-import de.nvclas.flats.Flats;
-import de.nvclas.flats.selection.Flat;
 import de.nvclas.flats.selection.Selection;
 import de.nvclas.flats.utils.LocationConverter;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -16,8 +12,8 @@ import java.util.UUID;
 
 public class FlatsConfig extends Config {
 
-    public FlatsConfig(Flats plugin, String fileName) {
-        super(plugin, fileName);
+    public FlatsConfig(String fileName) {
+        super(fileName);
     }
 
     public void addSelection(String flatName, Selection selection) {
@@ -32,12 +28,12 @@ public class FlatsConfig extends Config {
         saveConfig();
     }
 
-    public void setOwner(String flatName, Player owner) {
+    public void setOwner(String flatName, OfflinePlayer owner) {
         if (owner == null) {
             configFile.set(getOwnerPath(flatName), null);
-            return;
+        } else {
+            configFile.set(getOwnerPath(flatName), owner.getUniqueId().toString());
         }
-        configFile.set(getOwnerPath(flatName), owner.getUniqueId().toString());
         saveConfig();
     }
 
@@ -53,24 +49,12 @@ public class FlatsConfig extends Config {
         return configFile.getStringList(getAreaPath(flatName));
     }
 
-    public @NotNull String getAreaPath(String flatName) {
+    private @NotNull String getAreaPath(String flatName) {
         return flatName + ".areas";
     }
 
-    public @NotNull String getOwnerPath(String flatName) {
+    private @NotNull String getOwnerPath(String flatName) {
         return flatName + ".owner";
-    }
-    
-    public @Nullable Flat getFlatByLocation(Location location) {
-        for (String flatName : getConfigFile().getKeys(false)) {
-            for (String selectionString : getAreas(flatName)) {
-                Selection selection = LocationConverter.getSelectionFromString(selectionString);
-                if (selection.intersects(location)) {
-                    return new Flat(selection, flatName);
-                }
-            }
-        }
-        return null;
     }
     
 }

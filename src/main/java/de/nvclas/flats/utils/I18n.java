@@ -19,18 +19,15 @@ public class I18n {
     private static ResourceBundle translations;
     private static ResourceBundle fallbackTranslations;
 
-    private static Flats plugin;
+    private static final Flats plugin = Flats.getInstance();
 
-    private I18n() {
-        throw new IllegalStateException("Utility class");
+    public static @NotNull I18n initialize() {
+        I18n i18n = new I18n();
+        i18n.loadTranslations(FALLBACK_LOCALE);
+        return i18n;
     }
 
-    public static void initialize(Flats pluginInstance) {
-        plugin = pluginInstance;
-        loadTranslations(FALLBACK_LOCALE);
-    }
-
-    public static void loadTranslations(String localeCode) {
+    public void loadTranslations(String localeCode) {
         if (localeCode == null || localeCode.isEmpty() || localeCode.equals(currentLocale)) {
             return;
         }

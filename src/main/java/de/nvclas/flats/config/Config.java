@@ -12,12 +12,12 @@ import java.io.IOException;
 public abstract class Config {
 
     protected final File file;
-    protected final Flats plugin;
+    protected final Flats plugin = Flats.getInstance();
+    @NotNull
     @Getter
     protected FileConfiguration configFile;
 
-    protected Config(@NotNull Flats plugin, String fileName) {
-        this.plugin = plugin;
+    protected Config(String fileName) {
         this.file = new File(plugin.getDataFolder(), fileName);
         saveDefaults();
         createConfig();

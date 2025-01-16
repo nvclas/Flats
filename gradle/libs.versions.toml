@@ -1,9 +1,9 @@
 [versions]
-annotations = "24.0.0"
-lombok = "1.18.34"
-runPaper = "2.3.0"
-paperweight = "1.7.1"
-paper = "1.20.6-R0.1-SNAPSHOT"
+annotations = "26.0.1"
+lombok = "1.18.36"
+runPaper = "2.3.1"
+paperweight = "2.0.0-beta.14"
+paper = "1.21.1-R0.1-SNAPSHOT"
 
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }

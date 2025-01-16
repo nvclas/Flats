@@ -3,10 +3,11 @@ package de.nvclas.flats.updater;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import de.nvclas.flats.Flats;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
 import java.net.URI;
@@ -21,17 +22,20 @@ import java.util.logging.Level;
 
 public class UpdateDownloader {
 
-    private static final String API_URL = "https://api.github.com/repos/nvclas/Flats/releases/latest";
     private static final String PLUGINS_DIR = "plugins";
     private static final Gson GSON = new Gson();
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
 
-    private final Flats plugin;
+    private final JavaPlugin plugin;
+    @Getter
+    @Setter
+    private String apiUrl;
     @Getter
     private String fileName;
 
-    public UpdateDownloader(Flats plugin) {
+    public UpdateDownloader(JavaPlugin plugin, String apiUrl) {
         this.plugin = plugin;
+        this.apiUrl = apiUrl;
     }
 
     public UpdateStatus downloadLatestRelease() {
@@ -76,7 +80,7 @@ public class UpdateDownloader {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(API_URL))
+                        .uri(URI.create(apiUrl))
                         .header("Accept", "application/vnd.github+json")
                         .GET()
                         .build();

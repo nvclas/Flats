@@ -1,6 +1,7 @@
 package de.nvclas.flats.utils;
 
 import de.nvclas.flats.selection.Selection;
+import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -8,11 +9,8 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@UtilityClass
 public class LocationConverter {
-
-    private LocationConverter() {
-        throw new IllegalStateException("Utility class");
-    }
 
     public static @Nullable String getStringFromSelection(@NotNull Selection selection) {
         if (selection.getPos1().getWorld() == null || selection.getPos2().getWorld() == null) {

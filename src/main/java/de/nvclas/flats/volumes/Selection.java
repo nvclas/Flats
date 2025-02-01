@@ -27,7 +27,11 @@ public class Selection {
         if (pos1 == null || pos2 == null) {
             return 0;
         }
-        return Math.abs((pos2.getBlockX() - pos1.getBlockX() + 1) * (pos2.getBlockY() - pos1.getBlockY() + 1) * (pos2.getBlockZ() - pos1.getBlockZ() + 1));
+        int length = Math.abs(pos2.getBlockX() - pos1.getBlockX()) + 1;
+        int height = Math.abs(pos2.getBlockY() - pos1.getBlockY()) + 1;
+        int width = Math.abs(pos2.getBlockZ() - pos1.getBlockZ()) + 1;
+
+        return length * height * width;
     }
 
     public void clear() {

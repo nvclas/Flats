@@ -9,6 +9,7 @@ import de.nvclas.flats.listeners.PlayerMoveListener;
 import de.nvclas.flats.listeners.StickInteractListener;
 import de.nvclas.flats.listeners.protection.EntityDamageListener;
 import de.nvclas.flats.listeners.protection.PlayerInteractListener;
+import de.nvclas.flats.managers.FlatsManager;
 import de.nvclas.flats.utils.I18n;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -33,6 +34,9 @@ public class Flats extends JavaPlugin {
         flatsConfig = new FlatsConfig("flats.yml");
         settingsConfig = new SettingsConfig("settings.yml");
 
+        //Managers
+        FlatsManager.initialize();
+        
         //Commands
         Objects.requireNonNull(getCommand("flats")).setExecutor(new FlatsCommand());
         Objects.requireNonNull(getCommand("flats")).setTabCompleter(new FlatsCommand());
@@ -48,5 +52,11 @@ public class Flats extends JavaPlugin {
 
         //Translations
         I18n.initialize().loadTranslations(settingsConfig.getLanguage());
+    }
+
+    @Override
+    public void onDisable() {
+        //Save config
+        FlatsManager.shutdown();
     }
 }

@@ -7,13 +7,12 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Getter
 @Setter
 public class Flat {
-    
+
     private final List<Area> areas;
     private OfflinePlayer owner;
     private String name;
@@ -24,15 +23,10 @@ public class Flat {
         areas.add(area);
     }
 
-    public Flat(String name, List<Area> areas) {
+    public Flat(String name, List<Area> areas, OfflinePlayer owner) {
         this.name = name;
         this.areas = areas;
-    }
-
-    public Flat(String name, Area... areas) {
-        this.name = name;
-        this.areas = new ArrayList<>();
-        Collections.addAll(this.areas, areas);
+        this.owner = owner;
     }
 
     public boolean isWithinBounds(@NotNull Location location) {

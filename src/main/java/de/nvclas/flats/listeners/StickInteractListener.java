@@ -2,9 +2,9 @@ package de.nvclas.flats.listeners;
 
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.items.SelectionItem;
-import de.nvclas.flats.selection.Selection;
 import de.nvclas.flats.utils.I18n;
 import de.nvclas.flats.utils.Permissions;
+import de.nvclas.flats.volumes.Selection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 public class StickInteractListener implements Listener {
 
     @EventHandler
-    public void onStickIneraction(@NotNull PlayerInteractEvent event) {
+    public void onStickInteraction(@NotNull PlayerInteractEvent event) {
         Player p = event.getPlayer();
 
         if (event.getItem() == null) return;

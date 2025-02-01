@@ -1,14 +1,12 @@
 package de.nvclas.flats.utils;
 
 import de.nvclas.flats.Flats;
+import lombok.experimental.UtilityClass;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+@UtilityClass
 public class Permissions {
-
-    private Permissions() {
-        throw new IllegalStateException("Utility class");
-    }
 
     public static final String ADMIN = "flats.admin";
 

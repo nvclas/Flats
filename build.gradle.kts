@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "de.nvclas"
-version = "0.40"
+version = "0.50"
 
 repositories {
     mavenCentral()
@@ -19,7 +19,7 @@ dependencies {
     implementation(libs.annotations)
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
-    
+
     paperweight.paperDevBundle(libs.versions.paper)
 
     testCompileOnly(libs.lombok)
@@ -45,7 +45,7 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks {
     runServer {
-        minecraftVersion("1.20.6")
+        minecraftVersion("1.21.1")
     }
 }
 

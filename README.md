@@ -3,7 +3,8 @@
 ![Latest Release](https://img.shields.io/github/v/release/nvclas/Flats)
 ![License](https://img.shields.io/github/license/nvclas/Flats)
 
-Flats is a Minecraft plugin for Paper that allows you to create areas and let your players claim them. It provides an easy way to manage plots and ensure that players have their own designated areas to build and interact in.
+Flats is a Minecraft plugin for Paper that allows you to create areas and let your players claim them. It provides an
+easy way to manage plots and ensure that players have their own designated areas to build and interact in.
 
 ## Features
 
@@ -20,7 +21,9 @@ Flats is a Minecraft plugin for Paper that allows you to create areas and let yo
 
 ## Configuration
 
-After installation, the plugin will automatically create the configuration files `flats.yml` and `settings.yml` in the plugin directory. These files can be customized to control the plugin's behavior. `flats.yml` will save any created flats and their attributes whereas `settings.yml` contains general settings like language.
+After installation, the plugin will automatically create the configuration files `flats.yml` and `settings.yml` in the
+plugin directory. These files can be customized to control the plugin's behavior. `flats.yml` will save any created
+flats and their attributes whereas `settings.yml` contains general settings like language.
 
 ## Supported Languages
 
@@ -42,7 +45,7 @@ The plugin provides several commands to interact with the areas:
 - `/flats unclaim` - Unclaims the area the player is currently in.
 - `/flats info` - Shows information about the area the player is currently in.
 - `/flats list` - Lists all available areas and their owners.
-- `/flats show` - Show every area my marking it with yellow glass. 
+- `/flats show` - Show every area my marking it with yellow glass.
 - `/flats update` - Easily update the plugin to the latest version.
 - And more
 

@@ -3,12 +3,17 @@ package de.nvclas.flats.updater;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import de.nvclas.flats.Flats;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -21,31 +26,34 @@ import java.util.logging.Level;
 
 public class UpdateDownloader {
 
-    private static final String API_URL = "https://api.github.com/repos/nvclas/Flats/releases/latest";
     private static final String PLUGINS_DIR = "plugins";
     private static final Gson GSON = new Gson();
-    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.ALWAYS)
+            .build();
 
-    private final Flats plugin;
+    private final JavaPlugin plugin;
+    @Getter
+    @Setter
+    private String apiUrl;
     @Getter
     private String fileName;
 
-    public UpdateDownloader(Flats plugin) {
+    public UpdateDownloader(JavaPlugin plugin, String apiUrl) {
         this.plugin = plugin;
+        this.apiUrl = apiUrl;
     }
 
     public UpdateStatus downloadLatestRelease() {
         try {
-            return fetchLatestReleaseUrlAsync()
-                    .thenCompose(this::downloadFileAsync)
-                    .thenApply(v -> {
-                        moveJarToPlugins();
-                        return UpdateStatus.SUCCESS;
-                    })
-                    .exceptionally(e -> {
-                        plugin.getLogger().log(Level.SEVERE, "An error occurred during the update process: " + e.getMessage(), e);
-                        return UpdateStatus.FAILED;
-                    }).join();
+            return fetchLatestReleaseUrlAsync().thenCompose(this::downloadFileAsync).thenApply(v -> {
+                moveJarToPlugins();
+                return UpdateStatus.SUCCESS;
+            }).exceptionally(e -> {
+                plugin.getLogger()
+                        .log(Level.SEVERE, "An error occurred during the update process: " + e.getMessage(), e);
+                return UpdateStatus.FAILED;
+            }).join();
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "An error occurred during the update process: " + e.getMessage(), e);
             return UpdateStatus.FAILED;
@@ -76,7 +84,7 @@ public class UpdateDownloader {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(API_URL))
+                        .uri(URI.create(apiUrl))
                         .header("Accept", "application/vnd.github+json")
                         .GET()
                         .build();
@@ -117,23 +125,24 @@ public class UpdateDownloader {
                         .GET()
                         .build();
 
-                HttpResponse<InputStream> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
+                HttpResponse<InputStream> response = HTTP_CLIENT.send(request,
+                        HttpResponse.BodyHandlers.ofInputStream());
 
                 if (response.statusCode() != 200) {
                     plugin.getLogger().severe("Failed to download file: HTTP Status " + response.statusCode());
                     return;
                 }
 
-                fileName = response.headers().firstValue("Content-Disposition")
+                fileName = response.headers()
+                        .firstValue("Content-Disposition")
                         .map(header -> header.replaceFirst("(?i)^.*filename=\"?([^\"]+)\"?.*$", "$1"))
                         .orElseGet(() -> {
                             String[] parts = downloadUrl.split("/");
                             return parts[parts.length - 1];
                         });
 
-                try (InputStream inputStream = response.body();
-                     BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-                     FileOutputStream fileOutputStream = new FileOutputStream(fileName)) {
+                try (InputStream inputStream = response.body(); BufferedInputStream bufferedInputStream = new BufferedInputStream(
+                        inputStream); FileOutputStream fileOutputStream = new FileOutputStream(fileName)) {
 
                     byte[] dataBuffer = new byte[1024];
                     int bytesRead;
@@ -146,7 +155,8 @@ public class UpdateDownloader {
 
                     long expectedLength = response.headers().firstValueAsLong("Content-Length").orElse(-1);
                     if (expectedLength != -1 && totalBytesRead != expectedLength) {
-                        plugin.getLogger().severe("Downloaded file is incomplete. Expected: " + expectedLength + " bytes, received: " + totalBytesRead + " bytes.");
+                        plugin.getLogger()
+                                .severe("Downloaded file is incomplete. Expected: " + expectedLength + " bytes, received: " + totalBytesRead + " bytes.");
                     } else {
                         plugin.getLogger().info("Download completed: " + fileName);
                     }

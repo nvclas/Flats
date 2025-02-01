@@ -3,3 +3,8 @@ language: en_us
 
 # Sets the maximum volume of a flat in blocks
 maxFlatSize: 10000
+
+# Automatic gamemode change on flat entering or leaving
+enableAutoGamemode: false # true if enabled, false if disabled
+insideFlatGamemode: creative # Possible values: survival, creative, adventure, spectator
+outsideFlatGamemode: adventure # Possible values: survival, creative, adventure, spectator

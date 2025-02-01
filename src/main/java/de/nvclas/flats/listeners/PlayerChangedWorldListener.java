@@ -1,6 +1,6 @@
 package de.nvclas.flats.listeners;
 
-import de.nvclas.flats.selection.Selection;
+import de.nvclas.flats.volumes.Selection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

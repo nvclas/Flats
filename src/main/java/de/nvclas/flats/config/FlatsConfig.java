@@ -1,61 +1,59 @@
 package de.nvclas.flats.config;
 
-import de.nvclas.flats.Flats;
-import de.nvclas.flats.selection.Selection;
-import de.nvclas.flats.utils.LocationConverter;
+import de.nvclas.flats.volumes.Area;
+import de.nvclas.flats.volumes.Flat;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.bukkit.configuration.ConfigurationSection;
 
-import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class FlatsConfig extends Config {
 
-    public FlatsConfig(Flats plugin, String fileName) {
-        super(plugin, fileName);
+    private static final String FLATS_SECTION = "flats";
+
+    public FlatsConfig(String fileName) {
+        super(fileName);
     }
 
-    public void addSelection(String flatName, Selection selection) {
-        List<String> flats = getAreas(flatName);
-        flats.add(LocationConverter.getStringFromSelection(selection));
-        getConfigFile().set(getAreaPath(flatName), flats);
+    public void saveFlats(Map<String, Flat> flats) {
+        getConfigFile().set(FLATS_SECTION, null);
+        flats.forEach(this::saveFlat);
         saveConfig();
     }
 
-    public void removeFlat(String flatName) {
-        getConfigFile().set(flatName, null);
-        saveConfig();
-    }
-
-    public void setOwner(String flatName, Player owner) {
-        if (owner == null) {
-            configFile.set(getOwnerPath(flatName), null);
-            return;
+    public Map<String, Flat> loadFlats() {
+        ConfigurationSection flatsSection = getConfigFile().getConfigurationSection(FLATS_SECTION);
+        if (flatsSection == null) {
+            return new HashMap<>();
         }
-        configFile.set(getOwnerPath(flatName), owner.getUniqueId().toString());
-        saveConfig();
+
+        return flatsSection.getKeys(false)
+                .stream()
+                .map(this::loadFlat)
+                .collect(HashMap::new, (map, flat) -> map.put(flat.getName(), flat), HashMap::putAll);
     }
 
-    public @Nullable OfflinePlayer getOwner(String flatName) {
-        String ownerUUID = configFile.getString(getOwnerPath(flatName));
-        if (ownerUUID == null) {
-            return null;
-        }
-        return Bukkit.getOfflinePlayer(UUID.fromString(ownerUUID));
+    private void saveFlat(String flatName, Flat flat) {
+        getConfigFile().set(Paths.getOwnerPath(flatName),
+                flat.getOwner() == null ? null : flat.getOwner().getUniqueId().toString());
+
+        getConfigFile().set(Paths.getAreasPath(flatName),
+                flat.getAreas().stream().map(Area::getLocationString).toList());
     }
 
-    public @NotNull List<String> getAreas(String flatName) {
-        return configFile.getStringList(getAreaPath(flatName));
-    }
+    private Flat loadFlat(String flatName) {
+        String ownerUuid = getConfigFile().getString(Paths.getOwnerPath(flatName));
+        List<String> areaStrings = getConfigFile().getStringList(Paths.getAreasPath(flatName));
 
-    public @NotNull String getAreaPath(String flatName) {
-        return flatName + ".areas";
-    }
+        OfflinePlayer owner = (ownerUuid != null && !ownerUuid.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(
+                ownerUuid)) : null;
 
-    public @NotNull String getOwnerPath(String flatName) {
-        return flatName + ".owner";
+        List<Area> areas = areaStrings.stream().map(areaString -> Area.fromString(areaString, flatName)).toList();
+
+        return new Flat(flatName, areas, owner);
     }
 }

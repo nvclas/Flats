@@ -1,6 +1,6 @@
 package de.nvclas.flats.events;
 
-import de.nvclas.flats.selection.Flat;
+import de.nvclas.flats.volumes.Flat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.bukkit.entity.Player;

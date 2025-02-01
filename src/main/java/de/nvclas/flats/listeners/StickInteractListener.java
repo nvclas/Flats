@@ -2,7 +2,7 @@ package de.nvclas.flats.listeners;
 
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.items.SelectionItem;
-import de.nvclas.flats.selection.Selection;
+import de.nvclas.flats.volumes.Selection;
 import de.nvclas.flats.utils.I18n;
 import de.nvclas.flats.utils.Permissions;
 import org.bukkit.entity.Player;

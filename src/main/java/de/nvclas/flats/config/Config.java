@@ -11,25 +11,32 @@ import java.io.IOException;
 
 public abstract class Config {
 
+    private static final String CONFIG_FILE_EXISTS = "File %s already exists";
+    private static final String CONFIG_CREATION_FAILURE = "Failed to create file %s: %s";
+    private static final String CONFIG_SAVED_DEFAULT = "Saved default file of %s";
+    private static final String CONFIG_DEFAULT_NOT_FOUND = "No default file found for %s";
+    private static final String CONFIG_SAVE_FAILURE = "Failed to save file %s: %s";
+
     protected final File file;
-    protected final Flats plugin = Flats.getInstance();
-    @NotNull
+
     @Getter
+    @NotNull
     protected FileConfiguration configFile;
 
     protected Config(String fileName) {
-        this.file = new File(plugin.getDataFolder(), fileName);
-        saveDefaults();
-        createConfig();
+        this.file = new File(Flats.getInstance().getDataFolder(), fileName);
+        saveDefaultConfig();
+        initializeConfig();
     }
 
-    protected void createConfig() {
+    protected void initializeConfig() {
         try {
-            if (!plugin.getDataFolder().mkdir() && !file.createNewFile()) {
-                plugin.getLogger().config("File " + file.getName() + " already exists");
+            createParentDirectory();
+            if (file.createNewFile()) {
+                Flats.getInstance().getLogger().config(String.format(CONFIG_FILE_EXISTS, file.getName()));
             }
         } catch (IOException e) {
-            plugin.getLogger().severe("Failed to create file " + file.getName() + ": " + e.getMessage());
+            Flats.getInstance().getLogger().severe(String.format(CONFIG_CREATION_FAILURE, file.getName(), e.getMessage()));
         }
         configFile = YamlConfiguration.loadConfiguration(file);
     }
@@ -38,19 +45,26 @@ public abstract class Config {
         try {
             configFile.save(file);
         } catch (IOException e) {
-            plugin.getLogger().severe("Failed to save file " + file.getName() + ": " + e.getMessage());
+            Flats.getInstance().getLogger().severe(String.format(CONFIG_SAVE_FAILURE, file.getName(), e.getMessage()));
         }
         configFile = YamlConfiguration.loadConfiguration(file);
     }
 
-    private void saveDefaults() {
+    private void saveDefaultConfig() {
         if (!file.exists()) {
             try {
-                plugin.saveResource(file.getName(), false);
-                plugin.getLogger().config("Saved dafault file of " + file.getName());
+                Flats.getInstance().saveResource(file.getName(), false);
+                Flats.getInstance().getLogger().config(String.format(CONFIG_SAVED_DEFAULT, file.getName()));
             } catch (IllegalArgumentException e) {
-                plugin.getLogger().config("No default file found for " + file.getName());
+                Flats.getInstance().getLogger().config(String.format(CONFIG_DEFAULT_NOT_FOUND, file.getName()));
             }
+        }
+    }
+
+    private void createParentDirectory() {
+        File dataFolder = Flats.getInstance().getDataFolder();
+        if (!dataFolder.exists() && !dataFolder.mkdir()) {
+            Flats.getInstance().getLogger().config("Failed to create plugin data folder.");
         }
     }
 }

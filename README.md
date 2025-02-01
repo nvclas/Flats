@@ -9,8 +9,8 @@ easy way to manage plots and ensure that players have their own designated areas
 ## Features
 
 - **Create Flats:** Easily create areas with the selection tool and commands.
-- **Claim Flats:** Let players claim areas, allowing them to build only in their designated flats.
-- **Manage Flats:** Add or remove trusted players to allow them building in your flat.
+- **Claim Flats:** Let players claim areas, allowing them to build only in their designated flats. (PARTIALLY ADDED)
+- **Manage Flats:** Add or remove trusted players to allow them building in your flat. (NOT YET ADDED)
 - **Interactive Commands:** Use simple commands to interact with the plugin.
 
 ## Installation
@@ -40,12 +40,12 @@ Currently, the plugin supports the following languages:
 The plugin provides several commands to interact with the areas:
 
 - `/flats select` - Get the selection tool for defining the area of a flat.
-- `/flats create <name>` - Creates a new area with the specified name.
-- `/flats claim` - Claims the area the player is currently in.
-- `/flats unclaim` - Unclaims the area the player is currently in.
-- `/flats info` - Shows information about the area the player is currently in.
-- `/flats list` - Lists all available areas and their owners.
-- `/flats show` - Show every area my marking it with yellow glass.
+- `/flats add <name>` - Creates a new flat with the specified name.
+- `/flats claim` - Claims the flat the player is currently in.
+- `/flats unclaim` - Unclaims the flat the player is currently in.
+- `/flats info` - Shows information about the flat the player is currently in.
+- `/flats list` - Lists all available flats and their owners.
+- `/flats show` - Show every flat my marking it with yellow glass.
 - `/flats update` - Easily update the plugin to the latest version.
 - And more
 
@@ -53,7 +53,7 @@ The plugin provides several commands to interact with the areas:
 
 The plugin uses a permission system to control access to certain commands:
 
-- `flats.admin` - Permission for administrative commands like creating and deleting areas.
+- `flats.admin` - Permission for administrative commands like creating and deleting flats.
 
 ## Developer
 

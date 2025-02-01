@@ -41,14 +41,15 @@ public class FlatsManager {
     public @NotNull List<Area> getAllAreas() {
         return allFlats.values().stream().flatMap(flat -> flat.getAreas().stream()).toList();
     }
-    
+
     public Flat getFlat(@NotNull String name) {
         if (!existisFlat(name)) {
             return null;
         }
-        return Objects.requireNonNull(allFlats.get(name), "Oops, something went terribly wrong. Please restart the server!");
+        return Objects.requireNonNull(allFlats.get(name),
+                "Oops, something went terribly wrong. Please restart the server!");
     }
-    
+
     public @Nullable Flat getFlatByLocation(@NotNull Location location) {
         return allFlats.values()
                 .stream()
@@ -56,7 +57,7 @@ public class FlatsManager {
                 .findFirst()
                 .orElse(null);
     }
-    
+
     public void setOwner(Flat flat, OfflinePlayer owner) {
         flat.setOwner(owner);
     }
@@ -68,7 +69,7 @@ public class FlatsManager {
         Flat flat = getFlat(name);
         flat.addArea(area);
     }
-    
+
     public void create(@NotNull String name, @NotNull Area area) throws IllegalArgumentException {
         if (existisFlat(name)) {
             throw new IllegalArgumentException("A flat with this name already exists.");
@@ -76,7 +77,7 @@ public class FlatsManager {
         Flat newFlat = new Flat(name, area);
         allFlats.put(name, newFlat);
     }
-    
+
     public void delete(@NotNull String name) throws IllegalArgumentException {
         if (!existisFlat(name)) {
             throw new IllegalArgumentException("No flat exists with the given name: " + name);

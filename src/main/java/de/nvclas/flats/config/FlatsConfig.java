@@ -30,34 +30,29 @@ public class FlatsConfig extends Config {
         if (flatsSection == null) {
             return new HashMap<>();
         }
-        
-        return flatsSection
-                .getKeys(false)
+
+        return flatsSection.getKeys(false)
                 .stream()
                 .map(this::loadFlat)
                 .collect(HashMap::new, (map, flat) -> map.put(flat.getName(), flat), HashMap::putAll);
     }
 
     private void saveFlat(String flatName, Flat flat) {
-        getConfigFile().set(Paths.getOwnerPath(flatName), flat.getOwner() == null ? null : flat.getOwner()
-                .getUniqueId()
-                .toString());
+        getConfigFile().set(Paths.getOwnerPath(flatName),
+                flat.getOwner() == null ? null : flat.getOwner().getUniqueId().toString());
 
-        getConfigFile().set(Paths.getAreasPath(flatName), flat.getAreas()
-                .stream()
-                .map(Area::getLocationString)
-                .toList());
+        getConfigFile().set(Paths.getAreasPath(flatName),
+                flat.getAreas().stream().map(Area::getLocationString).toList());
     }
 
     private Flat loadFlat(String flatName) {
         String ownerUuid = getConfigFile().getString(Paths.getOwnerPath(flatName));
         List<String> areaStrings = getConfigFile().getStringList(Paths.getAreasPath(flatName));
 
-        OfflinePlayer owner = (ownerUuid != null && !ownerUuid.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(ownerUuid)) : null;
+        OfflinePlayer owner = (ownerUuid != null && !ownerUuid.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(
+                ownerUuid)) : null;
 
-        List<Area> areas = areaStrings.stream()
-                .map(areaString -> Area.fromString(areaString, flatName))
-                .toList();
+        List<Area> areas = areaStrings.stream().map(areaString -> Area.fromString(areaString, flatName)).toList();
 
         return new Flat(flatName, areas, owner);
     }

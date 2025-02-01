@@ -9,13 +9,13 @@ public class Paths {
     public static final String ENABLE_AUTO_GAMEMODE = "enableAutoGamemode";
     public static final String INSIDE_GAMEMODE = "insideFlatGamemode";
     public static final String OUTSIDE_GAMEMODE = "outsideFlatGamemode";
-    
+
     public static String getOwnerPath(String flatName) {
         return "flats." + flatName + ".owner";
-    } 
-    
+    }
+
     public static String getAreasPath(String flatName) {
         return "flats." + flatName + ".areas";
     }
-    
+
 }

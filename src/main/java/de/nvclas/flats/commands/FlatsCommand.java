@@ -94,7 +94,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return;
         }
         String flatName = args[1];
-        if(!FlatsManager.existisFlat(flatName)) {
+        if (!FlatsManager.existisFlat(flatName)) {
             FlatsManager.create(flatName, Area.fromSelection(selection, flatName));
             player.sendMessage(Flats.PREFIX + I18n.translate("messages.flat_created", flatName));
             return;
@@ -191,7 +191,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return;
         }
         for (Flat flat : FlatsManager.getAllFlats()) {
-            player.sendMessage(Flats.PREFIX + I18n.translate("messages.flats_list_header", flat));
+            player.sendMessage(Flats.PREFIX + I18n.translate("messages.flats_list_header", flat.getName()));
             OfflinePlayer owner = flat.getOwner();
             if (owner == null) {
                 player.sendMessage(Flats.PREFIX + I18n.translate("messages.flats_list_unoccupied"));
@@ -200,8 +200,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             }
             player.sendMessage(Flats.PREFIX + I18n.translate("messages.flats_list_areas_header"));
             for (Area area : flat.getAreas()) {
-                if (flat.getAreas().getLast() != area) {
-                    player.sendMessage(Flats.PREFIX + I18n.translate("messages.flats_list_area",
+                if (flat.getAreas().getLast() == area) {
+                    player.sendMessage(Flats.PREFIX + I18n.translate("messages.flats_list_area_last",
                             area.getLocationString()));
                     break;
                 }
@@ -235,9 +235,10 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
                     }, blockUpdateDelay.getAndIncrement());
                 }
 
-                Bukkit.getScheduler().runTaskLater(plugin,
-                        () -> player.sendBlockChanges(blocksToChange.stream().map(Block::getState).toList()),
-                        20L * showTime);
+                Bukkit.getScheduler()
+                        .runTaskLater(plugin,
+                                () -> player.sendBlockChanges(blocksToChange.stream().map(Block::getState).toList()),
+                                20L * showTime);
             });
         });
     }
@@ -260,8 +261,10 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     private @NotNull List<Block> getBlocksToChange() {
         List<Block> blocksToChange = new ArrayList<>();
 
-        FlatsManager.getAllAreas().stream().filter(area -> area.isWithinDistance(player.getLocation(), 100)).forEach(
-                area -> blocksToChange.addAll(area.getAllOuterBlocks()));
+        FlatsManager.getAllAreas()
+                .stream()
+                .filter(area -> area.isWithinDistance(player.getLocation(), 100))
+                .forEach(area -> blocksToChange.addAll(area.getAllOuterBlocks()));
 
         return blocksToChange;
     }
@@ -303,8 +306,10 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             completions.add("show");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove") && sender.hasPermission(Permissions.ADMIN)) {
             String partial = args[1].toLowerCase();
-            completions = FlatsManager.getAllFlatNames().stream().filter(flatName -> flatName.toLowerCase().startsWith(
-                    partial)).toList();
+            completions = FlatsManager.getAllFlatNames()
+                    .stream()
+                    .filter(flatName -> flatName.toLowerCase().startsWith(partial))
+                    .toList();
 
         }
         return completions;

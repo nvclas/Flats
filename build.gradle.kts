@@ -19,7 +19,7 @@ dependencies {
     implementation(libs.annotations)
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
-    
+
     paperweight.paperDevBundle(libs.versions.paper)
 
     testCompileOnly(libs.lombok)

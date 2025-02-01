@@ -13,7 +13,7 @@ public class LocationConverter {
         String pos2String = pos2.getBlockX() + "," + pos2.getBlockY() + "," + pos2.getBlockZ();
         return pos1.getWorld().getName() + ":" + pos1String + ";" + pos2String;
     }
-    
+
     public static @NotNull Location[] getLocationsFromString(@NotNull String locationString) {
         String[] parts = locationString.split("[,:;]");
         String world = parts[0];

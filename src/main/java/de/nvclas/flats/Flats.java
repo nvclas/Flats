@@ -22,21 +22,21 @@ public class Flats extends JavaPlugin {
     public static final String PREFIX = "§7[§6Flats§7] §r";
     @Getter
     private static Flats instance;
-    
+
     private FlatsConfig flatsConfig;
     private SettingsConfig settingsConfig;
 
     @Override
     public void onEnable() {
         instance = this;
-        
+
         //Configs
         flatsConfig = new FlatsConfig("flats.yml");
         settingsConfig = new SettingsConfig("settings.yml");
 
         //Managers
         FlatsManager.initialize();
-        
+
         //Commands
         Objects.requireNonNull(getCommand("flats")).setExecutor(new FlatsCommand());
         Objects.requireNonNull(getCommand("flats")).setTabCompleter(new FlatsCommand());
@@ -48,7 +48,7 @@ public class Flats extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FlatEnteredOrLeftListener(), this);
         getServer().getPluginManager().registerEvents(new EntityDamageListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
-        
+
 
         //Translations
         I18n.initialize().loadTranslations(settingsConfig.getLanguage());

@@ -36,7 +36,9 @@ public abstract class Config {
                 Flats.getInstance().getLogger().config(String.format(CONFIG_FILE_EXISTS, file.getName()));
             }
         } catch (IOException e) {
-            Flats.getInstance().getLogger().severe(String.format(CONFIG_CREATION_FAILURE, file.getName(), e.getMessage()));
+            Flats.getInstance()
+                    .getLogger()
+                    .severe(String.format(CONFIG_CREATION_FAILURE, file.getName(), e.getMessage()));
         }
         configFile = YamlConfiguration.loadConfiguration(file);
     }

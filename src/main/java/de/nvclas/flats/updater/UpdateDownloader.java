@@ -110,9 +110,9 @@ public class UpdateDownloader {
         File pluginJar = new File(PLUGINS_DIR, currentJar.getName());
         try {
             Files.delete(pluginJar.toPath());
-            plugin.getLogger().info("Deleted current jar file " + pluginJar.getName());
+            plugin.getLogger().log(Level.INFO, () -> "Deleted current jar file " + pluginJar.getName());
         } catch (IOException e) {
-            plugin.getLogger().warning("Failed to delete plugin jar file: " + e.getMessage());
+            plugin.getLogger().log(Level.WARNING, () -> "Failed to delete plugin jar file: " + e.getMessage());
         }
     }
 
@@ -136,13 +136,14 @@ public class UpdateDownloader {
                         String name = asset.get("name").getAsString();
                         if (name.endsWith(".jar")) {
                             String downloadUrl = asset.get("browser_download_url").getAsString();
-                            plugin.getLogger().info("Fetched latest release URL: " + downloadUrl);
+                            plugin.getLogger().log(Level.INFO, () -> "Fetched latest release URL: " + downloadUrl);
                             return downloadUrl;
                         }
                     }
-                    plugin.getLogger().warning("No JAR asset found in the latest release.");
+                    plugin.getLogger().log(Level.WARNING, () -> "No JAR asset found in the latest release.");
                 } else {
-                    plugin.getLogger().severe("Failed to fetch latest release: HTTP " + response.statusCode());
+                    plugin.getLogger()
+                            .log(Level.SEVERE, () -> "Failed to fetch latest release: HTTP " + response.statusCode());
                 }
             } catch (IOException | InterruptedException e) {
                 plugin.getLogger().log(Level.SEVERE, e, () -> "Error fetching latest release URL: " + e.getMessage());
@@ -166,7 +167,8 @@ public class UpdateDownloader {
                         HttpResponse.BodyHandlers.ofInputStream());
 
                 if (response.statusCode() != 200) {
-                    plugin.getLogger().severe("Failed to download file: HTTP Status " + response.statusCode());
+                    plugin.getLogger()
+                            .log(Level.SEVERE, () -> "Failed to download file: HTTP Status " + response.statusCode());
                     return;
                 }
 
@@ -192,10 +194,12 @@ public class UpdateDownloader {
 
                     long expectedLength = response.headers().firstValueAsLong("Content-Length").orElse(-1);
                     if (expectedLength != -1 && totalBytesRead != expectedLength) {
+                        long finalTotalBytesRead = totalBytesRead;
                         plugin.getLogger()
-                                .severe("Downloaded file is incomplete. Expected: " + expectedLength + " bytes, received: " + totalBytesRead + " bytes.");
+                                .log(Level.SEVERE,
+                                        () -> "Downloaded file is incomplete. Expected: " + expectedLength + " bytes, received: " + finalTotalBytesRead + " bytes.");
                     } else {
-                        plugin.getLogger().info("Download completed: " + fileName);
+                        plugin.getLogger().log(Level.INFO, () -> "Download completed: " + fileName);
                     }
                 }
             } catch (IOException | InterruptedException e) {

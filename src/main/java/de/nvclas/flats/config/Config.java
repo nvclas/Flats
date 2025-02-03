@@ -31,6 +31,13 @@ public abstract class Config {
         initializeConfig();
     }
 
+    private static void createParentDirectory() {
+        File dataFolder = Flats.getInstance().getDataFolder();
+        if (!dataFolder.exists() && !dataFolder.mkdir()) {
+            Flats.getInstance().getLogger().log(Level.CONFIG, () -> "Failed to create plugin data folder.");
+        }
+    }
+
     protected void initializeConfig() {
         try {
             createParentDirectory();
@@ -42,7 +49,7 @@ public abstract class Config {
         } catch (IOException e) {
             Flats.getInstance()
                     .getLogger()
-                    .severe(String.format(CONFIG_CREATION_FAILURE, file.getName(), e.getMessage()));
+                    .log(Level.SEVERE, () -> String.format(CONFIG_CREATION_FAILURE, file.getName(), e.getMessage()));
         }
         configFile = YamlConfiguration.loadConfiguration(file);
     }
@@ -51,7 +58,9 @@ public abstract class Config {
         try {
             configFile.save(file);
         } catch (IOException e) {
-            Flats.getInstance().getLogger().severe(String.format(CONFIG_SAVE_FAILURE, file.getName(), e.getMessage()));
+            Flats.getInstance()
+                    .getLogger()
+                    .log(Level.SEVERE, () -> String.format(CONFIG_SAVE_FAILURE, file.getName(), e.getMessage()));
         }
         configFile = YamlConfiguration.loadConfiguration(file);
     }
@@ -64,15 +73,8 @@ public abstract class Config {
                         .getLogger()
                         .log(Level.CONFIG, () -> String.format(CONFIG_SAVED_DEFAULT, file.getName()));
             } catch (IllegalArgumentException e) {
-                Flats.getInstance().getLogger().config(String.format(CONFIG_DEFAULT_NOT_FOUND, file.getName()));
+                Flats.getInstance().getLogger().log(Level.CONFIG, () -> String.format(CONFIG_DEFAULT_NOT_FOUND, file.getName()));
             }
-        }
-    }
-
-    private static void createParentDirectory() {
-        File dataFolder = Flats.getInstance().getDataFolder();
-        if (!dataFolder.exists() && !dataFolder.mkdir()) {
-            Flats.getInstance().getLogger().config("Failed to create plugin data folder.");
         }
     }
 }

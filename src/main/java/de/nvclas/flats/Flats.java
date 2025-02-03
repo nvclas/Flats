@@ -17,6 +17,7 @@ import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
+import java.util.logging.Level;
 
 @SuppressWarnings("java:S6548") // Singleton warning
 @Getter
@@ -61,7 +62,7 @@ public class Flats extends JavaPlugin {
         I18n.initialize(this);
         I18n.loadTranslations(settingsConfig.getLanguage());
 
-        getLogger().info("Flats initialized successfully");
+        getLogger().log(Level.INFO, () -> "Flats initialized successfully");
     }
 
     @Override
@@ -73,6 +74,6 @@ public class Flats extends JavaPlugin {
         AutoSaveScheduler.stop();
         CommandDelayScheduler.stopAll();
 
-        getLogger().info("All flats saved and schedulers stopped");
+        getLogger().log(Level.INFO, () -> "All flats saved and schedulers stopped");
     }
 }

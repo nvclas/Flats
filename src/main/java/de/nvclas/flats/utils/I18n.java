@@ -9,6 +9,7 @@ import org.jetbrains.annotations.PropertyKey;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -74,9 +75,9 @@ public class I18n {
                 fallbackTranslations = translations;
             }
 
-            getLogger().info(() -> "Loaded translation " + localeCode);
+            getLogger().log(Level.INFO, () -> "Loaded translation " + localeCode);
         } catch (MissingResourceException e) {
-            getLogger().warning(() -> "Translation file not found for locale: " + localeCode);
+            getLogger().log(Level.WARNING, () -> "Translation file not found for locale: " + localeCode);
         }
     }
 

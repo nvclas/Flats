@@ -8,6 +8,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.logging.Level;
+
 /**
  * The {@code AutoSaveScheduler} is a utility class responsible for managing periodic auto-save tasks
  * in the Flats plugin. It utilizes the {@link BukkitRunnable} to schedule tasks at fixed intervals
@@ -42,19 +44,22 @@ public class AutoSaveScheduler {
             throw new UnsupportedOperationException("AutoSaveScheduler is already running!");
         }
         if (AUTO_SAVE_INTERVAL <= 0) {
-            plugin.getLogger().info("Auto saving is disabled as autoSaveInterval is below 0 or missing");
+            plugin.getLogger()
+                    .log(Level.INFO, () -> "Auto saving is disabled as autoSaveInterval is below 0 or missing");
             return;
         }
 
-        plugin.getLogger().info("Started AutoSaveScheduler with interval " + settingsConfig.getAutoSaveInterval());
+        plugin.getLogger()
+                .log(Level.INFO,
+                        () -> "Started AutoSaveScheduler with interval " + settingsConfig.getAutoSaveInterval());
         running = true;
         task = new BukkitRunnable() {
 
             @Override
             public void run() {
-                plugin.getLogger().info("Saving flats...");
+                plugin.getLogger().log(Level.CONFIG, () -> "Saving flats...");
                 FlatsManager.saveAll();
-                plugin.getLogger().info("Flats saved.");
+                plugin.getLogger().log(Level.CONFIG, () -> "Flats saved");
             }
         }.runTaskTimerAsynchronously(plugin, 0, settingsConfig.getAutoSaveInterval() * 20);
     }

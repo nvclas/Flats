@@ -3,6 +3,7 @@ package de.nvclas.flats.commands;
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.items.SelectionItem;
 import de.nvclas.flats.managers.FlatsManager;
+import de.nvclas.flats.schedulers.CommandDelayScheduler;
 import de.nvclas.flats.updater.UpdateDownloader;
 import de.nvclas.flats.updater.UpdateStatus;
 import de.nvclas.flats.utils.I18n;
@@ -19,12 +20,12 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class FlatsCommand implements CommandExecutor, TabCompleter {
@@ -50,16 +51,16 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
         String subCommand = args[0].toLowerCase();
 
-        switch (subCommand) {
-            case "select" -> handleSelectCommand();
-            case "add" -> handleAddCommand(args);
-            case "remove" -> handleRemoveCommand(args);
-            case "claim" -> handleClaimCommand();
-            case "unclaim" -> handleUnclaimCommand();
-            case "info" -> handleInfoCommand();
-            case "list" -> handleListCommand();
-            case "show" -> handleShowCommand();
-            case "update" -> handleUpdateCommand();
+        switch (FlatsSubCommand.fromString(subCommand)) {
+            case SELECT -> handleSelectCommand();
+            case ADD -> handleAddCommand(args);
+            case REMOVE -> handleRemoveCommand(args);
+            case CLAIM -> handleClaimCommand();
+            case UNCLAIM -> handleUnclaimCommand();
+            case INFO -> handleInfoCommand();
+            case LIST -> handleListCommand();
+            case SHOW -> handleShowCommand();
+            case UPDATE -> handleUpdateCommand();
             default -> sendHelpMessage();
         }
         return true;
@@ -94,7 +95,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return;
         }
         String flatName = args[1];
-        if (!FlatsManager.existisFlat(flatName)) {
+        if (!FlatsManager.existsFlat(flatName)) {
             FlatsManager.create(flatName, Area.fromSelection(selection, flatName));
             player.sendMessage(Flats.PREFIX + I18n.translate("messages.flat_created", flatName));
             return;
@@ -112,7 +113,6 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return true;
         }).orElse(false);
     }
-
 
     private void handleRemoveCommand(String[] args) {
         if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
@@ -169,6 +169,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         for (Area area : FlatsManager.getAllAreas()) {
             if (area.isWithinBounds(player.getLocation())) {
                 player.sendMessage(Flats.PREFIX + I18n.translate("messages.flat_info_header", area.getFlatName()));
+                //noinspection DataFlowIssue
                 OfflinePlayer owner = FlatsManager.getFlat(area.getFlatName()).getOwner();
                 if (owner == null) {
                     player.sendMessage(Flats.PREFIX + I18n.translate("messages.flat_info_unoccupied"));
@@ -211,39 +212,51 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    public void handleShowCommand() {
+    private void handleShowCommand() {
         byte showTime = 10;
+
+        if (CommandDelayScheduler.getDelay(player, FlatsSubCommand.SHOW.getFullCommandName()) != 0) {
+            player.sendMessage(Flats.PREFIX + I18n.translate("messages.command_delay",
+                    CommandDelayScheduler.getDelay(player, FlatsSubCommand.SHOW.getFullCommandName())));
+            return;
+        }
+
+        if (!player.hasPermission(Permissions.ADMIN)) {
+            new CommandDelayScheduler(FlatsSubCommand.SHOW.getFullCommandName(), showTime).start(player);
+        }
+
         player.sendMessage(Flats.PREFIX + I18n.translate("messages.flats_show", showTime));
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            List<Block> blocksToChange = getBlocksToChange();
+        List<Block> blocksToChange = getBlocksToChange();
+        int maxUpdatesPerTick = 100;
 
-            AtomicInteger blockUpdateDelay = new AtomicInteger(1);
-            int maxUpdatesPerTick = 50;
+        new BukkitRunnable() {
+            private int currentIndex = 0;
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                for (int i = 0; i < blocksToChange.size(); i += maxUpdatesPerTick) {
-                    int startIndex = i;
-                    int endIndex = Math.min(blocksToChange.size(), i + maxUpdatesPerTick);
-
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        for (int j = startIndex; j < endIndex; j++) {
-                            Block block = blocksToChange.get(j);
-                            player.sendBlockChange(block.getLocation(),
-                                    Material.YELLOW_STAINED_GLASS.createBlockData());
-                        }
-                    }, blockUpdateDelay.getAndIncrement());
+            @Override
+            public void run() {
+                if (currentIndex >= blocksToChange.size()) {
+                    cancel();
+                    Bukkit.getScheduler()
+                            .runTaskLater(plugin,
+                                    () -> player.sendBlockChanges(blocksToChange.stream()
+                                            .map(Block::getState)
+                                            .toList()),
+                                    20L * showTime);
+                    return;
                 }
 
-                Bukkit.getScheduler()
-                        .runTaskLater(plugin,
-                                () -> player.sendBlockChanges(blocksToChange.stream().map(Block::getState).toList()),
-                                20L * showTime);
-            });
-        });
+                int endIndex = Math.min(blocksToChange.size(), currentIndex + maxUpdatesPerTick);
+                for (int i = currentIndex; i < endIndex; i++) {
+                    Block block = blocksToChange.get(i);
+                    player.sendBlockChange(block.getLocation(), Material.YELLOW_STAINED_GLASS.createBlockData());
+                }
+                currentIndex = endIndex;
+            }
+        }.runTaskTimer(plugin, 0L, 1L);
     }
 
-    public void handleUpdateCommand() {
+    private void handleUpdateCommand() {
         UpdateDownloader updateDownloader = new UpdateDownloader(plugin,
                 "https://api.github.com/repos/nvclas/Flats/releases/latest");
         UpdateStatus status = updateDownloader.downloadLatestRelease();
@@ -294,24 +307,28 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
         if (args.length == 1) {
             if (sender.hasPermission(Permissions.ADMIN)) {
-                completions.add("select");
-                completions.add("add");
-                completions.add("remove");
-                completions.add("list");
-                completions.add("update");
+                completions.addAll(List.of(FlatsSubCommand.SELECT.getSubCommandName(),
+                        FlatsSubCommand.ADD.getSubCommandName(),
+                        FlatsSubCommand.REMOVE.getSubCommandName(),
+                        FlatsSubCommand.LIST.getSubCommandName(),
+                        FlatsSubCommand.UPDATE.getSubCommandName()));
             }
-            completions.add("claim");
-            completions.add("unclaim");
-            completions.add("info");
-            completions.add("show");
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("remove") && sender.hasPermission(Permissions.ADMIN)) {
-            String partial = args[1].toLowerCase();
+            completions.addAll(List.of(FlatsSubCommand.CLAIM.getSubCommandName(),
+                    FlatsSubCommand.UNCLAIM.getSubCommandName(),
+                    FlatsSubCommand.INFO.getSubCommandName(),
+                    FlatsSubCommand.SHOW.getSubCommandName()));
+
+            completions = completions.stream()
+                    .filter(completion -> completion.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .toList();
+        } else if (args.length == 2 && args[0].equalsIgnoreCase(FlatsSubCommand.REMOVE.getSubCommandName()) && sender.hasPermission(
+                Permissions.ADMIN)) {
             completions = FlatsManager.getAllFlatNames()
                     .stream()
-                    .filter(flatName -> flatName.toLowerCase().startsWith(partial))
+                    .filter(flatName -> flatName.toLowerCase().startsWith(args[1].toLowerCase()))
                     .toList();
-
         }
+
         return completions;
     }
 }

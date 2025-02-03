@@ -8,6 +8,9 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Called when a player enters or leaves a flat
+ */
 @AllArgsConstructor
 public class FlatEnteredOrLeftEvent extends Event {
 
@@ -21,6 +24,7 @@ public class FlatEnteredOrLeftEvent extends Event {
     private final Player player;
     private final boolean entered;
 
+    @SuppressWarnings("unused") // Required for custom event
     public static HandlerList getHandlerList() {
         return HANDLER_LIST;
     }
@@ -29,6 +33,7 @@ public class FlatEnteredOrLeftEvent extends Event {
         return entered;
     }
 
+    @SuppressWarnings("java:S4144") // Required for custom event
     @Override
     public @NotNull HandlerList getHandlers() {
         return HANDLER_LIST;

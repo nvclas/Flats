@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
 
 public abstract class Config {
 
@@ -23,6 +24,7 @@ public abstract class Config {
     @NotNull
     protected FileConfiguration configFile;
 
+    @SuppressWarnings("java:S2637") // initializeConfig already sets the value
     protected Config(String fileName) {
         this.file = new File(Flats.getInstance().getDataFolder(), fileName);
         saveDefaultConfig();
@@ -32,8 +34,10 @@ public abstract class Config {
     protected void initializeConfig() {
         try {
             createParentDirectory();
-            if (file.createNewFile()) {
-                Flats.getInstance().getLogger().config(String.format(CONFIG_FILE_EXISTS, file.getName()));
+            if (!file.createNewFile()) {
+                Flats.getInstance()
+                        .getLogger()
+                        .log(Level.CONFIG, () -> String.format(CONFIG_FILE_EXISTS, file.getName()));
             }
         } catch (IOException e) {
             Flats.getInstance()
@@ -56,14 +60,16 @@ public abstract class Config {
         if (!file.exists()) {
             try {
                 Flats.getInstance().saveResource(file.getName(), false);
-                Flats.getInstance().getLogger().config(String.format(CONFIG_SAVED_DEFAULT, file.getName()));
+                Flats.getInstance()
+                        .getLogger()
+                        .log(Level.CONFIG, () -> String.format(CONFIG_SAVED_DEFAULT, file.getName()));
             } catch (IllegalArgumentException e) {
                 Flats.getInstance().getLogger().config(String.format(CONFIG_DEFAULT_NOT_FOUND, file.getName()));
             }
         }
     }
 
-    private void createParentDirectory() {
+    private static void createParentDirectory() {
         File dataFolder = Flats.getInstance().getDataFolder();
         if (!dataFolder.exists() && !dataFolder.mkdir()) {
             Flats.getInstance().getLogger().config("Failed to create plugin data folder.");

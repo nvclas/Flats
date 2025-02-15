@@ -3,7 +3,7 @@ package de.nvclas.flats.listeners;
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.events.FlatEnteredOrLeftEvent;
-import de.nvclas.flats.utils.Permissions;
+import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;

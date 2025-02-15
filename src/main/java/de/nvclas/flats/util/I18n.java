@@ -1,4 +1,4 @@
-package de.nvclas.flats.utils;
+package de.nvclas.flats.util;
 
 import lombok.experimental.UtilityClass;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 public class I18n {
 
     private static final String BUNDLE_NAME = "i18n.lang";
-    private static final String FALLBACK_LOCALE = "en_US";
+    private static final String FALLBACK_LOCALE = "en_us";
 
     private static boolean initialized = false;
     private static String currentLocale;
@@ -62,7 +62,7 @@ public class I18n {
         if (!initialized) {
             throw new IllegalStateException("I18n is not initialized! Call I18n.initialize() first");
         }
-        if (localeCode == null || localeCode.isEmpty() || localeCode.equals(currentLocale)) {
+        if (localeCode == null || localeCode.isEmpty() || localeCode.equalsIgnoreCase(currentLocale)) {
             return;
         }
 

@@ -1,6 +1,6 @@
 package de.nvclas.flats.volumes;
 
-import de.nvclas.flats.utils.LocationConverter;
+import de.nvclas.flats.util.LocationConverter;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.block.Block;

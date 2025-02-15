@@ -1,4 +1,4 @@
-package de.nvclas.flats.utils;
+package de.nvclas.flats.util;
 
 import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;

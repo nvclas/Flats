@@ -12,7 +12,7 @@ import de.nvclas.flats.listeners.protection.PlayerInteractListener;
 import de.nvclas.flats.managers.FlatsManager;
 import de.nvclas.flats.schedulers.AutoSaveScheduler;
 import de.nvclas.flats.schedulers.CommandDelayScheduler;
-import de.nvclas.flats.utils.I18n;
+import de.nvclas.flats.util.I18n;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 

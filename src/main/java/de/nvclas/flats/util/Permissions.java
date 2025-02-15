@@ -1,4 +1,4 @@
-package de.nvclas.flats.utils;
+package de.nvclas.flats.util;
 
 import de.nvclas.flats.Flats;
 import lombok.experimental.UtilityClass;

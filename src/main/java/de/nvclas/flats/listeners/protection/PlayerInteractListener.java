@@ -1,7 +1,7 @@
 package de.nvclas.flats.listeners.protection;
 
 import de.nvclas.flats.managers.FlatsManager;
-import de.nvclas.flats.utils.Permissions;
+import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

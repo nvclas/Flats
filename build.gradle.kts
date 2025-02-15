@@ -1,3 +1,5 @@
+import io.papermc.paperweight.userdev.ReobfArtifactConfiguration
+
 plugins {
     java
     alias(libs.plugins.runPaper)
@@ -17,13 +19,18 @@ repositories {
 
 dependencies {
     implementation(libs.annotations)
+    paperweight.paperDevBundle(libs.versions.paper)
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
 
-    paperweight.paperDevBundle(libs.versions.paper)
-
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockbukkit)
+}
+
+paperweight {
+    addServerDependencyTo = configurations.named(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME).map { setOf(it) }
 }
 
 val targetJavaVersion = 21
@@ -43,6 +50,10 @@ tasks.withType<JavaCompile>().configureEach {
     }
 }
 
+tasks.test {
+    useJUnitPlatform()
+}
+
 tasks {
     runServer {
         minecraftVersion("1.21.1")
@@ -58,6 +69,4 @@ tasks.processResources {
     }
 }
 
-tasks.assemble {
-    dependsOn(tasks.reobfJar)
-}
+paperweight.reobfArtifactConfiguration = ReobfArtifactConfiguration.MOJANG_PRODUCTION

@@ -3,18 +3,13 @@ package de.nvclas.flats.config;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
- * Represents a configuration wrapper specifically designed for handling settings
- * related to a flat-based management system.
+ * The {@code SettingsConfig} class is responsible for managing the retrieval of specific
+ * configuration settings related to flat and gameplay customization.
  * <p>
- * This class extends the {@link Config} class to provide specific methods for
- * retrieving configuration values related to:<p>
- * - General settings (e.g., language and auto-save intervals)<p>
- * - Flat-specific settings (e.g., maximum flat size, auto gamemode toggles)<p>
- * - Game mode configurations for player behavior based on position (inside vs. outside a flat)
- * <p>
- * Internally, the class uses the {@link #getConfigValue(String, Class)} helper method
- * to fetch configuration values and cast them to the required data type.
- * This ensures data integrity when interacting with a YAML configuration file.
+ * This class extends {@link Config}, inheriting capabilities to interface with
+ * configuration files and simplify the management of plugin-specific settings.
+ * {@code SettingsConfig} provides convenient methods for retrieving various
+ * configuration values such as language settings, maximum flat sizes, and game modes.
  */
 public class SettingsConfig extends Config {
 
@@ -37,11 +32,12 @@ public class SettingsConfig extends Config {
 
     /**
      * Retrieves the language setting from the configuration file.
-     * The language setting is defined by the key {@link Paths#LANGUAGE}.
-     * This method accesses the value corresponding to the {@link Paths#LANGUAGE}
-     * path in the configuration file and returns it as a {@code String}.
+     * <p>
+     * The value is obtained using the path specified in {@link Paths#LANGUAGE}.
+     * This method relies on the {@link #getConfigValue(String, Class)} helper method 
+     * to fetch and cast the configuration value.
      *
-     * @return the configured language value as a {@code String}.
+     * @return the language setting as a {@code String}, as defined in the configuration.
      */
     public String getLanguage() {
         return getConfigValue(Paths.LANGUAGE, String.class);

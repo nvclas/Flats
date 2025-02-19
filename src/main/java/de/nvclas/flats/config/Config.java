@@ -33,13 +33,41 @@ public abstract class Config {
         initializeConfig();
     }
 
-    private void createParentDirectory() {
-        File dataFolder = plugin.getDataFolder();
-        if (!dataFolder.exists() && !dataFolder.mkdir()) {
-            plugin.getLogger().log(Level.CONFIG, () -> "Failed to create plugin data folder.");
+    /**
+     * Saves the current configuration file to disk and reloads it from the storage.
+     * <p>
+     * This method attempts to persist any changes made to the in-memory configuration 
+     * data to the physical file associated with this configuration instance. If the 
+     * save operation fails due to an {@link IOException}, an error is logged with the 
+     * plugin's logger. After attempting to save, the configuration is reloaded from 
+     * the file to synchronize the in-memory state with the on-disk data.
+     * <p>
+     * Note that this method should be called after modifying the configuration to 
+     * ensure changes are saved and reflect in subsequent operations.
+     */
+    public void saveConfig() {
+        try {
+            configFile.save(file);
+        } catch (IOException e) {
+            plugin.getLogger()
+                    .log(Level.SEVERE, () -> String.format(CONFIG_SAVE_FAILURE, file.getName(), e.getMessage()));
         }
+        configFile = YamlConfiguration.loadConfiguration(file);
     }
 
+    /**
+     * Initializes the configuration file for the plugin. This method ensures that the
+     * configuration file exists, and if not, attempts to create it. Once the file
+     * is validated or created, it is loaded into a {@link YamlConfiguration} object.
+     * <p>
+     * If the configuration file already exists, a log message is generated with a
+     * {@link Level#CONFIG} severity. If file creation fails, an error message is
+     * logged with a {@link Level#SEVERE} severity, including details about the
+     * failure.
+     * <p>
+     * Callers can use this method to guarantee the configuration file is properly
+     * prepared and ready for use.
+     */
     protected void initializeConfig() {
         try {
             createParentDirectory();
@@ -53,14 +81,11 @@ public abstract class Config {
         configFile = YamlConfiguration.loadConfiguration(file);
     }
 
-    public void saveConfig() {
-        try {
-            configFile.save(file);
-        } catch (IOException e) {
-            plugin.getLogger()
-                    .log(Level.SEVERE, () -> String.format(CONFIG_SAVE_FAILURE, file.getName(), e.getMessage()));
+    private void createParentDirectory() {
+        File dataFolder = plugin.getDataFolder();
+        if (!dataFolder.exists() && !dataFolder.mkdir()) {
+            plugin.getLogger().log(Level.CONFIG, () -> "Failed to create plugin data folder.");
         }
-        configFile = YamlConfiguration.loadConfiguration(file);
     }
 
     private void saveDefaultConfig() {

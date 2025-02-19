@@ -2,20 +2,17 @@ package de.nvclas.flats.schedulers;
 
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.config.SettingsConfig;
-import de.nvclas.flats.managers.FlatsManager;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.logging.Level;
 
 /**
- * The {@code AutoSaveScheduler} is a utility class responsible for managing periodic auto-save tasks
- * in the Flats plugin. It utilizes the {@link BukkitRunnable} to schedule tasks at fixed intervals
- * defined in the plugin's {@link SettingsConfig}.
+ * Manages the scheduling of periodic auto-save tasks for the plugin's data.
  * <p>
- * The scheduler automatically saves all flats using {@link FlatsManager#saveAll} at the specified
- * auto-save interval. It also provides methods to start and stop the scheduler, ensuring that only
- * one instance of the scheduler can run at a time.
+ * The {@code AutoSaveScheduler} runs a repetitive task at a specified interval to save all data
+ * managed by the plugin. It provides methods to start and stop this task. The scheduler only starts
+ * if the interval is greater than zero.
  */
 public class AutoSaveScheduler {
 
@@ -32,15 +29,15 @@ public class AutoSaveScheduler {
     }
 
     /**
-     * Starts the AutoSaveScheduler, which periodically saves all flats using {@link FlatsManager#saveAll}.
+     * Starts the auto-save scheduler if it is not already running and the auto-save interval is
+     * greater than zero. This method schedules a periodic task to save all flats at the configured
+     * interval asynchronously.
      * <p>
-     * This method initializes and schedules a {@link BukkitRunnable} task to execute at regular intervals,
-     * defined by the auto-save interval retrieved from {@link SettingsConfig#getAutoSaveInterval}.
-     * If the scheduler is already running, an {@link UnsupportedOperationException} will be thrown.
-     * <p>
-     * Once started, the scheduler logs its initiation and subsequent periodic save events to the plugin's logger.
+     * If the scheduler is already running, it throws an {@link UnsupportedOperationException}.
+     * If the auto-save interval is zero or negative, auto-saving is disabled, and a log message is
+     * recorded.
      *
-     * @throws UnsupportedOperationException if the AutoSaveScheduler is already running.
+     * @throws UnsupportedOperationException if the scheduler is already running.
      */
     public void start() {
         if (running) {
@@ -68,11 +65,10 @@ public class AutoSaveScheduler {
     }
 
     /**
-     * Stops the AutoSaveScheduler.
+     * Stops the currently running auto-save task if it is active.
      * <p>
-     * This method cancels the currently running {@link BukkitTask} if it exists and has not been cancelled yet,
-     * effectively halting the periodic auto-save operations. Once stopped, the {@code running} flag is set to {@code false},
-     * and the {@code task} reference is set to {@code null}.
+     * This method cancels the ongoing {@link BukkitTask}, if one exists and is not already
+     * cancelled, and resets the internal state of the scheduler to indicate it is no longer running.
      */
     public void stop() {
         if (task != null && !task.isCancelled()) {

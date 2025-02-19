@@ -21,10 +21,10 @@ public class SelectionItem {
     private static final Material MATERIAL = Material.STICK;
 
     /**
-     * Creates and returns an {@link ItemStack} representing the selection item with a custom display name and formatting.
-     * The item is configured with a material and its name is styled in gold with italics disabled.
+     * Creates and returns a preconfigured {@link ItemStack} representing the selection item.
+     * The item has a specific material, gold-colored display name, and disabled italic style.
      *
-     * @return A non-null {@link ItemStack} instance representing the pre-configured selection item.
+     * @return a non-null {@link ItemStack} representing the selection tool used in various commands or events.
      */
     public static @NotNull ItemStack getItem() {
         ItemStack is = new ItemStack(MATERIAL);

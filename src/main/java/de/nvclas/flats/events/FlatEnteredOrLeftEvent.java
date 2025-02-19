@@ -9,7 +9,12 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Called when a player enters or leaves a flat
+ * This event is triggered when a {@link Player} enters or leaves a specific {@link Flat}.
+ * <p>
+ * The event provides information about the {@link Flat} involved, the {@link Player}
+ * involved, and whether the event signifies entry or exit.
+ * <p> 
+ * To determine whether the event represents an entry or exit, use {@link #hasEntered()}.
  */
 @AllArgsConstructor
 public class FlatEnteredOrLeftEvent extends Event {
@@ -29,6 +34,14 @@ public class FlatEnteredOrLeftEvent extends Event {
         return HANDLER_LIST;
     }
 
+    /**
+     * Determines whether the associated event signifies that a player has entered a {@link Flat}.
+     * <p>
+     * This method can be used to differentiate between entry and exit events in a 
+     * {@link FlatEnteredOrLeftEvent}.
+     *
+     * @return {@code true} if the player has entered the flat; {@code false} if the player has left.
+     */
     public boolean hasEntered() {
         return entered;
     }

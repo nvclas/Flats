@@ -27,13 +27,13 @@ public enum FlatsSubCommand {
     }
 
     /**
-     * Parses the given command string to match a corresponding enum constant in {@link FlatsSubCommand}.
-     * If the string does not match any defined constants, {@link FlatsSubCommand#NONE} is returned.
+     * Converts a given string to its corresponding {@link FlatsSubCommand} enum value.
+     * If the input does not match any valid subcommand, {@link FlatsSubCommand#NONE} is returned.
      *
-     * @param command the command string to be converted into a {@link FlatsSubCommand} enum constant;
-     *                must not be null and should ideally match one of the enum constants, case-insensitively.
-     * @return the corresponding {@link FlatsSubCommand} enum constant if a match is found;
-     * otherwise, {@link FlatsSubCommand#NONE}.
+     * @param command the string representing a subcommand; expected to match one of the predefined
+     *                {@code FlatsSubCommand} names (case insensitive).
+     * @return the matching {@code FlatsSubCommand} enumeration value, or {@link FlatsSubCommand#NONE}
+     * if no match is found.
      */
     public static @NotNull FlatsSubCommand fromString(String command) {
         try {
@@ -44,9 +44,11 @@ public enum FlatsSubCommand {
     }
 
     /**
-     * Constructs the full command name by prefixing the {@link #subCommandName} with "flats".
+     * Constructs and returns the full command name by appending the subcommand name
+     * to the base "flats" command.
      *
-     * @return A string representing the full command name, composed of "flats" followed by the sub-command name.
+     * @return The full command name in the format "flats {subCommandName}", where
+     * {@code subCommandName} is the specific subcommand assigned to this instance.
      */
     public String getFullCommandName() {
         return "flats " + subCommandName;

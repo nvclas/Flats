@@ -6,8 +6,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Utility class for managing permissions within the application.
- * Contains methods and constants to assist with handling player permissions.
+ * Utility class for managing and checking player permissions.
  */
 @UtilityClass
 public class Permissions {
@@ -15,12 +14,11 @@ public class Permissions {
     public static final String ADMIN = "flats.admin";
 
     /**
-     * Checks if the specified player does not have the given permission.
-     * If the player lacks the permission, a no-permission message is sent to the player.
+     * Checks if the specified player lacks the required permission and sends a no-permission message if true.
      *
-     * @param player     The {@link Player} whose permissions are to be checked. Must not be null.
-     * @param permission The permission string to check for. If the player lacks this permission, a message is sent.
-     * @return {@code true} if the player does not have the specified permission, {@code false} otherwise.
+     * @param player     The player whose permissions are being checked. Must not be null.
+     * @param permission The permission string to check against. Could represent an admin or other specific permission.
+     * @return {@code true} if the player does not have the required permission, otherwise {@code false}.
      */
     public static boolean hasNoPermission(@NotNull Player player, String permission) {
         if (!player.hasPermission(permission)) {

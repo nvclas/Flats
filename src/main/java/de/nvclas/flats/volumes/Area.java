@@ -9,6 +9,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a three-dimensional area defined by two corner points and a designated name.
+ * This class provides functionality for area creation, boundary checks, and interacting
+ * with its outer block structure.
+ */
 @Getter
 public class Area {
 
@@ -25,16 +30,13 @@ public class Area {
     }
 
     /**
-     * Creates a new {@link Area} instance based on a string representation of two {@link Location} objects
-     * and a flat name.
-     * <p>
-     * The method uses the {@link LocationConverter#getLocationsFromString(String)} method to extract two
-     * {@link Location} objects from the provided string. These locations define the bounds of the area.
+     * Creates a new {@link Area} instance by parsing location data from a string representation.
      *
-     * @param locationString A non-null string containing the world name and the coordinates of two locations
-     *                       in the specified format {@code worldName:x1,y1,z1;x2,y2,z2}.
-     * @param flatName       A non-null string representing the name of the flat associated with the area.
-     * @return A new {@link Area} instance defined by the parsed {@link Location} objects and the given flat name.
+     * @param locationString A non-null string representing two {@link Location} objects.
+     *                       The format must be {@code worldName:x1,y1,z1;x2,y2,z2}.
+     * @param flatName A non-null string representing the name of the flat.
+     * @return A new {@link Area} instance created using the parsed locations and the provided flat name.
+     * @throws IllegalArgumentException if the {@code locationString} is malformed or invalid.
      */
     public static Area fromString(@NotNull String locationString, @NotNull String flatName) {
         Location[] locations = LocationConverter.getLocationsFromString(locationString);
@@ -42,29 +44,25 @@ public class Area {
     }
 
     /**
-     * Creates a new {@link Area} instance based on the provided {@link Selection} and flat name.
-     * <p>
-     * This method uses the two positions from the selection ({@code pos1} and {@code pos2})
-     * to define the bounds of the area.
+     * Creates an {@link Area} instance from a given {@link Selection} object and a flat name.
      *
-     * @param selection The {@link Selection} object containing the two corner positions. Must not be null.
-     * @param flatName  The name of the flat associated with the area. Must not be null.
-     * @return A new {@link Area} instance defined by the positions from the selection and the given flat name.
+     * @param selection The {@link Selection} defining the positions of the area. Must not be null.
+     * @param flatName The name associated with the flat. Must not be null.
+     * @return A new {@link Area} created using the positions defined in the {@link Selection} and the specified flat name.
      */
     public static Area fromSelection(@NotNull Selection selection, @NotNull String flatName) {
         return new Area(selection.getPos1(), selection.getPos2(), flatName);
     }
 
     /**
-     * Determines if the provided {@link Location} is within the bounds defined by this area.
+     * Checks whether the specified {@link Location} is within the bounds defined
+     * by the two corners {@code pos1} and {@code pos2} of this {@link Area}.
      * <p>
-     * The bounds are determined by the two corner positions {@code pos1} and {@code pos2}.
-     * The method evaluates whether the location's x, y, and z coordinates fall between
-     * the minimum and maximum values of the respective coordinates of the two corners.
+     * The method performs a bounding box check across all dimensions (X, Y, Z).
      *
      * @param location The {@link Location} to check. Must not be null.
      * @return {@code true} if the {@code location} is within the bounds of the area;
-     * {@code false} otherwise.
+     *         {@code false} otherwise.
      */
     public boolean isWithinBounds(@NotNull Location location) {
         double minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
@@ -78,16 +76,16 @@ public class Area {
     }
 
     /**
-     * Determines if a given {@link Location} is within a specified distance (range)
-     * of either of the two opposite corner positions defining the area.
+     * Checks whether the given {@link Location} is within a specified distance from 
+     * any of the two positions defining this {@link Area}.
      * <p>
-     * The distance is calculated for each axis (x, y, z) individually, and the method ensures
-     * that all three axes are within the specified range for either corner {@code pos1} or {@code pos2}.
+     * This method evaluates whether the provided {@code location} falls within the 
+     * given {@code range} from either {@code pos1} or {@code pos2} in three-dimensional space.
      *
-     * @param location The {@link Location} to check. Must not be null.
-     * @param range    The allowed distance (range) from either corner position. Must be a non-negative value.
-     * @return {@code true} if the specified {@code location} is within the given range
-     * of either {@code pos1} or {@code pos2}; {@code false} otherwise.
+     * @param location The {@link Location} to be checked. Must not be null.
+     * @param range The distance threshold to check against.
+     * @return {@code true} if the {@code location} is within the specified {@code range}
+     * from either {@code pos1} or {@code pos2}; {@code false} otherwise.
      */
     public boolean isWithinDistance(@NotNull Location location, double range) {
         return (Math.abs(location.getX() - pos1.getX()) <= range && Math.abs(location.getY() - pos1.getY()) <= range && Math.abs(
@@ -96,15 +94,14 @@ public class Area {
     }
 
     /**
-     * Retrieves all the blocks that define the outer boundary of a 3D area formed
-     * between two opposite corners, {@code pos1} and {@code pos2}.
+     * Retrieves a list of all blocks that form the outer boundary of the current area.
      * <p>
-     * The outer boundary includes blocks on the minimum and maximum edges for
-     * each dimension (x, y, z) within the rectangular prism defined by the two
-     * corner positions.
+     * The method calculates the outer boundary based on the minimum and maximum coordinates
+     * derived from {@code pos1} and {@code pos2}, effectively including all blocks
+     * located on the edges of the rectangular cuboid defined by the area.
      *
-     * @return A list of {@link Block} objects representing the outer boundary
-     * of the area.
+     * @return A {@link List} of {@link Block} instances representing the outer boundary of the area.
+     *         The returned list is never null but may be empty if no valid boundaries are defined.
      */
     public @NotNull List<Block> getAllOuterBlocks() {
         List<Block> blocks = new ArrayList<>();

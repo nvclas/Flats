@@ -1,5 +1,7 @@
 package de.nvclas.flats.config;
 
+import org.bukkit.plugin.java.JavaPlugin;
+
 /**
  * Represents a configuration wrapper specifically designed for handling settings
  * related to a flat-based management system.
@@ -16,8 +18,8 @@ package de.nvclas.flats.config;
  */
 public class SettingsConfig extends Config {
 
-    public SettingsConfig(String fileName) {
-        super(fileName);
+    public SettingsConfig(String fileName, JavaPlugin plugin) {
+        super(fileName, plugin);
     }
 
     private <T> T getConfigValue(String path, Class<T> type) {

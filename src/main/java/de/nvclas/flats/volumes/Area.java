@@ -90,11 +90,9 @@ public class Area {
      * of either {@code pos1} or {@code pos2}; {@code false} otherwise.
      */
     public boolean isWithinDistance(@NotNull Location location, double range) {
-        return (Math.abs(location.getX() - pos1.getX()) <= range && Math.abs(
-                location.getY() - pos1.getY()) <= range && Math.abs(
-                location.getZ() - pos1.getZ()) <= range) || (Math.abs(
-                location.getX() - pos2.getX()) <= range && Math.abs(location.getY() - pos2.getY()) <= range && Math.abs(
-                location.getZ() - pos2.getZ()) <= range);
+        return (Math.abs(location.getX() - pos1.getX()) <= range && Math.abs(location.getY() - pos1.getY()) <= range && Math.abs(
+                location.getZ() - pos1.getZ()) <= range) || (Math.abs(location.getX() - pos2.getX()) <= range && Math.abs(
+                location.getY() - pos2.getY()) <= range && Math.abs(location.getZ() - pos2.getZ()) <= range);
     }
 
     /**

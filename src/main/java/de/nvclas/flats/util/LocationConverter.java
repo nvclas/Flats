@@ -50,11 +50,6 @@ public class LocationConverter {
     }
 
     private static Location createLocation(String worldName, String x, String y, String z) {
-        return new Location(
-                Bukkit.getWorld(worldName),
-                Integer.parseInt(x),
-                Integer.parseInt(y),
-                Integer.parseInt(z)
-        );
+        return new Location(Bukkit.getWorld(worldName), Integer.parseInt(x), Integer.parseInt(y), Integer.parseInt(z));
     }
 }

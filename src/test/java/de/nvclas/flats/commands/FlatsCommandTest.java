@@ -5,7 +5,9 @@ import de.nvclas.flats.Flats;
 import de.nvclas.flats.items.SelectionItem;
 import de.nvclas.flats.testutil.TestUtil;
 import de.nvclas.flats.util.I18n;
+import de.nvclas.flats.volumes.Flat;
 import de.nvclas.flats.volumes.Selection;
+import lombok.extern.slf4j.Slf4j;
 import org.bukkit.Location;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,15 +23,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Slf4j
 class FlatsCommandTest {
 
+    private static final String TEST_FLAT_NAME = "testFlat";
+
+    private ServerMock server;
+    private Flats plugin;
     private PlayerMock player;
     private WorldMock world;
 
     @BeforeEach
     void setUp() {
-        ServerMock server = MockBukkit.mock();
-        MockBukkit.load(Flats.class);
+        server = MockBukkit.mock();
+        plugin = MockBukkit.load(Flats.class);
         player = server.addPlayer();
         world = server.addSimpleWorld("world");
     }
@@ -74,11 +81,13 @@ class FlatsCommandTest {
     @Test
     void testAddCommand() {
         player.setOp(true);
-        Selection.getSelection(player).setPos1(new Location(world,1, 1, 1));
-        Selection.getSelection(player).setPos2(new Location(world,10, 10, 10));
+        Selection.getSelection(player).setPos1(new Location(world, 1, 1, 1));
+        Selection.getSelection(player).setPos2(new Location(world, 10, 10, 10));
         assertEquals(1000, Selection.getSelection(player).calculateVolume());
         player.performCommand("flats add testFlat");
-        TestUtil.assertEqualMessage(Flats.PREFIX + I18n.translate("messages.flat_created", "testFlat"), player.nextMessage());
+        TestUtil.assertEqualMessage(Flats.PREFIX + I18n.translate("messages.flat_created", TEST_FLAT_NAME),
+                player.nextMessage());
+        assertTrue(plugin.getFlatsManager().existsFlat(TEST_FLAT_NAME));
     }
 
     @Test
@@ -86,28 +95,37 @@ class FlatsCommandTest {
         createValidFlat();
         player.setOp(true);
         player.performCommand("flats remove testFlat");
-        TestUtil.assertEqualMessage(Flats.PREFIX + I18n.translate("messages.flat_deleted", "testFlat"), player.nextMessage());
+        TestUtil.assertEqualMessage(Flats.PREFIX + I18n.translate("messages.flat_deleted", TEST_FLAT_NAME),
+                player.nextMessage());
     }
 
     @Test
     void testClaimCommand() {
-        createValidFlat();
+        Flat created = createValidFlat();
         player.setLocation(new Location(world, 5, 5, 5));
         player.performCommand("flats claim");
         TestUtil.assertEqualMessage(Flats.PREFIX + I18n.translate("messages.claim_success"), player.nextMessage());
+        assertTrue(created.isOwner(player));
+    }
+
+    @Test
+    void testSaveWorldWithDeletedWorld() {
+        createValidFlat();
+        server.removeWorld(world);
     }
 
     /**
      * Creates a valid flat area selection for the player and registers it as a new flat
      * named {@code testFlat}. The selection is defined by two corners in the world at {@code 0, 0, 0} and {@code 10, 10, 10}.
-    **/
-    private void createValidFlat() {
+     **/
+    private Flat createValidFlat() {
         player.setOp(true);
-        Selection.getSelection(player).setPos1(new Location(world,1, 1, 1));
-        Selection.getSelection(player).setPos2(new Location(world,10, 10, 10));
+        Selection.getSelection(player).setPos1(new Location(world, 1, 1, 1));
+        Selection.getSelection(player).setPos2(new Location(world, 10, 10, 10));
         player.performCommand("flats add testFlat");
         player.nextMessage();
         player.setOp(false);
-
+        assertTrue(plugin.getFlatsManager().existsFlat(TEST_FLAT_NAME));
+        return plugin.getFlatsManager().getFlat(TEST_FLAT_NAME);
     }
 }

@@ -1,6 +1,6 @@
 package de.nvclas.flats.listeners.protection;
 
-import de.nvclas.flats.managers.FlatsManager;
+import de.nvclas.flats.Flats;
 import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.OfflinePlayer;
@@ -12,9 +12,15 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.jetbrains.annotations.NotNull;
 
 public class EntityDamageListener implements Listener {
+    private final Flats flatsPlugin;
+
+    public EntityDamageListener(Flats flatsPlugin) {
+        this.flatsPlugin = flatsPlugin;
+    }
+
     @EventHandler
     public void onEntityDamage(@NotNull EntityDamageByEntityEvent event) {
-        Flat flat = FlatsManager.getFlatByLocation(event.getEntity().getLocation());
+        Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(event.getEntity().getLocation());
         Entity damager = event.getDamager();
         if (flat == null || damager.hasPermission(Permissions.ADMIN)) {
             return;

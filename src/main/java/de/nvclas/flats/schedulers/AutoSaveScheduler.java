@@ -3,8 +3,6 @@ package de.nvclas.flats.schedulers;
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.managers.FlatsManager;
-import lombok.experimental.UtilityClass;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -19,14 +17,19 @@ import java.util.logging.Level;
  * auto-save interval. It also provides methods to start and stop the scheduler, ensuring that only
  * one instance of the scheduler can run at a time.
  */
-@UtilityClass
 public class AutoSaveScheduler {
 
-    private static final SettingsConfig settingsConfig = Flats.getInstance().getSettingsConfig();
-    private static final JavaPlugin plugin = Flats.getInstance();
-    private static final long AUTO_SAVE_INTERVAL = settingsConfig.getAutoSaveInterval();
-    private static BukkitTask task;
-    private static boolean running = false;
+    private final Flats flatsPlugin;
+    private final SettingsConfig settingsConfig;
+    private final long autoSaveInterval;
+    private BukkitTask task;
+    private boolean running = false;
+
+    public AutoSaveScheduler(Flats flatsPlugin) {
+        this.flatsPlugin = flatsPlugin;
+        this.settingsConfig = flatsPlugin.getSettingsConfig();
+        autoSaveInterval = settingsConfig.getAutoSaveInterval();
+    }
 
     /**
      * Starts the AutoSaveScheduler, which periodically saves all flats using {@link FlatsManager#saveAll}.
@@ -39,17 +42,17 @@ public class AutoSaveScheduler {
      *
      * @throws UnsupportedOperationException if the AutoSaveScheduler is already running.
      */
-    public static void start() {
+    public void start() {
         if (running) {
             throw new UnsupportedOperationException("AutoSaveScheduler is already running!");
         }
-        if (AUTO_SAVE_INTERVAL <= 0) {
-            plugin.getLogger()
+        if (autoSaveInterval <= 0) {
+            flatsPlugin.getLogger()
                     .log(Level.INFO, () -> "Auto saving is disabled as autoSaveInterval is below 0 or missing");
             return;
         }
 
-        plugin.getLogger()
+        flatsPlugin.getLogger()
                 .log(Level.INFO,
                         () -> "Started AutoSaveScheduler with interval " + settingsConfig.getAutoSaveInterval());
         running = true;
@@ -57,11 +60,11 @@ public class AutoSaveScheduler {
 
             @Override
             public void run() {
-                plugin.getLogger().log(Level.CONFIG, () -> "Saving flats...");
-                FlatsManager.saveAll();
-                plugin.getLogger().log(Level.CONFIG, () -> "Flats saved");
+                flatsPlugin.getLogger().log(Level.CONFIG, () -> "Saving flats...");
+                flatsPlugin.getFlatsManager().saveAll();
+                flatsPlugin.getLogger().log(Level.CONFIG, () -> "Flats saved");
             }
-        }.runTaskTimerAsynchronously(plugin, 0, settingsConfig.getAutoSaveInterval() * 20);
+        }.runTaskTimerAsynchronously(flatsPlugin, 0, settingsConfig.getAutoSaveInterval() * 20);
     }
 
     /**
@@ -71,7 +74,7 @@ public class AutoSaveScheduler {
      * effectively halting the periodic auto-save operations. Once stopped, the {@code running} flag is set to {@code false},
      * and the {@code task} reference is set to {@code null}.
      */
-    public static void stop() {
+    public void stop() {
         if (task != null && !task.isCancelled()) {
             task.cancel();
         }

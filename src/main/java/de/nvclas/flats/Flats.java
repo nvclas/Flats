@@ -19,44 +19,43 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.Objects;
 import java.util.logging.Level;
 
-@SuppressWarnings("java:S6548") // Singleton warning
 @Getter
 public class Flats extends JavaPlugin {
 
     public static final String PREFIX = "§7[§6Flats§7] §r";
-    @Getter
-    private static Flats instance;
 
     private FlatsConfig flatsConfig;
     private SettingsConfig settingsConfig;
+    private FlatsManager flatsManager;
+    private AutoSaveScheduler autoSaveScheduler;
 
-    @SuppressWarnings("java:S2696") // Required for Singleton
     @Override
     public void onEnable() {
-        instance = this;
-
         //Configs
-        flatsConfig = new FlatsConfig("flats.yml");
-        settingsConfig = new SettingsConfig("settings.yml");
+        flatsConfig = new FlatsConfig("flats.yml", this);
+        settingsConfig = new SettingsConfig("settings.yml", this);
 
         //Managers
-        FlatsManager.loadAll();
+        flatsManager = new FlatsManager(this);
+
+        //Flats
+        flatsManager.loadAll();
 
         //Schedulers
-        AutoSaveScheduler.start();
+        autoSaveScheduler = new AutoSaveScheduler(this);
+        autoSaveScheduler.start();
 
         //Commands
-        Objects.requireNonNull(getCommand("flats")).setExecutor(new FlatsCommand());
-        Objects.requireNonNull(getCommand("flats")).setTabCompleter(new FlatsCommand());
+        Objects.requireNonNull(getCommand("flats")).setExecutor(new FlatsCommand(this));
+        Objects.requireNonNull(getCommand("flats")).setTabCompleter(new FlatsCommand(this));
 
         //Listeners
         getServer().getPluginManager().registerEvents(new StickInteractListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerChangedWorldListener(), this);
-        getServer().getPluginManager().registerEvents(new PlayerMoveListener(), this);
-        getServer().getPluginManager().registerEvents(new FlatEnteredOrLeftListener(), this);
-        getServer().getPluginManager().registerEvents(new EntityDamageListener(), this);
-        getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
-
+        getServer().getPluginManager().registerEvents(new PlayerMoveListener(this), this);
+        getServer().getPluginManager().registerEvents(new FlatEnteredOrLeftListener(this), this);
+        getServer().getPluginManager().registerEvents(new EntityDamageListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerInteractListener(this), this);
 
         //Translations
         I18n.initialize(this);
@@ -67,13 +66,14 @@ public class Flats extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        //Save config
-        FlatsManager.saveAll();
+        //Save flats
+        flatsManager.saveAll();
 
         //Stop schedulers
-        AutoSaveScheduler.stop();
+        autoSaveScheduler.stop();
         CommandDelayScheduler.stopAll();
 
         getLogger().log(Level.INFO, () -> "All flats saved and schedulers stopped");
     }
+
 }

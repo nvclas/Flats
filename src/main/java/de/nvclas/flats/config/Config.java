@@ -1,9 +1,9 @@
 package de.nvclas.flats.config;
 
-import de.nvclas.flats.Flats;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -18,23 +18,25 @@ public abstract class Config {
     private static final String CONFIG_DEFAULT_NOT_FOUND = "No default file found for %s";
     private static final String CONFIG_SAVE_FAILURE = "Failed to save file %s: %s";
 
+    protected final JavaPlugin plugin;
     protected final File file;
 
-    @Getter
     @NotNull
+    @Getter
     protected FileConfiguration configFile;
 
     @SuppressWarnings("java:S2637") // initializeConfig already sets the value
-    protected Config(String fileName) {
-        this.file = new File(Flats.getInstance().getDataFolder(), fileName);
+    protected Config(String fileName, JavaPlugin plugin) {
+        this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder(), fileName);
         saveDefaultConfig();
         initializeConfig();
     }
 
-    private static void createParentDirectory() {
-        File dataFolder = Flats.getInstance().getDataFolder();
+    private void createParentDirectory() {
+        File dataFolder = plugin.getDataFolder();
         if (!dataFolder.exists() && !dataFolder.mkdir()) {
-            Flats.getInstance().getLogger().log(Level.CONFIG, () -> "Failed to create plugin data folder.");
+            plugin.getLogger().log(Level.CONFIG, () -> "Failed to create plugin data folder.");
         }
     }
 
@@ -42,13 +44,10 @@ public abstract class Config {
         try {
             createParentDirectory();
             if (!file.createNewFile()) {
-                Flats.getInstance()
-                        .getLogger()
-                        .log(Level.CONFIG, () -> String.format(CONFIG_FILE_EXISTS, file.getName()));
+                plugin.getLogger().log(Level.CONFIG, () -> String.format(CONFIG_FILE_EXISTS, file.getName()));
             }
         } catch (IOException e) {
-            Flats.getInstance()
-                    .getLogger()
+            plugin.getLogger()
                     .log(Level.SEVERE, () -> String.format(CONFIG_CREATION_FAILURE, file.getName(), e.getMessage()));
         }
         configFile = YamlConfiguration.loadConfiguration(file);
@@ -58,8 +57,7 @@ public abstract class Config {
         try {
             configFile.save(file);
         } catch (IOException e) {
-            Flats.getInstance()
-                    .getLogger()
+            plugin.getLogger()
                     .log(Level.SEVERE, () -> String.format(CONFIG_SAVE_FAILURE, file.getName(), e.getMessage()));
         }
         configFile = YamlConfiguration.loadConfiguration(file);
@@ -68,14 +66,10 @@ public abstract class Config {
     private void saveDefaultConfig() {
         if (!file.exists()) {
             try {
-                Flats.getInstance().saveResource(file.getName(), false);
-                Flats.getInstance()
-                        .getLogger()
-                        .log(Level.CONFIG, () -> String.format(CONFIG_SAVED_DEFAULT, file.getName()));
+                plugin.saveResource(file.getName(), false);
+                plugin.getLogger().log(Level.CONFIG, () -> String.format(CONFIG_SAVED_DEFAULT, file.getName()));
             } catch (IllegalArgumentException e) {
-                Flats.getInstance()
-                        .getLogger()
-                        .log(Level.CONFIG, () -> String.format(CONFIG_DEFAULT_NOT_FOUND, file.getName()));
+                plugin.getLogger().log(Level.CONFIG, () -> String.format(CONFIG_DEFAULT_NOT_FOUND, file.getName()));
             }
         }
     }

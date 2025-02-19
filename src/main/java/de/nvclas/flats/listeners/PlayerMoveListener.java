@@ -1,7 +1,7 @@
 package de.nvclas.flats.listeners;
 
+import de.nvclas.flats.Flats;
 import de.nvclas.flats.events.FlatEnteredOrLeftEvent;
-import de.nvclas.flats.managers.FlatsManager;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,13 +14,18 @@ import java.util.Objects;
 import java.util.WeakHashMap;
 
 public class PlayerMoveListener implements Listener {
+    private final Flats flatsPlugin;
     private final Map<Player, Flat> playerFlats = new WeakHashMap<>();
+
+    public PlayerMoveListener(Flats flatsPlugin) {
+        this.flatsPlugin = flatsPlugin;
+    }
 
     @EventHandler
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         Player player = event.getPlayer();
         Flat currentFlat = playerFlats.get(player);
-        Flat newFlat = FlatsManager.getFlatByLocation(event.getTo());
+        Flat newFlat = flatsPlugin.getFlatsManager().getFlatByLocation(event.getTo());
 
         if (!Objects.equals(currentFlat, newFlat)) {
             if (currentFlat != null) {

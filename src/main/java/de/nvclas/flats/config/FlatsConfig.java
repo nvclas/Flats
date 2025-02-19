@@ -5,11 +5,15 @@ import de.nvclas.flats.volumes.Flat;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Level;
 
 /**
  * The {@code FlatsConfig} class extends {@link Config} and provides methods to manage
@@ -22,8 +26,8 @@ import java.util.UUID;
  */
 public class FlatsConfig extends Config {
 
-    public FlatsConfig(String fileName) {
-        super(fileName);
+    public FlatsConfig(String fileName, JavaPlugin plugin) {
+        super(fileName, plugin);
     }
 
     /**
@@ -64,6 +68,7 @@ public class FlatsConfig extends Config {
         return flatsSection.getKeys(false)
                 .stream()
                 .map(this::loadFlat)
+                .filter(Objects::nonNull)
                 .collect(HashMap::new, (map, flat) -> map.put(flat.getName(), flat), HashMap::putAll);
     }
 
@@ -75,14 +80,36 @@ public class FlatsConfig extends Config {
                 flat.getAreas().stream().map(Area::getLocationString).toList());
     }
 
-    private Flat loadFlat(String flatName) {
+    private @Nullable Flat loadFlat(String flatName) {
         String ownerUuid = getConfigFile().getString(Paths.getOwnerPath(flatName));
-        List<String> areaStrings = getConfigFile().getStringList(Paths.getAreasPath(flatName));
+        List<String> locationStrings = getConfigFile().getStringList(Paths.getAreasPath(flatName));
 
-        OfflinePlayer owner = (ownerUuid != null && !ownerUuid.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(
-                ownerUuid)) : null;
+        OfflinePlayer owner = (ownerUuid != null && !ownerUuid.isEmpty())
+                ? Bukkit.getOfflinePlayer(UUID.fromString(ownerUuid))
+                : null;
 
-        List<Area> areas = areaStrings.stream().map(areaString -> Area.fromString(areaString, flatName)).toList();
+        List<Area> areas = locationStrings.stream()
+                .map(locationString -> Area.fromString(locationString, flatName))
+                .filter(area -> {
+                    if (area.getPos1().getWorld() == null) {
+                        plugin.getLogger().log(Level.WARNING, () ->
+                                "Flat '" + flatName + "' has an invalid area at position " + area.getLocationString() + " and will not be loaded.");
+                        return false;
+                    }
+                    return true;
+                })
+                .toList();
+
+        if (areas.isEmpty()) {
+            plugin.getLogger().log(Level.WARNING, () ->
+                    "Flat '" + flatName + "' has no valid areas and will not be loaded.");
+            return null;
+        }
+
+        if (areas.size() < locationStrings.size()) {
+            plugin.getLogger().log(Level.WARNING, () ->
+                    "!! ANY INVALID AREAS WILL BE REMOVED ON SERVER SHUTDOWN, PLEASE BACKUP NOW IF THEY ARE STILL NEEDED !!");
+        }
 
         return new Flat(flatName, areas, owner);
     }

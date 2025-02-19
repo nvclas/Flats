@@ -12,9 +12,16 @@ import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
 public class FlatEnteredOrLeftListener implements Listener {
+
+    private final Flats flatsPlugin;
+
+    public FlatEnteredOrLeftListener(Flats flatsPlugin) {
+        this.flatsPlugin = flatsPlugin;
+    }
+
     @EventHandler
     public void onFlatEnteredOrLeft(@NotNull FlatEnteredOrLeftEvent event) {
-        SettingsConfig settings = Flats.getInstance().getSettingsConfig();
+        SettingsConfig settings = flatsPlugin.getSettingsConfig();
         Player player = event.getPlayer();
 
         if (!settings.isAutoGamemodeEnabled() || player.hasPermission(Permissions.ADMIN)) {

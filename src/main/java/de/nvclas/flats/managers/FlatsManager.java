@@ -4,7 +4,6 @@ import de.nvclas.flats.Flats;
 import de.nvclas.flats.config.FlatsConfig;
 import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
-import lombok.experimental.UtilityClass;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
@@ -25,11 +24,15 @@ import java.util.Objects;
  * <p>
  * This class is a singleton and should not be instantiated.
  */
-@UtilityClass
 public class FlatsManager {
 
     private final Map<String, Flat> allFlats = new HashMap<>();
-    private final FlatsConfig config = Flats.getInstance().getFlatsConfig();
+    private final FlatsConfig config;
+
+    public FlatsManager(Flats flatsPlugin) {
+        this.config = flatsPlugin.getFlatsConfig();
+        loadAll();
+    }
 
     /**
      * Loads all flats from the configuration and populates the internal storage with the retrieved data.

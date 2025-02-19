@@ -1,8 +1,8 @@
 package de.nvclas.flats.schedulers;
 
-import de.nvclas.flats.Flats;
 import lombok.Getter;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -46,7 +46,8 @@ public class CommandDelayScheduler {
      */
     public static long getDelay(OfflinePlayer player, String command) {
         UUID playerId = player.getUniqueId();
-        return delays.entrySet().stream()
+        return delays.entrySet()
+                .stream()
                 .filter(entry -> entry.getValue().equals(playerId) && entry.getKey().getCommand().equals(command))
                 .map(entry -> entry.getKey().getDelay())
                 .findFirst()
@@ -73,7 +74,7 @@ public class CommandDelayScheduler {
      * @param player The {@link OfflinePlayer} for whom the command delay is being scheduled. The mapping
      *               between this instance and the player's unique identifier is stored to track active delays.
      */
-    public void start(OfflinePlayer player) {
+    public void start(OfflinePlayer player, JavaPlugin plugin) {
         delays.put(this, player.getUniqueId());
 
         task = new BukkitRunnable() {
@@ -85,7 +86,7 @@ public class CommandDelayScheduler {
                     delays.remove(CommandDelayScheduler.this);
                 }
             }
-        }.runTaskTimerAsynchronously(Flats.getInstance(), 0, 20);
+        }.runTaskTimerAsynchronously(plugin, 0, 20);
     }
 
 }

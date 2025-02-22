@@ -19,6 +19,7 @@ import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 import org.mockbukkit.mockbukkit.world.WorldMock;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -112,6 +113,7 @@ class FlatsCommandTest {
     void testSaveWorldWithDeletedWorld() {
         createValidFlat();
         server.removeWorld(world);
+        assertDoesNotThrow(() -> plugin.getFlatsManager().saveAll());
     }
 
     /**

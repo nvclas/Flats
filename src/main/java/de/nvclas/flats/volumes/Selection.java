@@ -10,7 +10,7 @@ import java.util.WeakHashMap;
 
 /**
  * Represents a three-dimensional selection defined by two corner points.
- * A selection can calculate its volume, check for intersections with other areas, 
+ * A selection can calculate its volume, check for intersections with other areas,
  * and is associated with specific players through a global map.
  */
 @Getter

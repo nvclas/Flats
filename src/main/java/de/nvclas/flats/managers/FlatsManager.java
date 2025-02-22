@@ -17,8 +17,8 @@ import java.util.Objects;
 /**
  * Manages a collection of flats and their properties.
  * <p>
- * The {@code FlatsManager} class provides methods for creating, retrieving, updating, 
- * and deleting flats, as well as managing their associated areas and owners. It 
+ * The {@code FlatsManager} class provides methods for creating, retrieving, updating,
+ * and deleting flats, as well as managing their associated areas and owners. It
  * interacts with the configuration system to persist and load data related to the flats.
  */
 public class FlatsManager {
@@ -122,10 +122,10 @@ public class FlatsManager {
     /**
      * Sets the owner of the specified flat.
      * <p>
-     * This method assigns the given {@link OfflinePlayer} as the owner of the 
+     * This method assigns the given {@link OfflinePlayer} as the owner of the
      * specified {@link Flat}.
      *
-     * @param flat the {@link Flat} whose owner is to be set. Must not be null.
+     * @param flat  the {@link Flat} whose owner is to be set. Must not be null.
      * @param owner the {@link OfflinePlayer} to be set as the owner. Must not be null.
      */
     public void setOwner(Flat flat, OfflinePlayer owner) {

@@ -13,8 +13,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Utility class for internationalization (I18n) functionality. Provides methods for managing and 
- * retrieving translations for a specified locale using resource bundles. This class supports 
+ * Utility class for internationalization (I18n) functionality. Provides methods for managing and
+ * retrieving translations for a specified locale using resource bundles. This class supports
  * dynamic locale switching and fallback translations.
  * <p>
  * The class must be initialized with a plugin instance before its methods can be used.
@@ -49,7 +49,7 @@ public class I18n {
     }
 
     /**
-     * Loads translations for the specified locale and updates the current translation set. 
+     * Loads translations for the specified locale and updates the current translation set.
      * If the specified locale matches the fallback locale, it will also set the fallback translations.
      * Logs warnings if the translation file for the given locale is not found.
      * This method requires {@link I18n#initialize(JavaPlugin)} to be called first.
@@ -96,7 +96,7 @@ public class I18n {
 
     /**
      * Retrieves the translated text corresponding to the given key from the active translations or fallback translations.
-     * If the key does not exist in either, returns {@code null}. Supports optional arguments 
+     * If the key does not exist in either, returns {@code null}. Supports optional arguments
      * for formatting the translated text using {@link String#format}.
      *
      * @param key  The key for the desired translation. Must correspond to a valid key in the resource bundle.

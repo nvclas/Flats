@@ -36,13 +36,13 @@ public abstract class Config {
     /**
      * Saves the current configuration file to disk and reloads it from the storage.
      * <p>
-     * This method attempts to persist any changes made to the in-memory configuration 
-     * data to the physical file associated with this configuration instance. If the 
-     * save operation fails due to an {@link IOException}, an error is logged with the 
-     * plugin's logger. After attempting to save, the configuration is reloaded from 
+     * This method attempts to persist any changes made to the in-memory configuration
+     * data to the physical file associated with this configuration instance. If the
+     * save operation fails due to an {@link IOException}, an error is logged with the
+     * plugin's logger. After attempting to save, the configuration is reloaded from
      * the file to synchronize the in-memory state with the on-disk data.
      * <p>
-     * Note that this method should be called after modifying the configuration to 
+     * Note that this method should be called after modifying the configuration to
      * ensure changes are saved and reflect in subsequent operations.
      */
     public void saveConfig() {

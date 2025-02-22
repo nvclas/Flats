@@ -39,7 +39,7 @@ public class Flat {
      *
      * @param location The {@link Location} to check. Must not be null.
      * @return {@code true} if the {@code location} is within the bounds of at least one {@link Area};
-     *         {@code false} otherwise.
+     * {@code false} otherwise.
      */
     public boolean isWithinBounds(@NotNull Location location) {
         return areas.stream().anyMatch(area -> area.isWithinBounds(location));

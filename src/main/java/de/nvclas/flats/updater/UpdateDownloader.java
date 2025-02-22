@@ -57,9 +57,9 @@ public class UpdateDownloader {
      * Handles errors during the process and reports success, failure, or the absence of a release.
      *
      * @return an {@link UpdateStatus} indicating the result of the operation:
-     *         {@code SUCCESS} if the update was downloaded and moved successfully,
-     *         {@code NOT_FOUND} if no suitable release was found,
-     *         or {@code FAILED} if any error occurred during the download or file operations.
+     * {@code SUCCESS} if the update was downloaded and moved successfully,
+     * {@code NOT_FOUND} if no suitable release was found,
+     * or {@code FAILED} if any error occurred during the download or file operations.
      */
     public UpdateStatus downloadLatestRelease() {
         try {

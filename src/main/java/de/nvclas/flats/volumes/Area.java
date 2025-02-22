@@ -34,7 +34,7 @@ public class Area {
      *
      * @param locationString A non-null string representing two {@link Location} objects.
      *                       The format must be {@code worldName:x1,y1,z1;x2,y2,z2}.
-     * @param flatName A non-null string representing the name of the flat.
+     * @param flatName       A non-null string representing the name of the flat.
      * @return A new {@link Area} instance created using the parsed locations and the provided flat name.
      * @throws IllegalArgumentException if the {@code locationString} is malformed or invalid.
      */
@@ -47,7 +47,7 @@ public class Area {
      * Creates an {@link Area} instance from a given {@link Selection} object and a flat name.
      *
      * @param selection The {@link Selection} defining the positions of the area. Must not be null.
-     * @param flatName The name associated with the flat. Must not be null.
+     * @param flatName  The name associated with the flat. Must not be null.
      * @return A new {@link Area} created using the positions defined in the {@link Selection} and the specified flat name.
      */
     public static Area fromSelection(@NotNull Selection selection, @NotNull String flatName) {
@@ -62,7 +62,7 @@ public class Area {
      *
      * @param location The {@link Location} to check. Must not be null.
      * @return {@code true} if the {@code location} is within the bounds of the area;
-     *         {@code false} otherwise.
+     * {@code false} otherwise.
      */
     public boolean isWithinBounds(@NotNull Location location) {
         double minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
@@ -76,14 +76,14 @@ public class Area {
     }
 
     /**
-     * Checks whether the given {@link Location} is within a specified distance from 
+     * Checks whether the given {@link Location} is within a specified distance from
      * any of the two positions defining this {@link Area}.
      * <p>
-     * This method evaluates whether the provided {@code location} falls within the 
+     * This method evaluates whether the provided {@code location} falls within the
      * given {@code range} from either {@code pos1} or {@code pos2} in three-dimensional space.
      *
      * @param location The {@link Location} to be checked. Must not be null.
-     * @param range The distance threshold to check against.
+     * @param range    The distance threshold to check against.
      * @return {@code true} if the {@code location} is within the specified {@code range}
      * from either {@code pos1} or {@code pos2}; {@code false} otherwise.
      */
@@ -101,7 +101,7 @@ public class Area {
      * located on the edges of the rectangular cuboid defined by the area.
      *
      * @return A {@link List} of {@link Block} instances representing the outer boundary of the area.
-     *         The returned list is never null but may be empty if no valid boundaries are defined.
+     * The returned list is never null but may be empty if no valid boundaries are defined.
      */
     public @NotNull List<Block> getAllOuterBlocks() {
         List<Block> blocks = new ArrayList<>();

@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
  * <p>
  * The event provides information about the {@link Flat} involved, the {@link Player}
  * involved, and whether the event signifies entry or exit.
- * <p> 
+ * <p>
  * To determine whether the event represents an entry or exit, use {@link #hasEntered()}.
  */
 @AllArgsConstructor
@@ -37,7 +37,7 @@ public class FlatEnteredOrLeftEvent extends Event {
     /**
      * Determines whether the associated event signifies that a player has entered a {@link Flat}.
      * <p>
-     * This method can be used to differentiate between entry and exit events in a 
+     * This method can be used to differentiate between entry and exit events in a
      * {@link FlatEnteredOrLeftEvent}.
      *
      * @return {@code true} if the player has entered the flat; {@code false} if the player has left.

@@ -81,31 +81,31 @@ public class FlatsConfig extends Config {
         String ownerUuid = getConfigFile().getString(Paths.getOwnerPath(flatName));
         List<String> locationStrings = getConfigFile().getStringList(Paths.getAreasPath(flatName));
 
-        OfflinePlayer owner = (ownerUuid != null && !ownerUuid.isEmpty())
-                ? Bukkit.getOfflinePlayer(UUID.fromString(ownerUuid))
-                : null;
+        OfflinePlayer owner = (ownerUuid != null && !ownerUuid.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(
+                ownerUuid)) : null;
 
-        List<Area> areas = locationStrings.stream()
-                .map(locationString -> Area.fromString(locationString, flatName))
-                .filter(area -> {
-                    if (area.getPos1().getWorld() == null) {
-                        plugin.getLogger().log(Level.WARNING, () ->
-                                "Flat '" + flatName + "' has an invalid area at position " + area.getLocationString() + " and will not be loaded.");
-                        return false;
-                    }
-                    return true;
-                })
-                .toList();
+        List<Area> areas = locationStrings.stream().map(locationString -> {
+            try {
+                return Area.fromString(locationString, flatName);
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger()
+                        .log(Level.WARNING,
+                                () -> "Flat '" + flatName + "' has an invalid area string '" + locationString + "' and will not be loaded.");
+                //noinspection ReturnOfNull
+                return null;
+            }
+        }).filter(Objects::nonNull).toList();
 
         if (areas.isEmpty()) {
-            plugin.getLogger().log(Level.WARNING, () ->
-                    "Flat '" + flatName + "' has no valid areas and will not be loaded.");
+            plugin.getLogger()
+                    .log(Level.WARNING, () -> "Flat '" + flatName + "' has no valid areas and will not be loaded.");
             return null;
         }
 
         if (areas.size() < locationStrings.size()) {
-            plugin.getLogger().log(Level.WARNING, () ->
-                    "!! ANY INVALID AREAS WILL BE REMOVED ON SERVER SHUTDOWN, PLEASE BACKUP NOW IF THEY ARE STILL NEEDED !!");
+            plugin.getLogger()
+                    .log(Level.WARNING,
+                            () -> "!! ANY INVALID AREAS WILL BE REMOVED ON NEXT SAVE, PLEASE BACKUP NOW IF THEY ARE STILL NEEDED !!");
         }
 
         return new Flat(flatName, areas, owner);

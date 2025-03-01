@@ -17,20 +17,22 @@ import java.util.List;
 @Setter
 public class Flat {
 
-    private final List<Area> areas;
-    private OfflinePlayer owner;
     private String name;
+    private OfflinePlayer owner;
+    private final List<Area> areas;
+    private final List<OfflinePlayer> trusted;
 
     public Flat(String name, Area area) {
         this.name = name;
-        areas = new ArrayList<>();
-        areas.add(area);
+        areas = new ArrayList<>(List.of(area));
+        trusted = new ArrayList<>();
     }
 
-    public Flat(String name, List<Area> areas, OfflinePlayer owner) {
+    public Flat(String name, OfflinePlayer owner, List<Area> areas, List<OfflinePlayer> trusted) {
         this.name = name;
-        this.areas = areas;
         this.owner = owner;
+        this.areas = areas;
+        this.trusted = trusted;
     }
 
     /**
@@ -55,6 +57,19 @@ public class Flat {
         return owner != null && owner.getUniqueId().equals(player.getUniqueId());
     }
 
+    /**
+     * Determines whether this {@link Flat} has an owner assigned.
+     *
+     * @return {@code true} if an owner is assigned to this flat; {@code false} otherwise.
+     */
+    public boolean hasOwner() {
+        return owner != null;
+    }
+
+    public boolean isTrusted(@NotNull OfflinePlayer player) {
+        return trusted.contains(player);
+    }
+    
     /**
      * Adds a new {@link Area} to the list of areas associated with this flat.
      *

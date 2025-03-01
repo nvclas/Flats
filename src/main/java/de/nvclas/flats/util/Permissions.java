@@ -22,7 +22,7 @@ public class Permissions {
      */
     public static boolean hasNoPermission(@NotNull Player player, String permission) {
         if (!player.hasPermission(permission)) {
-            player.sendMessage(Flats.PREFIX + I18n.translate("messages.no_permission"));
+            player.sendMessage(Flats.PREFIX + I18n.translate("error.no_permission"));
             return true;
         }
         return false;

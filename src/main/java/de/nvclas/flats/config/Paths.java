@@ -24,12 +24,18 @@ public class Paths {
 
     public static final String FLATS = "flats";
 
+    private final String rootSection = "flats.";
+
     public static String getOwnerPath(String flatName) {
-        return "flats." + flatName + ".owner";
+        return rootSection + flatName + ".owner";
     }
 
     public static String getAreasPath(String flatName) {
-        return "flats." + flatName + ".areas";
+        return rootSection + flatName + ".areas";
+    }
+
+    public static String getTrustedPath(String flatName) {
+        return rootSection + flatName + ".trusted";
     }
 
 }

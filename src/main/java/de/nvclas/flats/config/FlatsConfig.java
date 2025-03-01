@@ -75,11 +75,14 @@ public class FlatsConfig extends Config {
 
         getConfigFile().set(Paths.getAreasPath(flatName),
                 flat.getAreas().stream().map(Area::getLocationString).toList());
+        
+        getConfigFile().set(Paths.getTrustedPath(flatName), flat.getTrusted().stream().map(player -> player.getUniqueId().toString()).toList());
     }
 
     private @Nullable Flat loadFlat(String flatName) {
         String ownerUuid = getConfigFile().getString(Paths.getOwnerPath(flatName));
         List<String> locationStrings = getConfigFile().getStringList(Paths.getAreasPath(flatName));
+        List<String> trustedUuids = getConfigFile().getStringList(Paths.getTrustedPath(flatName));
 
         OfflinePlayer owner = (ownerUuid != null && !ownerUuid.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(
                 ownerUuid)) : null;
@@ -107,7 +110,9 @@ public class FlatsConfig extends Config {
                     .log(Level.WARNING,
                             () -> "!! ANY INVALID AREAS WILL BE REMOVED ON NEXT SAVE, PLEASE BACKUP NOW IF THEY ARE STILL NEEDED !!");
         }
+        
+        List<OfflinePlayer> trusted = trustedUuids.stream().map(uuid -> Bukkit.getOfflinePlayer(UUID.fromString(uuid))).toList();
 
-        return new Flat(flatName, areas, owner);
+        return new Flat(flatName, owner, areas, trusted);
     }
 }

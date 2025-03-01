@@ -14,6 +14,8 @@ public enum FlatsSubCommand {
     REMOVE("remove"),
     CLAIM("claim"),
     UNCLAIM("unclaim"),
+    TRUST("trust"),
+    UNTRUST("untrust"),
     INFO("info"),
     LIST("list"),
     SHOW("show"),

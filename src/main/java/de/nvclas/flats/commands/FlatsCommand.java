@@ -228,7 +228,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(Flats.PREFIX + I18n.translate("list.title"));
         for (Flat flat : flatsPlugin.getFlatsManager().getAllFlats()) {
             player.sendMessage(Flats.PREFIX + I18n.translate("list.header", flat.getName()));
-            if (flat.hasOwner()) {
+            if (!flat.hasOwner()) {
                 player.sendMessage(Flats.PREFIX + I18n.translate("list.unoccupied"));
             } else {
                 player.sendMessage(Flats.PREFIX + I18n.translate("list.owner", flat.getOwner().getName()));

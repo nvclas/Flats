@@ -26,7 +26,7 @@ public class PlayerInteractListener implements Listener {
             return;
         }
 
-        if (!flat.isOwner(player)) {
+        if (!flat.isOwner(player) && !flat.isTrusted(player)) {
             event.setCancelled(true);
         }
     }

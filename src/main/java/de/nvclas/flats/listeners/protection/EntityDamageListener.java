@@ -26,7 +26,7 @@ public class EntityDamageListener implements Listener {
             return;
         }
 
-        if (!(damager instanceof Player) || !flat.isOwner((OfflinePlayer) damager)) {
+        if (!(damager instanceof Player) || (!flat.isOwner((OfflinePlayer) damager) && !flat.isTrusted((OfflinePlayer) damager))) {
             event.setCancelled(true);
         }
     }

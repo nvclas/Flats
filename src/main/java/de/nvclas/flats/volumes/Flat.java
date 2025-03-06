@@ -17,10 +17,10 @@ import java.util.List;
 @Setter
 public class Flat {
 
-    private String name;
-    private OfflinePlayer owner;
     private final List<Area> areas;
     private final List<OfflinePlayer> trusted;
+    private String name;
+    private OfflinePlayer owner;
 
     public Flat(String name, Area area) {
         this.name = name;
@@ -69,7 +69,7 @@ public class Flat {
     public boolean isTrusted(@NotNull OfflinePlayer player) {
         return trusted.contains(player);
     }
-    
+
     /**
      * Adds a new {@link Area} to the list of areas associated with this flat.
      *

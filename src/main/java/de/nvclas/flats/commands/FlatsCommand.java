@@ -31,7 +31,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private static final String NOT_IN_FLAT = "error.not_in_flat";
     private static final String NOT_YOUR_FLAT = "error.not_your_flat";
-    
+
     private final Flats flatsPlugin;
     private Player player;
 
@@ -189,13 +189,13 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(Flats.PREFIX + I18n.translate(NOT_YOUR_FLAT));
             return;
         }
-        if(flat.isTrusted(target)) {
+        if (flat.isTrusted(target)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("trust.already_trusted", target.getName()));
             return;
         }
         // TODO: Hier muss noch getrustet werden (Manager)
     }
-    
+
     private void handleUntrustCommand(String[] args) {
         if (args.length < 2) {
             player.sendMessage(Flats.PREFIX + I18n.translate("untrust.usage"));
@@ -211,13 +211,13 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(Flats.PREFIX + I18n.translate(NOT_YOUR_FLAT));
             return;
         }
-        if(!flat.isTrusted(target)) {
+        if (!flat.isTrusted(target)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("untrust.not_trusted", target.getName()));
             return;
         }
         // TODO: Hier muss noch enttrustet werden (Manager)
     }
-    
+
     private void handleInfoCommand() {
         for (Area area : flatsPlugin.getFlatsManager().getAllAreas()) {
             if (area.isWithinBounds(player.getLocation())) {

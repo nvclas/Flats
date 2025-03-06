@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "de.nvclas"
-version = "0.55"
+version = "0.6.0"
 
 repositories {
     mavenCentral()
@@ -56,7 +56,7 @@ tasks.test {
 
 tasks {
     runServer {
-        minecraftVersion("1.21.1")
+        minecraftVersion(libs.versions.minecraft.get())
     }
 }
 

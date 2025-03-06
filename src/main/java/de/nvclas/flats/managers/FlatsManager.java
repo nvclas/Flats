@@ -23,6 +23,8 @@ import java.util.Objects;
  */
 public class FlatsManager {
 
+    private static final String FLAT_NOT_EXISTING = "No flat exists with the given name: %s";
+
     private final Map<String, Flat> allFlats = new HashMap<>();
     private final FlatsConfig config;
 
@@ -102,6 +104,16 @@ public class FlatsManager {
     }
 
     /**
+     *
+     */
+    private @NotNull Flat getFlat(@NotNull String name, @NotNull String errorMessage) throws IllegalArgumentException {
+        if (!existsFlat(name)) {
+            throw new IllegalArgumentException(errorMessage);
+        }
+        return Objects.requireNonNull(getFlat(name));
+    }
+
+    /**
      * Retrieves the {@link Flat} associated with the specified {@link Location}.
      * <p>
      * The method searches through all managed flats and determines if the provided
@@ -112,11 +124,7 @@ public class FlatsManager {
      * if no flat is found at the location.
      */
     public @Nullable Flat getFlatByLocation(@NotNull Location location) {
-        return allFlats.values()
-                .stream()
-                .filter(flat -> flat.isWithinBounds(location))
-                .findFirst()
-                .orElse(null);
+        return allFlats.values().stream().filter(flat -> flat.isWithinBounds(location)).findFirst().orElse(null);
     }
 
     /**
@@ -133,21 +141,46 @@ public class FlatsManager {
     }
 
     /**
-     * Adds a new {@link Area} to an existing flat specified by its name.
+     * Adds an {@link Area} to the specified flat.
      * <p>
-     * If no flat exists with the given name, an {@link IllegalArgumentException} is thrown.
+     * This method associates a new {@link Area} with an existing flat identified by its name.
+     * If the flat does not exist, an {@link IllegalArgumentException} is thrown.
      *
      * @param name the name of the flat to which the area should be added; must not be null.
      * @param area the {@link Area} to be added; must not be null.
-     * @throws IllegalArgumentException if no flat exists with the given name.
+     * @throws IllegalArgumentException if no flat exists with the specified name.
      */
     public void addArea(@NotNull String name, @NotNull Area area) throws IllegalArgumentException {
-        if (!existsFlat(name)) {
-            throw new IllegalArgumentException("No flat exists with the given name: " + name);
-        }
-        Flat flat = getFlat(name);
-        //noinspection DataFlowIssue
+        Flat flat = getFlat(name, String.format(FLAT_NOT_EXISTING, name));
         flat.addArea(area);
+    }
+
+    /**
+     * Adds the specified {@link OfflinePlayer} to the list of trusted players for the given flat.
+     * <p>
+     * If the flat does not exist, an {@link IllegalArgumentException} is thrown.
+     *
+     * @param name   the name of the flat to update; must not be null.
+     * @param player the {@link OfflinePlayer} to add to the trusted list; must not be null.
+     * @throws IllegalArgumentException if no flat exists with the specified name.
+     */
+    public void addTrusted(@NotNull String name, @NotNull OfflinePlayer player) throws IllegalArgumentException {
+        Flat flat = getFlat(name, String.format(FLAT_NOT_EXISTING, name));
+        flat.addTrusted(player);
+    }
+
+    /**
+     * Removes the specified {@link OfflinePlayer} from the list of trusted players for the given flat.
+     * <p>
+     * If the flat does not exist, an {@link IllegalArgumentException} is thrown.
+     *
+     * @param name   the name of the flat to update; must not be null.
+     * @param player the {@link OfflinePlayer} to remove from the trusted list; must not be null.
+     * @throws IllegalArgumentException if no flat exists with the specified name.
+     */
+    public void removeTrusted(@NotNull String name, @NotNull OfflinePlayer player) throws IllegalArgumentException {
+        Flat flat = getFlat(name, String.format(FLAT_NOT_EXISTING, name));
+        flat.removeTrusted(player);
     }
 
     /**

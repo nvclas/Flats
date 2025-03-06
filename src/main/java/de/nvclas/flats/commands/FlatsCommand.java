@@ -161,15 +161,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleUnclaimCommand() {
-        Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(player.getLocation());
-        if (flat == null) {
-            player.sendMessage(Flats.PREFIX + I18n.translate(NOT_IN_FLAT));
-            return;
-        }
-        if (!flat.isOwner(player)) {
-            player.sendMessage(Flats.PREFIX + I18n.translate(NOT_YOUR_FLAT));
-            return;
-        }
+        Flat flat = getOwnedFlatByLocation();
+        if (flat == null) return;
         player.sendMessage(Flats.PREFIX + I18n.translate("unclaim.success"));
         flatsPlugin.getFlatsManager().setOwner(flat, null);
     }
@@ -180,20 +173,14 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return;
         }
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
-        Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(player.getLocation());
-        if (flat == null) {
-            player.sendMessage(Flats.PREFIX + I18n.translate(NOT_IN_FLAT));
-            return;
-        }
-        if (!flat.isOwner(player)) {
-            player.sendMessage(Flats.PREFIX + I18n.translate(NOT_YOUR_FLAT));
-            return;
-        }
+        Flat flat = getOwnedFlatByLocation();
+        if (flat == null) return;
         if (flat.isTrusted(target)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("trust.already_trusted", target.getName()));
             return;
         }
-        // TODO: Hier muss noch getrustet werden (Manager)
+        flatsPlugin.getFlatsManager().addTrusted(flat.getName(), target);
+        player.sendMessage(Flats.PREFIX + I18n.translate("trust.success", target.getName()));
     }
 
     private void handleUntrustCommand(String[] args) {
@@ -202,20 +189,14 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return;
         }
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
-        Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(player.getLocation());
-        if (flat == null) {
-            player.sendMessage(Flats.PREFIX + I18n.translate(NOT_IN_FLAT));
-            return;
-        }
-        if (!flat.isOwner(player)) {
-            player.sendMessage(Flats.PREFIX + I18n.translate(NOT_YOUR_FLAT));
-            return;
-        }
+        Flat flat = getOwnedFlatByLocation();
+        if (flat == null) return;
         if (!flat.isTrusted(target)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("untrust.not_trusted", target.getName()));
             return;
         }
-        // TODO: Hier muss noch enttrustet werden (Manager)
+        flatsPlugin.getFlatsManager().removeTrusted(flat.getName(), target);
+        player.sendMessage(Flats.PREFIX + I18n.translate("untrust.success", target.getName()));
     }
 
     private void handleInfoCommand() {
@@ -335,6 +316,19 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         return blocksToChange;
     }
 
+    private @Nullable Flat getOwnedFlatByLocation() {
+        Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(player.getLocation());
+        if (flat == null) {
+            player.sendMessage(Flats.PREFIX + I18n.translate(NOT_IN_FLAT));
+            return null;
+        }
+        if (!flat.isOwner(player)) {
+            player.sendMessage(Flats.PREFIX + I18n.translate(NOT_YOUR_FLAT));
+            return null;
+        }
+        return flat;
+    }
+    
     private void sendHelpMessage() {
         player.sendMessage(Flats.PREFIX + I18n.translate("help.header"));
         if (player.hasPermission(Permissions.ADMIN)) {

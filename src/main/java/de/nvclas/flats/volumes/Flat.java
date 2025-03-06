@@ -71,6 +71,26 @@ public class Flat {
     }
 
     /**
+     * Adds the specified {@link OfflinePlayer} to the list of trusted players for this flat.
+     * <p>
+     * Trusted players have access to this flat's resources.
+     *
+     * @param player The {@link OfflinePlayer} to be added to the trusted list. Must not be null.
+     */
+    public void addTrusted(@NotNull OfflinePlayer player) {
+        trusted.add(player);
+    }
+
+    /**
+     * Removes the specified {@link OfflinePlayer} from the list of trusted players for this flat.
+     *
+     * @param player The {@link OfflinePlayer} to be removed from the trusted list. Must not be null.
+     */
+    public void removeTrusted(@NotNull OfflinePlayer player) {
+        trusted.remove(player);
+    }
+
+    /**
      * Adds a new {@link Area} to the list of areas associated with this flat.
      *
      * @param area The {@link Area} to add. Must not be null.

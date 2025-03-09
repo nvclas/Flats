@@ -6,14 +6,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
  * The {@code FlatsConfig} class extends {@link Config} and provides methods to manage
@@ -81,41 +84,57 @@ public class FlatsConfig extends Config {
     }
 
     private @Nullable Flat loadFlat(String flatName) {
+        OfflinePlayer owner = loadOwner(flatName);
+        List<Area> areas = loadAreas(flatName);
+        if (areas == null) return null;
+
+        List<OfflinePlayer> trustedPlayers = loadTrustedPlayers(flatName);
+
+        return new Flat(flatName, owner, areas, trustedPlayers);
+    }
+
+    private @Nullable OfflinePlayer loadOwner(String flatName) {
         String ownerUuid = getConfigFile().getString(Paths.getOwnerPath(flatName));
+        return (ownerUuid != null && !ownerUuid.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(ownerUuid)) : null;
+    }
+
+    private @Nullable List<Area> loadAreas(String flatName) {
         List<String> locationStrings = getConfigFile().getStringList(Paths.getAreasPath(flatName));
-        List<String> trustedUuids = getConfigFile().getStringList(Paths.getTrustedPath(flatName));
-
-        OfflinePlayer owner = (ownerUuid != null && !ownerUuid.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(
-                ownerUuid)) : null;
-
-        List<Area> areas = locationStrings.stream().map(locationString -> {
-            try {
-                return Area.fromString(locationString, flatName);
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger()
-                        .log(Level.WARNING,
-                                () -> "Flat '" + flatName + "' has an invalid area string '" + locationString + "' and will not be loaded.");
-                //noinspection ReturnOfNull
-                return null;
-            }
-        }).filter(Objects::nonNull).toList();
+        List<Area> areas = locationStrings.stream()
+                .map(locationString -> parseAreaOrNull(locationString, flatName))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(ArrayList::new));
 
         if (areas.isEmpty()) {
-            plugin.getLogger()
-                    .log(Level.WARNING, () -> "Flat '" + flatName + "' has no valid areas and will not be loaded.");
+            logWarning("Flat '" + flatName + "' has no valid areas and will not be loaded.");
             return null;
         }
 
         if (areas.size() < locationStrings.size()) {
-            plugin.getLogger()
-                    .log(Level.WARNING,
-                            () -> "!! ANY INVALID AREAS WILL BE REMOVED ON NEXT SAVE, PLEASE BACKUP NOW IF THEY ARE STILL NEEDED !!");
+            logWarning(
+                    "!! ANY INVALID AREAS WILL BE REMOVED ON NEXT SAVE, PLEASE BACKUP NOW IF THEY ARE STILL NEEDED !!");
         }
 
-        List<OfflinePlayer> trusted = trustedUuids.stream()
-                .map(uuid -> Bukkit.getOfflinePlayer(UUID.fromString(uuid)))
-                .toList();
+        return areas;
+    }
 
-        return new Flat(flatName, owner, areas, trusted);
+    private @Nullable Area parseAreaOrNull(String locationString, String flatName) {
+        try {
+            return Area.fromString(locationString, flatName);
+        } catch (IllegalArgumentException e) {
+            logWarning("Flat '" + flatName + "' has an invalid area string '" + locationString + "' and will not be loaded.");
+            return null;
+        }
+    }
+
+    private @NotNull List<OfflinePlayer> loadTrustedPlayers(String flatName) {
+        List<String> trustedUuids = getConfigFile().getStringList(Paths.getTrustedPath(flatName));
+        return trustedUuids.stream()
+                .map(uuid -> Bukkit.getOfflinePlayer(UUID.fromString(uuid)))
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private void logWarning(String message) {
+        plugin.getLogger().log(Level.WARNING, () -> message);
     }
 }

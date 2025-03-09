@@ -52,9 +52,9 @@ class FlatsCommandTest {
     @CsvSource({
             "flats unknown, help.header",
             "flats, help.header",
-            "flats add testFlat, nothing_selected",
-            "flats remove testFlat, flat_not_exist",
-            "flats claim, not_in_flat"
+            "flats add testFlat, error.nothing_selected",
+            "flats remove testFlat, error.flat_not_exist",
+            "flats claim, error.not_in_flat"
     })
     void testCommandFailures(String command, String messageKey) {
         player.setOp(true);

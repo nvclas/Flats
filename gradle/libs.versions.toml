@@ -6,7 +6,7 @@ paperweightUserdev = "2.0.0-beta.14"
 paper = "1.21.4-R0.1-SNAPSHOT"
 minecraft = "1.21.4"
 mockbukkit = "4.34.1"
-junitJupiter = "5.12.0"
+junitJupiter = "5.11.4"
 
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }

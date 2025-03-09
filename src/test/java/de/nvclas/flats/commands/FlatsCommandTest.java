@@ -6,7 +6,6 @@ import de.nvclas.flats.testutil.TestUtil;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.volumes.Flat;
 import de.nvclas.flats.volumes.Selection;
-import lombok.extern.slf4j.Slf4j;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
@@ -19,9 +18,13 @@ import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 import org.mockbukkit.mockbukkit.world.WorldMock;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-@Slf4j
 class FlatsCommandTest {
 
     private static final String TEST_FLAT_NAME = "testFlat";
@@ -71,7 +74,8 @@ class FlatsCommandTest {
     @Test
     void testSelectCommand() {
         executeCommandAsOp("flats select");
-        assertTrue(player.getInventory().contains(SelectionItem.getItem()), "Player should receive the selection item.");
+        assertTrue(player.getInventory().contains(SelectionItem.getItem()),
+                "Player should receive the selection item.");
     }
 
     @Test
@@ -104,7 +108,8 @@ class FlatsCommandTest {
     void testSaveWorldWithDeletedWorld() {
         createValidFlat();
         server.removeWorld(world);
-        assertDoesNotThrow(() -> plugin.getFlatsManager().saveAll(), "Save operation should not throw an exception even if the world is deleted.");
+        assertDoesNotThrow(() -> plugin.getFlatsManager().saveAll(),
+                "Save operation should not throw an exception even if the world is deleted.");
     }
 
     @Test
@@ -132,13 +137,13 @@ class FlatsCommandTest {
         assertNotNull(flat, "Flat should not be null.");
         assertFalse(flat.isTrusted(target), "Target player should no longer be trusted in the flat.");
     }
-    
+
     @Test
     void testUntrustCommandWithOfflineTarget() {
         target.kick();
         testUntrustCommandWithOnlineTarget();
     }
-    
+
     /**
      * Helper method to execute a command as an operator.
      */

@@ -128,19 +128,6 @@ public class FlatsManager {
     }
 
     /**
-     * Sets the owner of the specified flat.
-     * <p>
-     * This method assigns the given {@link OfflinePlayer} as the owner of the
-     * specified {@link Flat}.
-     *
-     * @param flat  the {@link Flat} whose owner is to be set. Must not be null.
-     * @param owner the {@link OfflinePlayer} to be set as the owner. Must not be null.
-     */
-    public void setOwner(Flat flat, OfflinePlayer owner) {
-        flat.setOwner(owner);
-    }
-
-    /**
      * Adds an {@link Area} to the specified flat.
      * <p>
      * This method associates a new {@link Area} with an existing flat identified by its name.

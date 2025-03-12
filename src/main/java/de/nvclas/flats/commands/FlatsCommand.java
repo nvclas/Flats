@@ -33,52 +33,49 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     private static final String NOT_YOUR_FLAT = "error.not_your_flat";
 
     private final Flats flatsPlugin;
-    private Player player;
-
+    
     public FlatsCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
-        if (!command.getName().equalsIgnoreCase("flats") || !(sender instanceof Player p)) {
+        if (!command.getName().equalsIgnoreCase("flats") || !(sender instanceof Player player)) {
             return false;
         }
 
-        player = p;
-
         if (args.length == 0) {
-            sendHelpMessage();
+            sendHelpMessage(player);
             return true;
         }
 
         String subCommand = args[0].toLowerCase();
 
         switch (FlatsSubCommand.fromString(subCommand)) {
-            case SELECT -> handleSelectCommand();
-            case ADD -> handleAddCommand(args);
-            case REMOVE -> handleRemoveCommand(args);
-            case CLAIM -> handleClaimCommand();
-            case UNCLAIM -> handleUnclaimCommand();
-            case TRUST -> handleTrustCommand(args);
-            case UNTRUST -> handleUntrustCommand(args);
-            case INFO -> handleInfoCommand();
-            case LIST -> handleListCommand();
-            case SHOW -> handleShowCommand();
-            case UPDATE -> handleUpdateCommand();
-            default -> sendHelpMessage();
+            case SELECT -> handleSelectCommand(player);
+            case ADD -> handleAddCommand(player, args);
+            case REMOVE -> handleRemoveCommand(player, args);
+            case CLAIM -> handleClaimCommand(player);
+            case UNCLAIM -> handleUnclaimCommand(player);
+            case TRUST -> handleTrustCommand(player, args);
+            case UNTRUST -> handleUntrustCommand(player, args);
+            case INFO -> handleInfoCommand(player);
+            case LIST -> handleListCommand(player);
+            case SHOW -> handleShowCommand(player);
+            case UPDATE -> handleUpdateCommand(player);
+            default -> sendHelpMessage(player);
         }
         return true;
     }
 
-    private void handleSelectCommand() {
+    private void handleSelectCommand(Player player) {
         if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
         player.getInventory().addItem(SelectionItem.getItem());
     }
 
-    private void handleAddCommand(String[] args) {
+    private void handleAddCommand(Player player, String[] args) {
         if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
@@ -97,7 +94,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.selection_too_large"));
             return;
         }
-        if (doesSelectionIntersect(selection)) {
+        if (doesSelectionIntersect(player, selection)) {
             return;
         }
         String flatName = args[1];
@@ -110,7 +107,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(Flats.PREFIX + I18n.translate("add.area_added", flatName));
     }
 
-    private boolean doesSelectionIntersect(Selection selection) {
+    private boolean doesSelectionIntersect(Player player, Selection selection) {
         return flatsPlugin.getFlatsManager()
                 .getAllAreas()
                 .stream()
@@ -126,7 +123,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
                 .orElse(false);
     }
 
-    private void handleRemoveCommand(String[] args) {
+    private void handleRemoveCommand(Player player, String[] args) {
         if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
@@ -143,7 +140,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(Flats.PREFIX + I18n.translate("remove.success", flatToRemove));
     }
 
-    private void handleClaimCommand() {
+    private void handleClaimCommand(Player player) {
         Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(player.getLocation());
         if (flat == null) {
             player.sendMessage(Flats.PREFIX + I18n.translate(NOT_IN_FLAT));
@@ -157,29 +154,31 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(Flats.PREFIX + I18n.translate("claim.already_owned_by", flat.getOwner().getName()));
             return;
         }
-        flatsPlugin.getFlatsManager().setOwner(flat, player);
+        flat.setOwner(player);
         player.sendMessage(Flats.PREFIX + I18n.translate("claim.success"));
     }
 
-    private void handleUnclaimCommand() {
-        Flat flat = getOwnedFlatAtPlayerLocation();
+    private void handleUnclaimCommand(Player player) {
+        Flat flat = getOwnedFlatAtPlayerLocation(player);
         if (flat == null) {
             return;
         }
         player.sendMessage(Flats.PREFIX + I18n.translate("unclaim.success"));
-        flatsPlugin.getFlatsManager().setOwner(flat, null);
+        flat.setOwner(null);
+        flat.getTrusted().clear();
+
     }
 
-    private void handleTrustCommand(String[] args) {
+    private void handleTrustCommand(Player player, String[] args) {
         if (args.length < 2) {
             player.sendMessage(Flats.PREFIX + I18n.translate("trust.usage"));
             return;
         }
-        Flat flat = getOwnedFlatAtPlayerLocation();
+        Flat flat = getOwnedFlatAtPlayerLocation(player);
         if (flat == null) {
             return;
         }
-        OfflinePlayer target = findOfflinePlayer(args);
+        OfflinePlayer target = findOfflinePlayer(player, args[1]);
         if (target == null) return;
         if (flat.isTrusted(target)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("trust.already_trusted", target.getName()));
@@ -189,16 +188,16 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(Flats.PREFIX + I18n.translate("trust.success", target.getName()));
     }
 
-    private void handleUntrustCommand(String[] args) {
+    private void handleUntrustCommand(Player player, String[] args) {
         if (args.length < 2) {
             player.sendMessage(Flats.PREFIX + I18n.translate("untrust.usage"));
             return;
         }
-        Flat flat = getOwnedFlatAtPlayerLocation();
+        Flat flat = getOwnedFlatAtPlayerLocation(player);
         if (flat == null) {
             return;
         }
-        OfflinePlayer target = findOfflinePlayer(args);
+        OfflinePlayer target = findOfflinePlayer(player, args[1]);
         if (target == null) return;
         if (!flat.isTrusted(target)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("untrust.not_trusted", target.getName()));
@@ -208,17 +207,18 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(Flats.PREFIX + I18n.translate("untrust.success", target.getName()));
     }
 
-    private void handleInfoCommand() {
+    @SuppressWarnings("DataFlowIssue")
+    private void handleInfoCommand(Player player) {
         for (Area area : flatsPlugin.getFlatsManager().getAllAreas()) {
             if (area.isWithinBounds(player.getLocation())) {
-                player.sendMessage(Flats.PREFIX + I18n.translate("info.header", area.getFlatName()));
-                //noinspection DataFlowIssue
+                player.sendMessage(Flats.PREFIX + I18n.translate("info.flat", area.getFlatName()));
                 OfflinePlayer owner = flatsPlugin.getFlatsManager().getFlat(area.getFlatName()).getOwner();
                 if (owner == null) {
                     player.sendMessage(Flats.PREFIX + I18n.translate("info.unoccupied"));
                 } else {
                     player.sendMessage(Flats.PREFIX + I18n.translate("info.owner", owner.getName()));
                 }
+                listAllTrustedOfFlat(player, flatsPlugin.getFlatsManager().getFlat(area.getFlatName()));
                 player.sendMessage(Flats.PREFIX + I18n.translate("info.area", area.getLocationString()));
                 return;
             }
@@ -226,7 +226,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(Flats.PREFIX + I18n.translate(NOT_IN_FLAT));
     }
 
-    private void handleListCommand() {
+    private void handleListCommand(Player player) {
         if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
@@ -236,26 +236,17 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         }
         player.sendMessage(Flats.PREFIX + I18n.translate("list.title"));
         for (Flat flat : flatsPlugin.getFlatsManager().getAllFlats()) {
-            player.sendMessage(Flats.PREFIX + I18n.translate("list.header", flat.getName()));
+            player.sendMessage(Flats.PREFIX + I18n.translate("info.flat", flat.getName()));
             if (!flat.hasOwner()) {
-                player.sendMessage(Flats.PREFIX + I18n.translate("list.unoccupied"));
+                player.sendMessage(Flats.PREFIX + I18n.translate("info.unoccupied"));
             } else {
-                player.sendMessage(Flats.PREFIX + I18n.translate("list.owner", flat.getOwner().getName()));
+                player.sendMessage(Flats.PREFIX + I18n.translate("info.owner", flat.getOwner().getName()));
             }
-            player.sendMessage(Flats.PREFIX + I18n.translate("list.areas_header"));
-            for (Area area : flat.getAreas()) {
-                if (flat.getAreas().getLast() == area) {
-                    player.sendMessage(Flats.PREFIX + I18n.translate("list.area_last",
-                            area.getLocationString()));
-                    break;
-                }
-                player.sendMessage(Flats.PREFIX + I18n.translate("list.area_item",
-                        area.getLocationString()));
-            }
+            listAllAreasOfFlat(player, flat);
         }
     }
 
-    private void handleShowCommand() {
+    private void handleShowCommand(Player player) {
         byte showTime = 10;
 
         if (CommandDelayScheduler.getDelay(player, FlatsSubCommand.SHOW.getFullCommandName()) != 0) {
@@ -270,7 +261,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
         player.sendMessage(Flats.PREFIX + I18n.translate("show.success", showTime));
 
-        List<Block> blocksToChange = getBlocksToChange();
+        List<Block> blocksToChange = getBlocksToChange(player);
         int maxUpdatesPerTick = 100;
 
         new BukkitRunnable() {
@@ -299,8 +290,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         }.runTaskTimer(flatsPlugin, 0L, 1L);
     }
 
-    private void handleUpdateCommand() {
-        if(Permissions.hasNoPermission(player, Permissions.ADMIN)) {
+    private void handleUpdateCommand(Player player) {
+        if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
         UpdateDownloader updateDownloader = new UpdateDownloader(flatsPlugin,
@@ -309,18 +300,18 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         switch (status) {
             case SUCCESS -> {
                 updateDownloader.unloadPluginAndDeleteJar();
-                player.sendMessage(Flats.PREFIX + I18n.translate("update.success",
-                        updateDownloader.getFileName()));
+                player.sendMessage(Flats.PREFIX + I18n.translate("update.success", updateDownloader.getFileName()));
             }
             case NOT_FOUND -> player.sendMessage(Flats.PREFIX + I18n.translate("update.not_found"));
             case FAILED -> player.sendMessage(Flats.PREFIX + I18n.translate("update.failed"));
         }
     }
 
-    private @NotNull List<Block> getBlocksToChange() {
+    private @NotNull List<Block> getBlocksToChange(Player player) {
         List<Block> blocksToChange = new ArrayList<>();
 
-        flatsPlugin.getFlatsManager().getAllAreas()
+        flatsPlugin.getFlatsManager()
+                .getAllAreas()
                 .stream()
                 .filter(area -> area.isWithinDistance(player.getLocation(), 100))
                 .forEach(area -> blocksToChange.addAll(area.getAllOuterBlocks()));
@@ -328,16 +319,36 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         return blocksToChange;
     }
 
-    private @Nullable OfflinePlayer findOfflinePlayer(String[] args) {
-        OfflinePlayer target = Bukkit.getOfflinePlayerIfCached(args[1]);
+    private void listAllTrustedOfFlat(Player player, Flat flat) {
+        if(flat.getTrusted().isEmpty()) {
+            return;
+        }
+        player.sendMessage(Flats.PREFIX + I18n.translate("info.trusted_header"));
+        for (OfflinePlayer trustedPlayer : flat.getTrusted()) {
+            String messageKey = flat.getTrusted()
+                    .getLast() == trustedPlayer ? "info.trusted_last" : "info.trusted_item";
+            player.sendMessage(Flats.PREFIX + I18n.translate(messageKey, trustedPlayer.getName()));
+        }
+    }
+
+    private void listAllAreasOfFlat(Player player, Flat flat) {
+        player.sendMessage(Flats.PREFIX + I18n.translate("list.areas_header"));
+        for (Area area : flat.getAreas()) {
+            String messageKey = flat.getAreas().getLast() == area ? "list.areas_last" : "list.areas_item";
+            player.sendMessage(Flats.PREFIX + I18n.translate(messageKey, area.getLocationString()));
+        }
+    }
+    
+    private @Nullable OfflinePlayer findOfflinePlayer(Player player, String name) {
+        OfflinePlayer target = Bukkit.getOfflinePlayerIfCached(name);
         if (target == null) {
-            player.sendMessage(Flats.PREFIX + I18n.translate("error.player_not_found", args[1]));
+            player.sendMessage(Flats.PREFIX + I18n.translate("error.player_not_found", name));
             return null;
         }
         return target;
     }
-    
-    private @Nullable Flat getOwnedFlatAtPlayerLocation() {
+
+    private @Nullable Flat getOwnedFlatAtPlayerLocation(Player player) {
         Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(player.getLocation());
         if (flat == null) {
             player.sendMessage(Flats.PREFIX + I18n.translate(NOT_IN_FLAT));
@@ -350,7 +361,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         return flat;
     }
 
-    private void sendHelpMessage() {
+    private void sendHelpMessage(Player player) {
         player.sendMessage(Flats.PREFIX + I18n.translate("help.header"));
         if (player.hasPermission(Permissions.ADMIN)) {
             player.sendMessage(I18n.translate("help.select"));
@@ -395,7 +406,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
                     .toList();
         } else if (args.length == 2 && args[0].equalsIgnoreCase(FlatsSubCommand.REMOVE.getSubCommandName()) && sender.hasPermission(
                 Permissions.ADMIN)) {
-            completions = flatsPlugin.getFlatsManager().getAllFlatNames()
+            completions = flatsPlugin.getFlatsManager()
+                    .getAllFlatNames()
                     .stream()
                     .filter(flatName -> flatName.toLowerCase().startsWith(args[1].toLowerCase()))
                     .toList();

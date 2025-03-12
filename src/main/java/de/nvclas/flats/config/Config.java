@@ -12,7 +12,7 @@ import java.util.logging.Level;
 
 public abstract class Config {
 
-    private static final String CONFIG_FILE_EXISTS = "File %s already exists";
+    private static final String CONFIG_CREATION_SUCCESS = "Created file %s";
     private static final String CONFIG_CREATION_FAILURE = "Failed to create file %s: %s";
     private static final String CONFIG_SAVED_DEFAULT = "Saved default file of %s";
     private static final String CONFIG_DEFAULT_NOT_FOUND = "No default file found for %s";
@@ -71,8 +71,8 @@ public abstract class Config {
     protected void initializeConfig() {
         try {
             createParentDirectory();
-            if (!file.createNewFile()) {
-                plugin.getLogger().log(Level.CONFIG, () -> String.format(CONFIG_FILE_EXISTS, file.getName()));
+            if (file.createNewFile()) {
+                plugin.getLogger().log(Level.CONFIG, () -> String.format(CONFIG_CREATION_SUCCESS, file.getName()));
             }
         } catch (IOException e) {
             plugin.getLogger()

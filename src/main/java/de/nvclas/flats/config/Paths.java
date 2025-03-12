@@ -9,9 +9,6 @@ import lombok.experimental.UtilityClass;
  * The {@code Paths} class contains predefined strings representing various configuration keys that are
  * frequently used in flat management within a configuration file. It also includes methods to generate
  * specific configuration paths based on flat names, such as paths for flat owners and flat areas.
- * <p>
- * This class is designed to centralize and standardize access to configuration paths, ensuring consistency
- * and reducing the likelihood of errors caused by hardcoding paths in multiple locations.
  */
 @UtilityClass
 public class Paths {

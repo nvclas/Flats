@@ -179,11 +179,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         if (flat == null) {
             return;
         }
-        OfflinePlayer target = Bukkit.getOfflinePlayerIfCached(args[1]);
-        if (target == null) {
-            player.sendMessage(Flats.PREFIX + I18n.translate("error.player_not_found", args[1]));
-            return;
-        }
+        OfflinePlayer target = findOfflinePlayer(args);
+        if (target == null) return;
         if (flat.isTrusted(target)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("trust.already_trusted", target.getName()));
             return;
@@ -201,11 +198,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         if (flat == null) {
             return;
         }
-        OfflinePlayer target = Bukkit.getOfflinePlayerIfCached(args[1]);
-        if (target == null) {
-            player.sendMessage(Flats.PREFIX + I18n.translate("error.player_not_found", args[1]));
-            return;
-        }
+        OfflinePlayer target = findOfflinePlayer(args);
+        if (target == null) return;
         if (!flat.isTrusted(target)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("untrust.not_trusted", target.getName()));
             return;
@@ -334,6 +328,15 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         return blocksToChange;
     }
 
+    private @Nullable OfflinePlayer findOfflinePlayer(String[] args) {
+        OfflinePlayer target = Bukkit.getOfflinePlayerIfCached(args[1]);
+        if (target == null) {
+            player.sendMessage(Flats.PREFIX + I18n.translate("error.player_not_found", args[1]));
+            return null;
+        }
+        return target;
+    }
+    
     private @Nullable Flat getOwnedFlatAtPlayerLocation() {
         Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(player.getLocation());
         if (flat == null) {

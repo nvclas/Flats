@@ -11,7 +11,7 @@ import java.util.logging.Level;
  * Manages the scheduling of periodic auto-save tasks for the plugin's data.
  * <p>
  * The {@code AutoSaveScheduler} runs a repetitive task at a specified interval to save all data
- * managed by the plugin. It provides methods to start and stop this task. The scheduler only starts
+ * cached by the plugin. It provides methods to start and stop this task. The scheduler only starts
  * if the interval is greater than zero.
  */
 public class AutoSaveScheduler {

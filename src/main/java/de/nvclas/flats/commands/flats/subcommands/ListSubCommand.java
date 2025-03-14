@@ -10,24 +10,24 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class ListSubCommand implements SubCommand {
-    
+
     private final Flats flatsPlugin;
-    
+
     public ListSubCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
     }
-    
+
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
         if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
             return;
         }
-        if (flatsPlugin.getFlatsManager().getAllFlatNames().isEmpty()) {
+        if (flatsPlugin.getFlatsCache().getAllFlatNames().isEmpty()) {
             player.sendMessage(Flats.PREFIX + I18n.translate("list.empty"));
             return;
         }
         player.sendMessage(Flats.PREFIX + I18n.translate("list.title"));
-        for (Flat flat : flatsPlugin.getFlatsManager().getAllFlats()) {
+        for (Flat flat : flatsPlugin.getFlatsCache().getAllFlats()) {
             player.sendMessage(Flats.PREFIX + I18n.translate("info.flat", flat.getName()));
             if (!flat.hasOwner()) {
                 player.sendMessage(Flats.PREFIX + I18n.translate("info.unoccupied"));

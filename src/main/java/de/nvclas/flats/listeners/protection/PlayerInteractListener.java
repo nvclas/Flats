@@ -14,17 +14,17 @@ public class PlayerInteractListener implements Listener {
     public PlayerInteractListener(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
     }
-    
+
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        if(event.getClickedBlock() != null) {
-            Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(event.getClickedBlock().getLocation());
+        if (event.getClickedBlock() != null) {
+            Flat flat = flatsPlugin.getFlatsCache().getFlatByLocation(event.getClickedBlock().getLocation());
             EventCancelChecker.cancelEventIfPlayerNotTrustedOrOwner(event, flat, player);
             return;
         }
-        if(event.getInteractionPoint() != null) {
-            Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(event.getInteractionPoint());
+        if (event.getInteractionPoint() != null) {
+            Flat flat = flatsPlugin.getFlatsCache().getFlatByLocation(event.getInteractionPoint());
             EventCancelChecker.cancelEventIfPlayerNotTrustedOrOwner(event, flat, player);
         }
     }

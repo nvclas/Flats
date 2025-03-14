@@ -8,13 +8,13 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class RemoveSubCommand implements SubCommand {
-    
+
     private final Flats flatsPlugin;
-    
+
     public RemoveSubCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
     }
-    
+
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
         if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
@@ -25,11 +25,11 @@ public class RemoveSubCommand implements SubCommand {
             return;
         }
         String flatToRemove = args[1];
-        if (!flatsPlugin.getFlatsManager().getAllFlatNames().contains(flatToRemove)) {
+        if (!flatsPlugin.getFlatsCache().getAllFlatNames().contains(flatToRemove)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_not_exist"));
             return;
         }
-        flatsPlugin.getFlatsManager().delete(flatToRemove);
+        flatsPlugin.getFlatsCache().delete(flatToRemove);
         player.sendMessage(Flats.PREFIX + I18n.translate("remove.success", flatToRemove));
     }
 }

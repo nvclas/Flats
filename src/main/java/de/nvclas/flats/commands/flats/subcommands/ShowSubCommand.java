@@ -17,13 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ShowSubCommand implements SubCommand {
-    
+
     private final Flats flatsPlugin;
-    
+
     public ShowSubCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
     }
-    
+
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
         byte showTime = 10;
@@ -72,7 +72,7 @@ public class ShowSubCommand implements SubCommand {
     private @NotNull List<Block> getBlocksToChange(Player player) {
         List<Block> blocksToChange = new ArrayList<>();
 
-        flatsPlugin.getFlatsManager()
+        flatsPlugin.getFlatsCache()
                 .getAllAreas()
                 .stream()
                 .filter(area -> area.isWithinDistance(player.getLocation(), 100))
@@ -80,5 +80,5 @@ public class ShowSubCommand implements SubCommand {
 
         return blocksToChange;
     }
-    
+
 }

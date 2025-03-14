@@ -98,7 +98,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
                     .toList();
         } else if (args.length == 2 && args[0].equalsIgnoreCase(FlatsSubCommand.REMOVE.getSubCommandName()) && player.hasPermission(
                 Permissions.ADMIN)) {
-            completions = flatsPlugin.getFlatsManager()
+            completions = flatsPlugin.getFlatsCache()
                     .getAllFlatNames()
                     .stream()
                     .filter(flatName -> flatName.toLowerCase().startsWith(args[1].toLowerCase()))

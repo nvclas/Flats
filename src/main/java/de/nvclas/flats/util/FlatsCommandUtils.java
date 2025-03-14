@@ -24,7 +24,7 @@ public class FlatsCommandUtils {
      * @return the {@link Flat} owned by the player at their current location, or {@code null} if the player is not in a flat or does not own the flat.
      */
     public @Nullable Flat getOwnedFlatAtPlayerLocation(Player player, Flats flatsPlugin) {
-        Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(player.getLocation());
+        Flat flat = flatsPlugin.getFlatsCache().getFlatByLocation(player.getLocation());
         if (flat == null) {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.not_in_flat"));
             return null;

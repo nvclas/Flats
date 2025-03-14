@@ -25,7 +25,7 @@ public class PlayerMoveListener implements Listener {
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         Player player = event.getPlayer();
         Flat currentFlat = playerFlats.get(player);
-        Flat newFlat = flatsPlugin.getFlatsManager().getFlatByLocation(event.getTo());
+        Flat newFlat = flatsPlugin.getFlatsCache().getFlatByLocation(event.getTo());
 
         if (!Objects.equals(currentFlat, newFlat)) {
             if (currentFlat != null) {

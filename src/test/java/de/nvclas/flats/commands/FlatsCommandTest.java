@@ -1,13 +1,14 @@
 package de.nvclas.flats.commands;
 
 import de.nvclas.flats.Flats;
+import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.items.SelectionItem;
 import de.nvclas.flats.testutil.TestUtil;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.volumes.Flat;
 import de.nvclas.flats.volumes.Selection;
 import org.bukkit.Location;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ class FlatsCommandTest {
     private PlayerMock player;
     private PlayerMock target;
     private WorldMock world;
+    private FlatsCache flatsCache;
 
     @BeforeEach
     void setUp() {
@@ -42,6 +44,7 @@ class FlatsCommandTest {
         world = server.addSimpleWorld("world");
         player = server.addPlayer();
         target = server.addPlayer();
+        flatsCache = plugin.getFlatsCache();
     }
 
     @AfterEach
@@ -83,7 +86,7 @@ class FlatsCommandTest {
         setupValidSelection();
         executeCommandAsOp("flats add " + TEST_FLAT_NAME);
         verifyMessageEquals(I18n.translate("add.success", TEST_FLAT_NAME));
-        assertTrue(plugin.getFlatsManager().existsFlat(TEST_FLAT_NAME), "Flat should exist after being added.");
+        assertTrue(flatsCache.existsFlat(TEST_FLAT_NAME), "Flat should exist after being added.");
     }
 
     @Test
@@ -91,7 +94,7 @@ class FlatsCommandTest {
         createValidFlat();
         executeCommandAsOp("flats remove " + TEST_FLAT_NAME);
         verifyMessageEquals(I18n.translate("remove.success", TEST_FLAT_NAME));
-        assertFalse(plugin.getFlatsManager().existsFlat(TEST_FLAT_NAME), "Flat should not exist after removal.");
+        assertFalse(flatsCache.existsFlat(TEST_FLAT_NAME), "Flat should not exist after removal.");
     }
 
     @Test
@@ -100,7 +103,6 @@ class FlatsCommandTest {
         player.setLocation(new Location(world, 5, 5, 5));
         executeCommand("flats claim");
         verifyMessageEquals(I18n.translate("claim.success"));
-        assertNotNull(createdFlat, "Created flat should not be null.");
         assertTrue(createdFlat.isOwner(player), "Player should be the owner of the claimed flat.");
     }
 
@@ -108,7 +110,7 @@ class FlatsCommandTest {
     void testSaveWorldWithDeletedWorld() {
         createValidFlat();
         server.removeWorld(world);
-        assertDoesNotThrow(() -> plugin.getFlatsManager().saveAll(),
+        assertDoesNotThrow(() -> flatsCache.saveAll(),
                 "Save operation should not throw an exception even if the world is deleted.");
     }
 
@@ -117,8 +119,7 @@ class FlatsCommandTest {
         testClaimCommand();
         executeCommand("flats trust " + target.getName());
         verifyMessageEquals(I18n.translate("trust.success", target.getName()));
-        Flat flat = plugin.getFlatsManager().getFlat(TEST_FLAT_NAME);
-        assertNotNull(flat, "Flat should not be null.");
+        Flat flat = flatsCache.getExistingFlat(TEST_FLAT_NAME);
         assertTrue(flat.isTrusted(target), "Target player should be trusted in the flat.");
     }
 
@@ -133,8 +134,7 @@ class FlatsCommandTest {
         testTrustCommandWithOnlineTarget();
         executeCommand("flats untrust " + target.getName());
         verifyMessageEquals(I18n.translate("untrust.success", target.getName()));
-        Flat flat = plugin.getFlatsManager().getFlat(TEST_FLAT_NAME);
-        assertNotNull(flat, "Flat should not be null.");
+        Flat flat = flatsCache.getExistingFlat(TEST_FLAT_NAME);
         assertFalse(flat.isTrusted(target), "Target player should no longer be trusted in the flat.");
     }
 
@@ -186,10 +186,10 @@ class FlatsCommandTest {
      *
      * @return The created {@link Flat}, or {@code null} if creation failed.
      */
-    private @Nullable Flat createValidFlat() {
+    private @NotNull Flat createValidFlat() {
         setupValidSelection();
         executeCommandAsOp("flats add " + TEST_FLAT_NAME);
         verifyMessageEquals("add.success", TEST_FLAT_NAME);
-        return plugin.getFlatsManager().getFlat(TEST_FLAT_NAME);
+        return flatsCache.getExistingFlat(TEST_FLAT_NAME);
     }
 }

@@ -2,8 +2,8 @@ package de.nvclas.flats.commands.flats.subcommands;
 
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.commands.flats.SubCommand;
-import de.nvclas.flats.util.FlatsCommandUtils;
 import de.nvclas.flats.util.CommandUtils;
+import de.nvclas.flats.util.FlatsCommandUtils;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.OfflinePlayer;
@@ -11,13 +11,13 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class TrustSubCommand implements SubCommand {
-    
+
     private final Flats flatsPlugin;
-    
+
     public TrustSubCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
     }
-    
+
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
         if (args.length < 2) {
@@ -34,8 +34,8 @@ public class TrustSubCommand implements SubCommand {
             player.sendMessage(Flats.PREFIX + I18n.translate("trust.already_trusted", target.getName()));
             return;
         }
-        flatsPlugin.getFlatsManager().addTrusted(flat.getName(), target);
+        flat.addTrusted(target);
         player.sendMessage(Flats.PREFIX + I18n.translate("trust.success", target.getName()));
     }
-    
+
 }

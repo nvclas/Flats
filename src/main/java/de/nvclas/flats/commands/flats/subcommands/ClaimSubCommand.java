@@ -10,14 +10,14 @@ import org.jetbrains.annotations.NotNull;
 public class ClaimSubCommand implements SubCommand {
 
     private final Flats flatsPlugin;
-    
+
     public ClaimSubCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
     }
-    
+
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        Flat flat = flatsPlugin.getFlatsManager().getFlatByLocation(player.getLocation());
+        Flat flat = flatsPlugin.getFlatsCache().getFlatByLocation(player.getLocation());
         if (flat == null) {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.not_in_flat"));
             return;

@@ -9,7 +9,7 @@ import de.nvclas.flats.listeners.PlayerMoveListener;
 import de.nvclas.flats.listeners.StickInteractListener;
 import de.nvclas.flats.listeners.protection.EntityDamageListener;
 import de.nvclas.flats.listeners.protection.PlayerInteractListener;
-import de.nvclas.flats.managers.FlatsManager;
+import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.schedulers.AutoSaveScheduler;
 import de.nvclas.flats.schedulers.CommandDelayScheduler;
 import de.nvclas.flats.util.I18n;
@@ -26,7 +26,7 @@ public class Flats extends JavaPlugin {
 
     private FlatsConfig flatsConfig;
     private SettingsConfig settingsConfig;
-    private FlatsManager flatsManager;
+    private FlatsCache flatsCache;
     private AutoSaveScheduler autoSaveScheduler;
 
     @Override
@@ -40,10 +40,10 @@ public class Flats extends JavaPlugin {
         I18n.loadTranslations(settingsConfig.getLanguage());
 
         //Managers
-        flatsManager = new FlatsManager(this);
+        flatsCache = new FlatsCache(this);
 
         //Flats
-        flatsManager.loadAll();
+        flatsCache.loadAll();
 
         //Schedulers
         autoSaveScheduler = new AutoSaveScheduler(this);
@@ -67,7 +67,7 @@ public class Flats extends JavaPlugin {
     @Override
     public void onDisable() {
         //Save flats
-        flatsManager.saveAll();
+        flatsCache.saveAll();
 
         //Stop schedulers
         autoSaveScheduler.stop();

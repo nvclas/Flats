@@ -58,7 +58,7 @@ public class AutoSaveScheduler {
             @Override
             public void run() {
                 flatsPlugin.getLogger().log(Level.CONFIG, () -> "Saving flats...");
-                flatsPlugin.getFlatsManager().saveAll();
+                flatsPlugin.getFlatsCache().saveAll();
                 flatsPlugin.getLogger().log(Level.CONFIG, () -> "Flats saved");
             }
         }.runTaskTimerAsynchronously(flatsPlugin, 0, settingsConfig.getAutoSaveInterval() * 20);

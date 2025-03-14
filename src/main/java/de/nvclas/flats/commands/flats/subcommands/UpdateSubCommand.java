@@ -10,9 +10,9 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class UpdateSubCommand implements SubCommand {
-    
+
     private final Flats flatsPlugin;
-    
+
     public UpdateSubCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
     }

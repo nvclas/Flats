@@ -1,6 +1,6 @@
 package de.nvclas.flats;
 
-import de.nvclas.flats.commands.FlatsCommand;
+import de.nvclas.flats.commands.flats.FlatsCommand;
 import de.nvclas.flats.config.FlatsConfig;
 import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.listeners.FlatEnteredOrLeftListener;
@@ -35,6 +35,10 @@ public class Flats extends JavaPlugin {
         flatsConfig = new FlatsConfig("flats.yml", this);
         settingsConfig = new SettingsConfig("settings.yml", this);
 
+        //Translations
+        I18n.initialize(this);
+        I18n.loadTranslations(settingsConfig.getLanguage());
+
         //Managers
         flatsManager = new FlatsManager(this);
 
@@ -56,10 +60,6 @@ public class Flats extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FlatEnteredOrLeftListener(this), this);
         getServer().getPluginManager().registerEvents(new EntityDamageListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(this), this);
-
-        //Translations
-        I18n.initialize(this);
-        I18n.loadTranslations(settingsConfig.getLanguage());
 
         getLogger().log(Level.INFO, () -> "Flats initialized successfully");
     }

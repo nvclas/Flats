@@ -1,7 +1,6 @@
-package de.nvclas.flats.commands;
+package de.nvclas.flats.commands.flats;
 
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a set of subcommands associated with the "flats" command context.
@@ -19,30 +18,12 @@ public enum FlatsSubCommand {
     INFO("info"),
     LIST("list"),
     SHOW("show"),
-    UPDATE("update"),
-    NONE("none");
+    UPDATE("update");
 
     private final String subCommandName;
 
     FlatsSubCommand(String commandName) {
         this.subCommandName = commandName;
-    }
-
-    /**
-     * Converts a given string to its corresponding {@link FlatsSubCommand} enum value.
-     * If the input does not match any valid subcommand, {@link FlatsSubCommand#NONE} is returned.
-     *
-     * @param command the string representing a subcommand; expected to match one of the predefined
-     *                {@code FlatsSubCommand} names (case insensitive).
-     * @return the matching {@code FlatsSubCommand} enumeration value, or {@link FlatsSubCommand#NONE}
-     * if no match is found.
-     */
-    public static @NotNull FlatsSubCommand fromString(String command) {
-        try {
-            return FlatsSubCommand.valueOf(command.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return NONE;
-        }
     }
 
     /**

@@ -39,9 +39,9 @@ class FlatsCommandTest {
     void setUp() {
         server = MockBukkit.mock();
         plugin = MockBukkit.load(Flats.class);
+        world = server.addSimpleWorld("world");
         player = server.addPlayer();
         target = server.addPlayer();
-        world = server.addSimpleWorld("world");
     }
 
     @AfterEach

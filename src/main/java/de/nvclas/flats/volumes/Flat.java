@@ -66,6 +66,12 @@ public class Flat {
         return owner != null;
     }
 
+    /**
+     * Checks if the given {@link OfflinePlayer} is in the list of trusted players for this flat.
+     *
+     * @param player The {@link OfflinePlayer} to check. Must not be null.
+     * @return {@code true} if the specified player is trusted; {@code false} otherwise.
+     */
     public boolean isTrusted(@NotNull OfflinePlayer player) {
         return trusted.contains(player);
     }

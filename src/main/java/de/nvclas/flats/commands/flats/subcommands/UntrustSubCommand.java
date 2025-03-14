@@ -17,7 +17,7 @@ public class UntrustSubCommand implements SubCommand {
     public UntrustSubCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
     }
-    
+
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
         if (args.length < 2) {

@@ -16,7 +16,7 @@ public class UpdateSubCommand implements SubCommand {
     public UpdateSubCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
     }
-    
+
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
         if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {

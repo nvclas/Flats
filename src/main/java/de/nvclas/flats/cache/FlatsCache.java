@@ -17,12 +17,12 @@ import java.util.Objects;
  * Manages a cache of flats and provides methods to interact with them.
  *
  * <p>
- * The {@code FlatsCache} class handles the storage and operations related to 
- * flat management, such as adding, retrieving, saving, and deleting flats. 
+ * The {@code FlatsCache} class handles the storage and operations related to
+ * flat management, such as adding, retrieving, saving, and deleting flats.
  * It uses a configuration source to persist and load data.
  *
  * <p>
- * Instances of this class are initialized with a reference to the 
+ * Instances of this class are initialized with a reference to the
  * {@link FlatsConfig}, enabling seamless integration with the underlying storage.
  */
 public class FlatsCache {
@@ -95,7 +95,7 @@ public class FlatsCache {
      * them as a single list.
      *
      * @return A non-null {@link List} of {@link Area} instances representing all areas.
-     *         The returned list may be empty if no areas are defined.
+     * The returned list may be empty if no areas are defined.
      */
     public @NotNull List<Area> getAllAreas() {
         return allFlats.values().stream().flatMap(flat -> flat.getAreas().stream()).toList();
@@ -132,7 +132,7 @@ public class FlatsCache {
     /**
      * Retrieves the {@link Flat} that contains the provided {@link Location}.
      * <p>
-     * The method checks all existing flats and returns the first one where the location 
+     * The method checks all existing flats and returns the first one where the location
      * is within the bounds of any associated {@link Area}. If no such flat is found, it returns {@code null}.
      *
      * @param location the {@link Location} to find a flat for. Must not be {@code null}.
@@ -141,12 +141,12 @@ public class FlatsCache {
     public @Nullable Flat getFlatByLocation(@NotNull Location location) {
         return allFlats.values().stream().filter(flat -> flat.isWithinBounds(location)).findFirst().orElse(null);
     }
-    
+
     /**
      * Creates a new flat with the specified name and area.
      *
      * <p>
-     * The created flat is stored in the internal cache. If a flat with the 
+     * The created flat is stored in the internal cache. If a flat with the
      * same name already exists, an exception is thrown.
      *
      * @param name the name of the flat to be created, must not be null

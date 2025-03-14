@@ -1,16 +1,14 @@
 package de.nvclas.flats.commands.flats.subcommands;
 
 import de.nvclas.flats.Flats;
-import de.nvclas.flats.commands.flats.SubCommand;
 import de.nvclas.flats.cache.FlatsCache;
+import de.nvclas.flats.commands.flats.SubCommand;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
 
 public class InfoSubCommand implements SubCommand {
 

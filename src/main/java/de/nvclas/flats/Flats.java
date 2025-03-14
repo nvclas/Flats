@@ -1,5 +1,6 @@
 package de.nvclas.flats;
 
+import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.commands.flats.FlatsCommand;
 import de.nvclas.flats.config.FlatsConfig;
 import de.nvclas.flats.config.SettingsConfig;
@@ -9,7 +10,6 @@ import de.nvclas.flats.listeners.PlayerMoveListener;
 import de.nvclas.flats.listeners.StickInteractListener;
 import de.nvclas.flats.listeners.protection.EntityDamageListener;
 import de.nvclas.flats.listeners.protection.PlayerInteractListener;
-import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.schedulers.AutoSaveScheduler;
 import de.nvclas.flats.schedulers.CommandDelayScheduler;
 import de.nvclas.flats.util.I18n;

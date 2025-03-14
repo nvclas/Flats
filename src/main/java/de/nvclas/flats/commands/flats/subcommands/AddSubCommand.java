@@ -1,8 +1,8 @@
 package de.nvclas.flats.commands.flats.subcommands;
 
 import de.nvclas.flats.Flats;
-import de.nvclas.flats.commands.flats.SubCommand;
 import de.nvclas.flats.cache.FlatsCache;
+import de.nvclas.flats.commands.flats.SubCommand;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Area;

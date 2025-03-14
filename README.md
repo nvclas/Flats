@@ -9,8 +9,8 @@ easy way to manage plots and ensure that players have their own designated areas
 ## Features
 
 - **Create Flats:** Easily create areas with the selection tool and commands.
-- **Claim Flats:** Let players claim areas, allowing them to build only in their designated flats. (PARTIALLY ADDED)
-- **Manage Flats:** Add or remove trusted players to allow them building in your flat. (NOT YET ADDED)
+- **Claim Flats:** Let players claim areas, allowing them to build only in their designated flats.
+- **Manage Flats:** Add or remove trusted players to allow them building in your flat.
 - **Interactive Commands:** Use simple commands to interact with the plugin.
 
 ## Installation

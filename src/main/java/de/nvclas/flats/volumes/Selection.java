@@ -8,6 +8,11 @@ import org.bukkit.entity.Player;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+/**
+ * Represents a three-dimensional selection defined by two corner points.
+ * A selection can calculate its volume, check for intersections with other areas,
+ * and is associated with specific players through a global map.
+ */
 @Getter
 @Setter
 public class Selection {
@@ -17,25 +22,22 @@ public class Selection {
     private Location pos2;
 
     /**
-     * Retrieves the {@link Selection} associated with the specified player.
-     * <p>
-     * If no selection exists for the player, a new selection is created, associated with the player,
-     * and then returned. Uses a weak reference to ensure unused selections can be garbage collected.
+     * Retrieves the {@link Selection} associated with the given {@link Player}.
+     * If no selection exists for the specified player, a new one is created and returned.
      *
-     * @param player The {@link Player} for whom the selection is retrieved or created. Must not be null.
-     * @return The {@link Selection} object associated with the given player.
+     * @param player The player whose selection is to be retrieved. Must not be null.
+     * @return The {@link Selection} object associated with the given player. Never null.
      */
     public static Selection getSelection(Player player) {
         return selections.computeIfAbsent(player, k -> new Selection());
     }
 
     /**
-     * Calculates the volume of the selection defined by the positions {@code pos1} and {@code pos2}.
+     * Calculates the volume of a three-dimensional cuboid defined by two corner points {@code pos1} and {@code pos2}.
      * <p>
-     * The volume is determined by treating the selection as a rectangular prism, where {@code pos1} and {@code pos2}
-     * represent two opposite corners of the prism. If either position is {@code null}, the volume is defined as {@code 0}.
+     * If either {@code pos1} or {@code pos2} is {@code null}, the method returns {@code 0}.
      *
-     * @return The calculated volume of the selection as an integer. Returns {@code 0} if either {@code pos1} or {@code pos2} is {@code null}.
+     * @return The calculated volume as an {@code int}, or {@code 0} if the positions are not defined.
      */
     public int calculateVolume() {
         if (pos1 == null || pos2 == null) {
@@ -49,26 +51,19 @@ public class Selection {
     }
 
     /**
-     * Clears this selection by removing it from the collection of selections
-     * managed by the containing class.
+     * Removes the current {@link Selection} instance from the global selection map.
      * <p>
-     * This method ensures that the current {@link Selection} instance is
-     * removed from the {@code selections} map, effectively disassociating
-     * it from any tracked entries.
+     * This method effectively clears the selection associated with this object.
      */
     public void clear() {
         selections.values().remove(this);
     }
 
     /**
-     * Determines whether this selection intersects with the provided {@link Area}.
-     * <p>
-     * This method checks if the volumetric boundaries of the current selection
-     * overlap with those of the given area in three-dimensional space.
+     * Checks if the current selection intersects with the specified {@link Area}.
      *
-     * @param area The {@link Area} to check for intersection. Must not be null.
-     * @return {@code true} if this selection intersects with the specified area;
-     * {@code false} otherwise.
+     * @param area the {@code Area} to test for intersection with the current selection
+     * @return {@code true} if the two areas intersect, {@code false} otherwise
      */
     public boolean intersects(Area area) {
         double maxX1 = Math.max(pos1.getX(), pos2.getX());

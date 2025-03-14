@@ -26,13 +26,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 /**
- * The {@code UpdateDownloader} class is responsible for managing the process of downloading,
- * updating, and replacing plugin files in a Minecraft server environment.
- * <p>
- * It fetches the latest release of the plugin from a specified GitHub API endpoint,
- * downloads the corresponding JAR file, and replaces the existing plugin JAR.
- * <p>
- * The class also provides functionality to unload the currently running plugin and delete the old JAR file.
+ * Manages the process of downloading and updating a plugin by retrieving the latest release
+ * from a specified GitHub API URL and handling related operations such as file downloading, moving
+ * to the appropriate directory, and plugin cleanup.
  */
 public class UpdateDownloader {
 
@@ -55,16 +51,15 @@ public class UpdateDownloader {
     }
 
     /**
-     * Downloads the latest release of the plugin from a specified GitHub API endpoint.
-     * The method performs several asynchronous operations, including fetching the download URL,
-     * downloading the file, and moving the downloaded JAR file to the plugins directory.
-     * <p>
-     * If any errors occur during the process, they are logged, and the method returns a failure status.
+     * Downloads the latest release of the plugin and moves the downloaded file to the plugins directory.
+     * The method fetches the latest release URL asynchronously, downloads the file if available,
+     * and performs necessary file operations to place the plugin in the appropriate location.
+     * Handles errors during the process and reports success, failure, or the absence of a release.
      *
-     * @return {@link UpdateStatus} indicating the result of the update operation. Possible values are:
-     * - {@code UpdateStatus.SUCCESS}: The latest release was successfully downloaded and moved to the plugins directory.
-     * - {@code UpdateStatus.FAILED}: An error occurred during the update process.
-     * - {@code UpdateStatus.NOT_FOUND}: No valid JAR file was found in the latest release.
+     * @return an {@link UpdateStatus} indicating the result of the operation:
+     * {@code SUCCESS} if the update was downloaded and moved successfully,
+     * {@code NOT_FOUND} if no suitable release was found,
+     * or {@code FAILED} if any error occurred during the download or file operations.
      */
     public UpdateStatus downloadLatestRelease() {
         try {
@@ -89,13 +84,14 @@ public class UpdateDownloader {
     }
 
     /**
-     * Unloads the current plugin and deletes its associated JAR file asynchronously.
-     * This method should be run when {@link #downloadLatestRelease()} returns {@link UpdateStatus#SUCCESS}.
+     * Unloads the current plugin and asynchronously deletes its jar file.
      * <p>
-     * This method retrieves the plugin instance from the Bukkit plugin manager using the name
-     * of the current plugin. If the plugin is found, it is disabled using the plugin manager.
-     * After successfully disabling the plugin, the JAR file corresponding to the plugin
-     * is deleted asynchronously.
+     * This method disables the plugin using the Bukkit Plugin Manager to ensure
+     * it is no longer active. Afterward, it triggers an asynchronous operation
+     * to delete the plugin's jar file from the plugins directory.
+     * <p>
+     * The deletion process is performed in a non-blocking manner, but any
+     * potential errors during the deletion are logged.
      */
     public void unloadPluginAndDeleteJar() {
         Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(plugin.getName());

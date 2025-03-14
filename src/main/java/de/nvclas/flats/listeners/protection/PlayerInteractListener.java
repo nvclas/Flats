@@ -1,26 +1,31 @@
 package de.nvclas.flats.listeners.protection;
 
-import de.nvclas.flats.managers.FlatsManager;
-import de.nvclas.flats.utils.Permissions;
+import de.nvclas.flats.Flats;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.jetbrains.annotations.NotNull;
 
 public class PlayerInteractListener implements Listener {
+
+    private final Flats flatsPlugin;
+
+    public PlayerInteractListener(Flats flatsPlugin) {
+        this.flatsPlugin = flatsPlugin;
+    }
+
     @EventHandler
-    public void onBlockPlace(@NotNull PlayerInteractEvent event) {
-        if (event.getInteractionPoint() == null) return;
-        Flat flat = FlatsManager.getFlatByLocation(event.getInteractionPoint());
+    public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        if (flat == null || player.hasPermission(Permissions.ADMIN)) {
+        if (event.getClickedBlock() != null) {
+            Flat flat = flatsPlugin.getFlatsCache().getFlatByLocation(event.getClickedBlock().getLocation());
+            EventCancelChecker.cancelEventIfPlayerNotTrustedOrOwner(event, flat, player);
             return;
         }
-
-        if (!flat.isOwner(player)) {
-            event.setCancelled(true);
+        if (event.getInteractionPoint() != null) {
+            Flat flat = flatsPlugin.getFlatsCache().getFlatByLocation(event.getInteractionPoint());
+            EventCancelChecker.cancelEventIfPlayerNotTrustedOrOwner(event, flat, player);
         }
     }
 }

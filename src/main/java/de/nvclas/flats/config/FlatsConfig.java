@@ -5,11 +5,18 @@ import de.nvclas.flats.volumes.Flat;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
  * The {@code FlatsConfig} class extends {@link Config} and provides methods to manage
@@ -22,20 +29,19 @@ import java.util.UUID;
  */
 public class FlatsConfig extends Config {
 
-    public FlatsConfig(String fileName) {
-        super(fileName);
+    public FlatsConfig(String fileName, JavaPlugin plugin) {
+        super(fileName, plugin);
     }
 
     /**
-     * Saves the provided flats to the configuration file.
+     * Saves a collection of flats to the configuration file by clearing the existing flats data
+     * and persisting each flat.
      * <p>
-     * This method clears any existing flat data in the configuration under the key
-     * defined by {@link Paths#FLATS}, then saves each flat by invoking {@code saveFlat}
-     * for each entry in the provided map. Finally, it writes the changes to the configuration
-     * file by calling {@link #saveConfig()}.
+     * This method removes all currently stored flat data in the configuration file and then adds
+     * the provided flats to it. The updated configuration is saved to disk afterward.
      *
-     * @param flats A map where the keys are the flat names (as {@code String}) and the values
-     *              are the corresponding {@link Flat} objects to be saved.
+     * @param flats A map containing the flats to be saved, where the key is the flat name,
+     *              and the value is the {@link Flat} instance representing the flat. Must not be null.
      */
     public void saveFlats(Map<String, Flat> flats) {
         getConfigFile().set(Paths.FLATS, null);
@@ -44,16 +50,14 @@ public class FlatsConfig extends Config {
     }
 
     /**
-     * Loads all flats configuration data from the configuration file into a map.
+     * Loads all defined flats from the configuration file.
      * <p>
-     * This method retrieves the section of the configuration related to flats using the
-     * {@link ConfigurationSection} provided by {@link #getConfigFile()}.
-     * For each flat identifier found, it calls {@link #loadFlat(String)} to create and map
-     * the corresponding {@code Flat} object.
-     * If the relevant configuration section does not exist, an empty map is returned.
+     * This method retrieves the flat definitions stored under {@link Paths#FLATS} in the configuration file,
+     * processes them into {@link Flat} objects, and returns a map associating each flat's name with its corresponding
+     * {@link Flat} instance. If no flats are defined or the configuration section is absent, an empty map is returned.
      *
-     * @return A {@link Map} where the key is the name of the flat and the value is the
-     * corresponding {@link Flat} object. If no flats are found, the map will be empty.
+     * @return A map containing the loaded flats, where the keys are flat names and the values are their respective
+     * {@link Flat} objects. Returns an empty map if no flats are defined or if the configuration section is null.
      */
     public Map<String, Flat> loadFlats() {
         ConfigurationSection flatsSection = getConfigFile().getConfigurationSection(Paths.FLATS);
@@ -64,6 +68,7 @@ public class FlatsConfig extends Config {
         return flatsSection.getKeys(false)
                 .stream()
                 .map(this::loadFlat)
+                .filter(Objects::nonNull)
                 .collect(HashMap::new, (map, flat) -> map.put(flat.getName(), flat), HashMap::putAll);
     }
 
@@ -73,17 +78,63 @@ public class FlatsConfig extends Config {
 
         getConfigFile().set(Paths.getAreasPath(flatName),
                 flat.getAreas().stream().map(Area::getLocationString).toList());
+
+        getConfigFile().set(Paths.getTrustedPath(flatName),
+                flat.getTrusted().stream().map(player -> player.getUniqueId().toString()).toList());
     }
 
-    private Flat loadFlat(String flatName) {
+    private @Nullable Flat loadFlat(String flatName) {
+        OfflinePlayer owner = loadOwner(flatName);
+        List<Area> areas = loadAreas(flatName);
+        if (areas == null) return null;
+
+        List<OfflinePlayer> trustedPlayers = loadTrustedPlayers(flatName);
+
+        return new Flat(flatName, owner, areas, trustedPlayers);
+    }
+
+    private @Nullable OfflinePlayer loadOwner(String flatName) {
         String ownerUuid = getConfigFile().getString(Paths.getOwnerPath(flatName));
-        List<String> areaStrings = getConfigFile().getStringList(Paths.getAreasPath(flatName));
+        return (ownerUuid != null && !ownerUuid.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(ownerUuid)) : null;
+    }
 
-        OfflinePlayer owner = (ownerUuid != null && !ownerUuid.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(
-                ownerUuid)) : null;
+    private @Nullable List<Area> loadAreas(String flatName) {
+        List<String> locationStrings = getConfigFile().getStringList(Paths.getAreasPath(flatName));
+        List<Area> areas = locationStrings.stream()
+                .map(locationString -> parseAreaOrNull(locationString, flatName))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(ArrayList::new));
 
-        List<Area> areas = areaStrings.stream().map(areaString -> Area.fromString(areaString, flatName)).toList();
+        if (areas.isEmpty()) {
+            logWarning("Flat '" + flatName + "' has no valid areas and will not be loaded.");
+            return null;
+        }
 
-        return new Flat(flatName, areas, owner);
+        if (areas.size() < locationStrings.size()) {
+            logWarning(
+                    "!! ANY INVALID AREAS WILL BE REMOVED ON NEXT SAVE, PLEASE BACKUP NOW IF THEY ARE STILL NEEDED !!");
+        }
+
+        return areas;
+    }
+
+    private @Nullable Area parseAreaOrNull(String locationString, String flatName) {
+        try {
+            return Area.fromString(locationString, flatName);
+        } catch (IllegalArgumentException e) {
+            logWarning("Flat '" + flatName + "' has an invalid area string '" + locationString + "' and will not be loaded.");
+            return null;
+        }
+    }
+
+    private @NotNull List<OfflinePlayer> loadTrustedPlayers(String flatName) {
+        List<String> trustedUuids = getConfigFile().getStringList(Paths.getTrustedPath(flatName));
+        return trustedUuids.stream()
+                .map(uuid -> Bukkit.getOfflinePlayer(UUID.fromString(uuid)))
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private void logWarning(String message) {
+        plugin.getLogger().log(Level.WARNING, () -> message);
     }
 }

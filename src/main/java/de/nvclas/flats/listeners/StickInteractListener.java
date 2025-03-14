@@ -2,8 +2,8 @@ package de.nvclas.flats.listeners;
 
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.items.SelectionItem;
-import de.nvclas.flats.utils.I18n;
-import de.nvclas.flats.utils.Permissions;
+import de.nvclas.flats.util.I18n;
+import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Selection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,11 +26,11 @@ public class StickInteractListener implements Listener {
         Selection selection = Selection.getSelection(p);
         if (event.getAction() == Action.LEFT_CLICK_BLOCK && event.getClickedBlock() != null) {
             selection.setPos1(event.getClickedBlock().getLocation());
-            p.sendMessage(Flats.PREFIX + I18n.translate("messages.position_set", "1", selection.calculateVolume()));
+            p.sendMessage(Flats.PREFIX + I18n.translate("selection.set", "1", selection.calculateVolume()));
         }
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
             selection.setPos2(event.getClickedBlock().getLocation());
-            p.sendMessage(Flats.PREFIX + I18n.translate("messages.position_set", "2", selection.calculateVolume()));
+            p.sendMessage(Flats.PREFIX + I18n.translate("selection.set", "2", selection.calculateVolume()));
         }
     }
 

@@ -1,14 +1,19 @@
 [versions]
-annotations = "26.0.1"
+annotations = "26.0.2"
 lombok = "1.18.36"
 runPaper = "2.3.1"
-paperweight = "2.0.0-beta.14"
-paper = "1.21.1-R0.1-SNAPSHOT"
+paperweightUserdev = "2.0.0-beta.14"
+paper = "1.21.4-R0.1-SNAPSHOT"
+minecraft = "1.21.4"
+mockbukkit = "4.34.1"
+junitJupiter = "5.11.4"
 
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+mockbukkit = { group = "org.mockbukkit.mockbukkit", name = "mockbukkit-v1.21", version.ref = "mockbukkit" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junitJupiter" }
 
 [plugins]
 runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
-paperweight-userdev = { id = "io.papermc.paperweight.userdev", version.ref = "paperweight" }
+paperweight-userdev = { id = "io.papermc.paperweight.userdev", version.ref = "paperweightUserdev" }

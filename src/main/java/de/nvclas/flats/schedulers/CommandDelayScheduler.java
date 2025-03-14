@@ -1,8 +1,8 @@
 package de.nvclas.flats.schedulers;
 
-import de.nvclas.flats.Flats;
 import lombok.Getter;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -11,11 +11,10 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Manages delayed execution of commands linked to specific players.
+ * The {@code CommandDelayScheduler} class manages delayed execution of commands for specific players.
+ * It provides methods to start a delay, retrieve remaining delay time, and stop all active delays.
  * <p>
- * This class allows scheduling and tracking delays associated with specific commands for individual players.
- * It utilizes a {@link BukkitRunnable} to manage asynchronous decrementing of delays and, upon expiration,
- * removes the corresponding command delay entry from the internal map.
+ * Each instance associates a command with a delay in ticks and schedules a task to decrement the delay over time.
  */
 @Getter
 public class CommandDelayScheduler {
@@ -31,22 +30,18 @@ public class CommandDelayScheduler {
     }
 
     /**
-     * Retrieves the delay associated with a particular command for a specified player.
+     * Retrieves the remaining delay for a specified command associated with a player.
      * <p>
-     * This method checks the {@code delays} map for entries matching the given player's unique identifier
-     * and the specified command. If an entry is found, the corresponding delay value is returned.
-     * If no match is found, the method returns {@code 0L}.
+     * If no delay exists for the given player and command, returns 0.
      *
-     * @param player  The {@link OfflinePlayer} for whom the delay is being retrieved.
-     *                This is used to identify the relevant entry in the {@code delays} map.
-     * @param command The specific command whose delay is being checked.
-     *                This is used to filter entries in the {@code delays} map.
-     * @return The delay value, in ticks, associated with the specified player and command.
-     * Returns {@code 0L} if no matching entry is found.
+     * @param player  The {@link OfflinePlayer} for whom the delay is being checked.
+     * @param command The command whose delay is being retrieved.
+     * @return The remaining delay in ticks, or 0 if no delay is set for the given player and command.
      */
     public static long getDelay(OfflinePlayer player, String command) {
         UUID playerId = player.getUniqueId();
-        return delays.entrySet().stream()
+        return delays.entrySet()
+                .stream()
                 .filter(entry -> entry.getValue().equals(playerId) && entry.getKey().getCommand().equals(command))
                 .map(entry -> entry.getKey().getDelay())
                 .findFirst()
@@ -54,26 +49,25 @@ public class CommandDelayScheduler {
     }
 
     /**
-     * Stops all scheduled command delays.
+     * Cancels all currently active command delay tasks managed by {@code CommandDelayScheduler}.
      * <p>
-     * This method clears the internal {@code delays} map, effectively removing all entries
-     * and halting all currently pending command delays.
+     * This method iterates through all running tasks stored in the {@code delays} map and cancels them,
+     * effectively stopping all scheduled command delays.
      */
     public static void stopAll() {
         delays.keySet().forEach(scheduler -> scheduler.task.cancel());
     }
 
     /**
-     * Starts a scheduled command delay for the given {@link OfflinePlayer}.
+     * Starts the command delay scheduler for the specified player and plugin.
      * <p>
-     * This method associates the {@link CommandDelayScheduler} instance with the player's unique identifier
-     * in the internal {@code delays} map, and initializes a {@link BukkitRunnable} to decrement the
-     * delay time asynchronously. Once the delay reaches zero, the association is removed.
+     * This method initializes a delay countdown for the associated command and player. It schedules
+     * a task that decrements the delay periodically and removes the delay entry when it reaches zero.
      *
-     * @param player The {@link OfflinePlayer} for whom the command delay is being scheduled. The mapping
-     *               between this instance and the player's unique identifier is stored to track active delays.
+     * @param player the {@link OfflinePlayer} for whom the command delay is being scheduled.
+     * @param plugin the {@link JavaPlugin} instance required to schedule the task asynchronously.
      */
-    public void start(OfflinePlayer player) {
+    public void start(OfflinePlayer player, JavaPlugin plugin) {
         delays.put(this, player.getUniqueId());
 
         task = new BukkitRunnable() {
@@ -85,7 +79,7 @@ public class CommandDelayScheduler {
                     delays.remove(CommandDelayScheduler.this);
                 }
             }
-        }.runTaskTimerAsynchronously(Flats.getInstance(), 0, 20);
+        }.runTaskTimerAsynchronously(plugin, 0, 20);
     }
 
 }

@@ -42,6 +42,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
         if (!"flats".equalsIgnoreCase(command.getName()) || !(sender instanceof Player player)) {
+            sender.sendMessage(Flats.PREFIX + I18n.translate("error.only_players"));
             return false;
         }
 

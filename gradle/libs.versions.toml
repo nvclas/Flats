@@ -2,12 +2,12 @@
 annotations = "26.0.2"
 lombok = "1.18.36"
 runPaper = "2.3.1"
-paperweight-userdev = "2.0.0-beta.14"
+paperweight-userdev = "2.0.0-beta.15"
 paper = "1.21.4-R0.1-SNAPSHOT"
 minecraft = "1.21.4"
 mockbukkit = "4.34.1"
 junit-jupiter = "5.11.4"
-junit-platform-launcher = "1.10.0"
+junit-platform-launcher = "1.11.4"
 
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }

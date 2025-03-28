@@ -19,6 +19,27 @@ easy way to manage plots and ensure that players have their own designated areas
 2. Copy the downloaded `Flats-x.x.jar` file into the `plugins` folder of your Paper Minecraft server.
 3. Restart the server to load the plugin.
 
+## Getting Started
+
+Once the plugin is installed, follow these steps to create and claim your first flat:
+
+1. **Select an area:**
+   - Use `/flats select` to get the selection tool.
+   - Mark two corners of a cubic area you want to define as a flat.
+   - One block in any bottom corner and one block on the opposite top corner.
+   
+2. **Create a flat:**
+   - Run `/flats add <name>` to register the selected area as a flat.
+
+3. **Claim the flat:**
+   - Stand inside the area and use `/flats claim` to make it yours.
+
+4. **Manage access:**
+   - Use `/flats trust <player>` to allow other players to build in your flat.
+   - Use `/flats untrust <player>` to remove their access.
+
+You're now ready to use Flats and manage your own space in the world!
+
 ## Configuration
 
 After installation, the plugin will automatically create the configuration files `flats.yml` and `settings.yml` in the

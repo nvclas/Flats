@@ -16,10 +16,9 @@ permissions:
 
 jobs:
   build:
+    if: ${{ github.event.pull_request == null || (github.event.pull_request.number == null) }}
     name: Build Project
     runs-on: ubuntu-latest
-    outputs:
-      build_status: ${{ job.status }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -43,7 +42,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-      - name: Upload build artifacts
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts

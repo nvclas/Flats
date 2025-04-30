@@ -5,6 +5,10 @@ on:
     branches-ignore:
       - main
       - master
+  pull_request:
+    branches:
+      - main
+      - master
 
 permissions:
   contents: read

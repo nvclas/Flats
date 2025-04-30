@@ -27,7 +27,7 @@ Once the plugin is installed, follow these steps to create and claim your first 
    - Use `/flats select` to get the selection tool.
    - Mark two corners of a cubic area you want to define as a flat.
    - One block at any bottom corner and one block at the opposite top corner.
-   
+
 2. **Create a flat:**
    - Run `/flats add <name>` to register the selected area as a flat.
 

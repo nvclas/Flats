@@ -1,107 +1,119 @@
 package de.nvclas.flats.config;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 /**
- * The {@code SettingsConfig} class is responsible for managing the retrieval of specific
- * configuration settings related to flat and gameplay customization.
+ * The {@code SettingsConfig} class is a specific implementation of the {@link Config} class
+ * that handles configuration settings related to flat management and player preferences.
  * <p>
- * This class extends {@link Config}, inheriting capabilities to interface with
- * configuration files and simplify the management of plugin-specific settings.
- * {@code SettingsConfig} provides convenient methods for retrieving various
- * configuration values such as language settings, maximum flat sizes, and game modes.
+ * Default values are defined for various configuration settings, which are returned in
+ * case no specific value is set in the configuration file. This class provides methods
+ * to access these settings.
  */
 public class SettingsConfig extends Config {
+
+    private static final String DEFAULT_LANGUAGE = "en_US";
+    private static final long DEFAULT_AUTO_SAVE_INTERVAL = 600;
+    private static final int DEFAULT_MAX_FLAT_SIZE = 10000;
+    private static final int DEFAULT_MAX_CLAIMABLE_FLATS = 3;
+    private static final boolean DEFAULT_ENABLE_AUTO_GAMEMODE = false;
+    private static final String DEFAULT_INSIDE_GAMEMODE = "creative";
+    private static final String DEFAULT_OUTSIDE_GAMEMODE = "adventure";
 
     public SettingsConfig(String fileName, JavaPlugin plugin) {
         super(fileName, plugin);
     }
 
     /**
-     * Retrieves the configured language setting.
+     * Retrieves the configured language value from the configuration.
      * <p>
-     * The language setting determines the localization that the application should use,
-     * which may affect in-game messages and other textual content.
+     * If the value is not explicitly set in the configuration, a default value is returned.
      *
-     * @return the language code as a {@link String}, typically representing
-     * a locale such as "en_US" or "de_DE".
+     * @return the current language setting as a non-null {@code String}.
      */
+    @NotNull
     public String getLanguage() {
-        return getConfigValue(Paths.LANGUAGE, String.class);
+        return getConfigValue(Paths.LANGUAGE, String.class, DEFAULT_LANGUAGE);
     }
 
     /**
-     * Retrieves the maximum allowed flat size from the configuration.
+     * Retrieves the auto-save interval setting from the configuration.
      * <p>
-     * This value is defined in the configuration file using the path
-     * specified by {@link Paths#MAX_FLAT_SIZE}. It represents the
-     * maximum size that a flat can occupy.
-     *
-     * @return the maximum flat size as an integer, or a default
-     * value if the configuration entry is not found.
-     */
-    public int getMaxFlatSize() {
-        return getConfigValue(Paths.MAX_FLAT_SIZE, Integer.class);
-    }
-
-    /**
-     * Checks whether the automatic gamemode feature is enabled in the configuration.
-     * <p>
-     * This method retrieves the value associated with the {@link Paths#ENABLE_AUTO_GAMEMODE} configuration key
-     * and returns it as a boolean. The feature might control automatic switching or enabling of specific game modes
-     * based on certain conditions.
-     *
-     * @return {@code true} if the automatic gamemode feature is enabled, {@code false} otherwise.
-     */
-    public boolean isAutoGamemodeEnabled() {
-        return getConfigValue(Paths.ENABLE_AUTO_GAMEMODE, Boolean.class);
-    }
-
-    /**
-     * Retrieves the configured game mode to be applied when inside a flat area.
-     * <p>
-     * This value is fetched from the configuration file using the path specified
-     * in {@link Paths#INSIDE_GAMEMODE}.
-     *
-     * @return the name of the game mode as a string, or {@code null} if the
-     * configuration value is not set or invalid.
-     */
-    public String getInsideGamemode() {
-        return getConfigValue(Paths.INSIDE_GAMEMODE, String.class);
-    }
-
-    /**
-     * Retrieves the configured game mode for players outside designated flat areas.
-     * <p>
-     * This method fetches the value associated with the {@code Paths.OUTSIDE_GAMEMODE} key from the configuration
-     * file. The returned game mode is expected to be defined as a {@code String}, typically representing
-     * one of the standard Minecraft game modes (e.g., "SURVIVAL", "CREATIVE").
-     *
-     * @return the game mode for players outside flat areas as a {@code String}, or {@code null} if not specified.
-     */
-    public String getOutsideGamemode() {
-        return getConfigValue(Paths.OUTSIDE_GAMEMODE, String.class);
-    }
-
-    /**
-     * Retrieves the interval, in milliseconds, at which data is automatically saved.
-     * The value is fetched from the configuration file.
+     * If the value is not explicitly set in the configuration, a default value is returned.
      *
      * @return the auto-save interval in milliseconds as a {@code long}.
      */
     public long getAutoSaveInterval() {
-        return getConfigValue(Paths.AUTO_SAVE_INTERVAL, Long.class);
+        return getConfigValue(Paths.AUTO_SAVE_INTERVAL, Long.class, DEFAULT_AUTO_SAVE_INTERVAL);
     }
 
-    private <T> T getConfigValue(String path, Class<T> type) {
+    /**
+     * Retrieves the maximum allowed size for a flat from the configuration.
+     * <p>
+     * If the value is not explicitly set in the configuration, a default value is returned.
+     *
+     * @return the maximum flat size as an {@code int}.
+     */
+    public int getMaxFlatSize() {
+        return getConfigValue(Paths.MAX_FLAT_SIZE, Integer.class, DEFAULT_MAX_FLAT_SIZE);
+    }
+
+    /**
+     * Retrieves the maximum number of flats a player is allowed to claim from the configuration.
+     * <p>
+     * If the value is not explicitly set in the configuration, a default value is returned.
+     *
+     * @return the maximum claimable flats as an {@code int}.
+     */
+    public int getMaxClaimableFlats() {
+        return getConfigValue(Paths.MAX_CLAIMABLE_FLATS, Integer.class, DEFAULT_MAX_CLAIMABLE_FLATS);
+    }
+
+    /**
+     * Checks whether the automatic gamemode switch is enabled in the configuration.
+     * <p>
+     * If the value is not explicitly set in the configuration, a default value is returned.
+     *
+     * @return {@code true} if auto gamemode is enabled; {@code false} otherwise.
+     */
+    public boolean isAutoGamemodeEnabled() {
+        return getConfigValue(Paths.ENABLE_AUTO_GAMEMODE, Boolean.class, DEFAULT_ENABLE_AUTO_GAMEMODE);
+    }
+
+    /**
+     * Retrieves the configured gamemode setting for when a player is inside a flat.
+     * <p>
+     * If no specific value is set in the configuration, a default value is returned.
+     *
+     * @return the inside gamemode setting as a non-null {@code String}.
+     */
+    @NotNull
+    public String getInsideGamemode() {
+        return getConfigValue(Paths.INSIDE_GAMEMODE, String.class, DEFAULT_INSIDE_GAMEMODE);
+    }
+
+    /**
+     * Retrieves the configured gamemode to be applied outside the defined flat areas.
+     * <p>
+     * If no specific gamemode is set in the configuration, a default value is returned.
+     *
+     * @return the outside gamemode setting as a non-null {@code String}.
+     */
+    @NotNull
+    public String getOutsideGamemode() {
+        return getConfigValue(Paths.OUTSIDE_GAMEMODE, String.class, DEFAULT_OUTSIDE_GAMEMODE);
+    }
+
+    private <T> T getConfigValue(String path, Class<T> type, T defaultValue) {
         if (type == String.class) {
-            return type.cast(getConfigFile().getString(path));
+            return type.cast(getConfigFile().getString(path, (String) defaultValue));
         } else if (type == Integer.class) {
-            return type.cast(getConfigFile().getInt(path));
+            return type.cast(getConfigFile().getInt(path, (Integer) defaultValue));
         } else if (type == Boolean.class) {
-            return type.cast(getConfigFile().getBoolean(path));
+            return type.cast(getConfigFile().getBoolean(path, (Boolean) defaultValue));
         } else if (type == Long.class) {
-            return type.cast(getConfigFile().getLong(path));
+            return type.cast(getConfigFile().getLong(path, (Long) defaultValue));
         }
         throw new IllegalArgumentException("Unsupported type: " + type);
     }

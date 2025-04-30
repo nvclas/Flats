@@ -5,6 +5,7 @@ import de.nvclas.flats.config.FlatsConfig;
 import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -140,6 +141,19 @@ public class FlatsCache {
      */
     public @Nullable Flat getFlatByLocation(@NotNull Location location) {
         return allFlats.values().stream().filter(flat -> flat.isWithinBounds(location)).findFirst().orElse(null);
+    }
+
+    /**
+     * Retrieves the number of flats owned by the specified player.
+     * <p>
+     * Ownership is determined by checking if the given player is marked as
+     * the owner of any flats in the cache.
+     *
+     * @param player The {@link OfflinePlayer} whose owned flats are to be counted. Must not be {@code null}.
+     * @return The number of flats owned by the specified player.
+     */
+    public int getOwnedFlatsCount(@NotNull OfflinePlayer player) {
+        return (int) allFlats.values().stream().filter(flat -> flat.isOwner(player)).count();
     }
 
     /**

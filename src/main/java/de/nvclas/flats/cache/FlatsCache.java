@@ -51,7 +51,6 @@ public class FlatsCache {
         Map<String, Flat> loadedFlats = config.loadFlats();
         allFlats.putAll(loadedFlats);
 
-        // Populate the spatial index with all flats
         for (Flat flat : loadedFlats.values()) {
             spatialIndex.addFlat(flat);
         }

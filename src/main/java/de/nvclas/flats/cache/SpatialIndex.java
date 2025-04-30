@@ -61,12 +61,10 @@ public class SpatialIndex {
      * @param flat The {@link Flat} to be removed. Must not be null.
      */
     public void removeFlat(@NotNull Flat flat) {
-        // Remove the flat from all grid cells it might be in
         for (List<Flat> flats : gridMap.values()) {
             flats.remove(flat);
         }
 
-        // Clean up empty lists
         gridMap.entrySet().removeIf(entry -> entry.getValue().isEmpty());
     }
 
@@ -112,13 +110,11 @@ public class SpatialIndex {
      * @param flat the flat associated with the area being added
      */
     private void addAreaToGrid(Area area, Flat flat) {
-        // Calculate grid cell ranges for this area using the cached boundary values
         int minGridX = (int) Math.floor(area.getMinX() / GRID_SIZE);
         int maxGridX = (int) Math.floor(area.getMaxX() / GRID_SIZE);
         int minGridZ = (int) Math.floor(area.getMinZ() / GRID_SIZE);
         int maxGridZ = (int) Math.floor(area.getMaxZ() / GRID_SIZE);
 
-        // Add the flat to all grid cells this area intersects with
         for (int gridX = minGridX; gridX <= maxGridX; gridX++) {
             for (int gridZ = minGridZ; gridZ <= maxGridZ; gridZ++) {
                 GridKey key = new GridKey(gridX, gridZ);
@@ -128,16 +124,16 @@ public class SpatialIndex {
     }
 
     /**
-     * Computes the {@link GridKey} corresponding to the given {@link Location}.
+     * Computes the {@link GridKey} corresponding to the grid cell that contains the specified {@link Location}.
      * <p>
-     * The {@link GridKey} identifies which grid cell the location falls into.
+     * This is used to map a {@link Location} to its respective grid cell based on spatial division.
      *
-     * @param location the {@link Location} for which to compute the grid key
-     * @return the {@link GridKey} representing the grid cell containing the given location
+     * @param location The {@link Location} for which the grid key is to be generated. Must not be null.
+     * @return A {@link GridKey} representing the grid cell coordinates for the specified {@link Location}.
      */
     private GridKey getGridKey(Location location) {
-        int gridX = location.getBlockX() / GRID_SIZE;
-        int gridZ = location.getBlockZ() / GRID_SIZE;
+        int gridX = (int) Math.floor((double) location.getBlockX() / GRID_SIZE);
+        int gridZ = (int) Math.floor((double) location.getBlockZ() / GRID_SIZE);
         return new GridKey(gridX, gridZ);
     }
 

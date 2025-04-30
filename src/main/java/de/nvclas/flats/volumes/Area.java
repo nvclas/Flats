@@ -29,6 +29,17 @@ public class Area {
     private final double minZ;
     private final double maxZ;
 
+    /**
+     * Constructs a new {@code Area} with the specified corner positions and flat name.
+     * <p>
+     * This constructor initializes an area defined by two corner points and associates it
+     * with a specific flat. It also pre-calculates and caches the minimum and maximum
+     * coordinate values for each dimension (X, Y, Z) to optimize boundary checks.
+     *
+     * @param pos1     The first corner position of the area. Must not be null.
+     * @param pos2     The second corner position of the area. Must not be null.
+     * @param flatName The name of the flat this area belongs to. Must not be null.
+     */
     public Area(Location pos1, Location pos2, String flatName) {
         this.pos1 = pos1;
         this.pos2 = pos2;

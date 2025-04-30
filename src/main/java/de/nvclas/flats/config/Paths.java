@@ -22,18 +22,45 @@ public class Paths {
 
     public static final String FLATS = "flats";
 
-    private final String rootSection = "flats.";
+    private static final String ROOT_SECTION = "flats.";
 
+    /**
+     * Generates the configuration path for a flat's owner.
+     * <p>
+     * This method constructs the full path string used to access or store
+     * the owner information for a specific flat in the configuration.
+     *
+     * @param flatName The name of the flat. Must not be null.
+     * @return A string representing the configuration path for the flat's owner.
+     */
     public static String getOwnerPath(String flatName) {
-        return rootSection + flatName + ".owner";
+        return ROOT_SECTION + flatName + ".owner";
     }
 
+    /**
+     * Generates the configuration path for a flat's areas.
+     * <p>
+     * This method constructs the full path string used to access or store
+     * the area information for a specific flat in the configuration.
+     *
+     * @param flatName The name of the flat. Must not be null.
+     * @return A string representing the configuration path for the flat's areas.
+     */
     public static String getAreasPath(String flatName) {
-        return rootSection + flatName + ".areas";
+        return ROOT_SECTION + flatName + ".areas";
     }
 
+    /**
+     * Generates the configuration path for a flat's trusted players.
+     * <p>
+     * This method constructs the full path string used to access or store
+     * the list of trusted players for a specific flat in the configuration.
+     *
+     * @param flatName The name of the flat. Must not be null.
+     * @return A string representing the configuration path for the flat's trusted players.
+     */
     public static String getTrustedPath(String flatName) {
-        return rootSection + flatName + ".trusted";
+        return ROOT_SECTION + flatName + ".trusted";
     }
 
 }

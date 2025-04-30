@@ -18,6 +18,7 @@ public class Paths {
     public static final String ENABLE_AUTO_GAMEMODE = "enableAutoGamemode";
     public static final String INSIDE_GAMEMODE = "insideFlatGamemode";
     public static final String OUTSIDE_GAMEMODE = "outsideFlatGamemode";
+    public static final String MAX_CLAIMABLE_FLATS = "maxClaimableFlats";
 
     public static final String FLATS = "flats";
 

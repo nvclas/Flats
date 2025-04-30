@@ -10,6 +10,9 @@ autoSaveInterval: 600
 # Sets the maximum volume of a flat in blocks
 maxFlatSize: 10000
 
+# Sets the maximum number of claimable flats per player
+maxClaimableFlats: 3
+
 # Automatic gamemode change on flat entering or leaving
 enableAutoGamemode: false # true if enabled, false if disabled
 insideFlatGamemode: creative # Possible values: survival, creative, adventure, spectator

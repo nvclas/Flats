@@ -16,7 +16,7 @@ public class SettingsConfig extends Config {
     private static final String DEFAULT_LANGUAGE = "en_US";
     private static final long DEFAULT_AUTO_SAVE_INTERVAL = 600;
     private static final int DEFAULT_MAX_FLAT_SIZE = 10000;
-    private static final int DEFAULT_MAX_CLAIMABLE_FLATS = 1;
+    private static final int DEFAULT_MAX_CLAIMABLE_FLATS = 3;
     private static final boolean DEFAULT_ENABLE_AUTO_GAMEMODE = false;
     private static final String DEFAULT_INSIDE_GAMEMODE = "creative";
     private static final String DEFAULT_OUTSIDE_GAMEMODE = "adventure";

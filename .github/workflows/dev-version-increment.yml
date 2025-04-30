@@ -33,20 +33,20 @@ jobs:
         run: |
           # Split version into parts
           IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
-          
+
           # Increment patch version
           PATCH=$((VERSION_PARTS[2] + 1))
-          
+
           # Construct new version
           NEW_VERSION="${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.$PATCH"
           echo "New version: $NEW_VERSION"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-          
+
           # Update version in build.gradle.kts
           sed -i "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" build.gradle.kts
 
-      - name: Commit and push changes
+      - name: Amend commit and force push changes
         run: |
           git add build.gradle.kts
-          git commit -m "Bump version to ${{ env.NEW_VERSION }} [skip ci]"
-          git push
+          git commit --amend --no-edit
+          git push --force

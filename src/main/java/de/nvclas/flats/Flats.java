@@ -19,6 +19,17 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.Objects;
 import java.util.logging.Level;
 
+/**
+ * Main plugin class for the Flats plugin.
+ * <p>
+ * This plugin allows players to create, manage, and protect designated areas called "flats"
+ * within a Minecraft server. It provides functionality for defining spatial boundaries,
+ * managing ownership and permissions, and enforcing protection rules within these areas.
+ * <p>
+ * The plugin handles initialization of configurations, caches, commands, listeners, and
+ * schedulers necessary for flat management. It also manages the lifecycle of these components
+ * during server startup and shutdown.
+ */
 @Getter
 public class Flats extends JavaPlugin {
 
@@ -29,6 +40,19 @@ public class Flats extends JavaPlugin {
     private FlatsCache flatsCache;
     private AutoSaveScheduler autoSaveScheduler;
 
+    /**
+     * Initializes the plugin when it is enabled by the server.
+     * <p>
+     * This method performs the following initialization steps:
+     * <ol>
+     *   <li>Loads configuration files</li>
+     *   <li>Sets up internationalization</li>
+     *   <li>Initializes the flats cache</li>
+     *   <li>Starts the auto-save scheduler</li>
+     *   <li>Registers commands</li>
+     *   <li>Registers event listeners</li>
+     * </ol>
+     */
     @Override
     public void onEnable() {
         //Configs
@@ -64,6 +88,17 @@ public class Flats extends JavaPlugin {
         getLogger().log(Level.INFO, () -> "Flats initialized successfully");
     }
 
+    /**
+     * Performs cleanup operations when the plugin is disabled by the server.
+     * <p>
+     * This method ensures that all plugin resources are properly released and
+     * data is saved before the plugin is disabled. It performs the following tasks:
+     * <ol>
+     *   <li>Saves all flats data to persistent storage</li>
+     *   <li>Stops the auto-save scheduler</li>
+     *   <li>Stops all command delay schedulers</li>
+     * </ol>
+     */
     @Override
     public void onDisable() {
         //Save flats

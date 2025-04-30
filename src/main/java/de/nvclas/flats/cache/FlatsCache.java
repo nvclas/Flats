@@ -9,6 +9,7 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ public class FlatsCache {
 
     private final Map<String, Flat> allFlats = new HashMap<>();
     private final FlatsConfig config;
+    private final SpatialIndex spatialIndex = new SpatialIndex();
 
     public FlatsCache(Flats flatsPlugin) {
         this.config = flatsPlugin.getFlatsConfig();
@@ -40,10 +42,18 @@ public class FlatsCache {
      * Loads all flats into the cache by clearing the current data and reloading it from the configuration.
      * <p>
      * This method ensures that the cached flat data is synchronized with the data stored in the configuration source.
+     * It also rebuilds the spatial index for efficient location-based queries.
      */
     public void loadAll() {
         allFlats.clear();
-        allFlats.putAll(config.loadFlats());
+        spatialIndex.clear();
+
+        Map<String, Flat> loadedFlats = config.loadFlats();
+        allFlats.putAll(loadedFlats);
+
+        for (Flat flat : loadedFlats.values()) {
+            spatialIndex.addFlat(flat);
+        }
     }
 
     /**
@@ -94,12 +104,18 @@ public class FlatsCache {
      * <p>
      * The method aggregates areas from all flats stored within the cache and returns
      * them as a single list.
+     * <p>
+     * This implementation uses direct iteration for better performance compared to stream operations.
      *
      * @return A non-null {@link List} of {@link Area} instances representing all areas.
      * The returned list may be empty if no areas are defined.
      */
     public @NotNull List<Area> getAllAreas() {
-        return allFlats.values().stream().flatMap(flat -> flat.getAreas().stream()).toList();
+        List<Area> allAreas = new ArrayList<>();
+        for (Flat flat : allFlats.values()) {
+            allAreas.addAll(flat.getAreas());
+        }
+        return allAreas;
     }
 
     /**
@@ -133,14 +149,15 @@ public class FlatsCache {
     /**
      * Retrieves the {@link Flat} that contains the provided {@link Location}.
      * <p>
-     * The method checks all existing flats and returns the first one where the location
-     * is within the bounds of any associated {@link Area}. If no such flat is found, it returns {@code null}.
+     * The method uses a spatial index to efficiently find the flat that contains the location.
+     * This provides significant performance improvements over checking all flats, especially
+     * when there are many flats in the system.
      *
      * @param location the {@link Location} to find a flat for. Must not be {@code null}.
      * @return the {@link Flat} containing the specified location, or {@code null} if no flat contains the location.
      */
     public @Nullable Flat getFlatByLocation(@NotNull Location location) {
-        return allFlats.values().stream().filter(flat -> flat.isWithinBounds(location)).findFirst().orElse(null);
+        return spatialIndex.getFlatAtLocation(location);
     }
 
     /**
@@ -148,20 +165,28 @@ public class FlatsCache {
      * <p>
      * Ownership is determined by checking if the given player is marked as
      * the owner of any flats in the cache.
+     * <p>
+     * This implementation uses direct iteration for better performance compared to stream operations.
      *
      * @param player The {@link OfflinePlayer} whose owned flats are to be counted. Must not be {@code null}.
      * @return The number of flats owned by the specified player.
      */
     public int getOwnedFlatsCount(@NotNull OfflinePlayer player) {
-        return (int) allFlats.values().stream().filter(flat -> flat.isOwner(player)).count();
+        int count = 0;
+        for (Flat flat : allFlats.values()) {
+            if (flat.isOwner(player)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**
      * Creates a new flat with the specified name and area.
      *
      * <p>
-     * The created flat is stored in the internal cache. If a flat with the
-     * same name already exists, an exception is thrown.
+     * The created flat is stored in the internal cache and added to the spatial index.
+     * If a flat with the same name already exists, an exception is thrown.
      *
      * @param name the name of the flat to be created, must not be null
      * @param area the area of the flat to be created, must not be null
@@ -173,12 +198,13 @@ public class FlatsCache {
         }
         Flat newFlat = new Flat(name, area);
         allFlats.put(name, newFlat);
+        spatialIndex.addFlat(newFlat);
     }
 
     /**
      * Deletes the specified flat by its name.
      *
-     * <p>Removes the flat from the underlying cache if it exists.
+     * <p>Removes the flat from the underlying cache and spatial index if it exists.
      *
      * @param name the name of the flat to delete; must not be {@code null}.
      * @throws IllegalStateException if no flat with the specified name exists.
@@ -187,6 +213,8 @@ public class FlatsCache {
         if (!existsFlat(name)) {
             throw new IllegalStateException("No flat exists with the given name: " + name);
         }
+        Flat flat = allFlats.get(name);
+        spatialIndex.removeFlat(flat);
         allFlats.remove(name);
     }
 

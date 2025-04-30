@@ -44,7 +44,12 @@ public class Flat {
      * {@code false} otherwise.
      */
     public boolean isWithinBounds(@NotNull Location location) {
-        return areas.stream().anyMatch(area -> area.isWithinBounds(location));
+        for (Area area : areas) {
+            if (area.isWithinBounds(location)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

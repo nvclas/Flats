@@ -67,7 +67,7 @@ public class I18n {
         }
 
         try {
-            Locale locale = Locale.forLanguageTag(localeCode.replace("_", "-")); // Korrekte Methode für Locale-Objekte
+            Locale locale = Locale.forLanguageTag(localeCode.replace("_", "-"));
             translations = ResourceBundle.getBundle(BUNDLE_NAME, locale);
             currentLocale = localeCode;
 

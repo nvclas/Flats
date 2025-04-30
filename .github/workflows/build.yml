@@ -1,73 +1,28 @@
 name: Build
 
 on:
-  push:
-    branches-ignore:
-      - main
-      - master
   pull_request:
-    branches:
-      - '**'
-
-# Prevent duplicate builds on PR
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
-  checks: write
-  pull-requests: write
-  statuses: write
+    branches: [ main, master ]
 
 jobs:
   build:
-    name: Build Project
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
           java-version: '21'
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}
-          restore-keys: ${{ runner.os }}-gradle
+          distribution: 'temurin'
+          cache: gradle
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        id: build
         run: ./gradlew build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: build/libs/
-
-      - name: Report build status
-        if: always()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const sha = context.sha;
-            const buildResult = '${{ steps.build.outcome }}' === 'success' ? 'success' : 'failure';
-
-            await github.rest.repos.createCommitStatus({
-              owner,
-              repo,
-              sha,
-              state: buildResult,
-              context: 'Build / Gradle Build',
-              description: buildResult === 'success' ? 'Build succeeded' : 'Build failed'
-            });
+      - name: Run tests
+        run: ./gradlew test

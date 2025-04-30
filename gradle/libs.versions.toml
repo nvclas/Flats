@@ -1,11 +1,11 @@
 [versions]
 annotations = "26.0.2"
-lombok = "1.18.36"
+lombok = "1.18.38"
 runPaper = "2.3.1"
-paperweight-userdev = "2.0.0-beta.15"
+paperweight-userdev = "2.0.0-beta.16"
 paper = "1.21.4-R0.1-SNAPSHOT"
 minecraft = "1.21.4"
-mockbukkit = "4.34.1"
+mockbukkit = "4.46.3"
 junit-jupiter = "5.12.1"
 junit-platform-launcher = "1.12.1"
 

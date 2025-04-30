@@ -21,6 +21,15 @@ public class SettingsConfig extends Config {
     private static final String DEFAULT_INSIDE_GAMEMODE = "creative";
     private static final String DEFAULT_OUTSIDE_GAMEMODE = "adventure";
 
+    /**
+     * Constructs a new {@code SettingsConfig} instance with the specified file name and plugin reference.
+     * <p>
+     * This constructor initializes the settings configuration by loading the specified configuration file.
+     * If the file doesn't exist, it will be created with default values.
+     *
+     * @param fileName The name of the configuration file. Must not be null.
+     * @param plugin   The plugin instance that owns this configuration. Must not be null.
+     */
     public SettingsConfig(String fileName, JavaPlugin plugin) {
         super(fileName, plugin);
     }

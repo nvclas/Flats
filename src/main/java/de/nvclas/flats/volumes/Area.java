@@ -22,11 +22,25 @@ public class Area {
     private final String flatName;
     private final String locationString;
 
+    private final double minX;
+    private final double maxX;
+    private final double minY;
+    private final double maxY;
+    private final double minZ;
+    private final double maxZ;
+
     public Area(Location pos1, Location pos2, String flatName) {
         this.pos1 = pos1;
         this.pos2 = pos2;
         this.flatName = flatName;
         this.locationString = LocationConverter.getStringFromLocations(pos1, pos2);
+
+        this.minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
+        this.maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        this.minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+        this.maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        this.minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+        this.maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
     }
 
     /**
@@ -59,20 +73,16 @@ public class Area {
      * by the two corners {@code pos1} and {@code pos2} of this {@link Area}.
      * <p>
      * The method performs a bounding box check across all dimensions (X, Y, Z).
+     * Uses cached boundary values for improved performance.
      *
      * @param location The {@link Location} to check. Must not be null.
      * @return {@code true} if the {@code location} is within the bounds of the area;
      * {@code false} otherwise.
      */
     public boolean isWithinBounds(@NotNull Location location) {
-        double minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
-        double maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
-        double minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
-        double maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
-        double minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
-        double maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
-
-        return location.getBlockX() >= minX && location.getBlockX() <= maxX && location.getBlockY() >= minY && location.getBlockY() <= maxY && location.getBlockZ() >= minZ && location.getBlockZ() <= maxZ;
+        return location.getBlockX() >= minX && location.getBlockX() <= maxX &&
+                location.getBlockY() >= minY && location.getBlockY() <= maxY &&
+                location.getBlockZ() >= minZ && location.getBlockZ() <= maxZ;
     }
 
     /**
@@ -96,26 +106,19 @@ public class Area {
     /**
      * Retrieves a list of all blocks that form the outer boundary of the current area.
      * <p>
-     * The method calculates the outer boundary based on the minimum and maximum coordinates
-     * derived from {@code pos1} and {@code pos2}, effectively including all blocks
-     * located on the edges of the rectangular cuboid defined by the area.
+     * The method uses cached boundary values to efficiently determine the outer boundary,
+     * effectively including all blocks located on the edges of the rectangular cuboid defined by the area.
      *
      * @return A {@link List} of {@link Block} instances representing the outer boundary of the area.
      * The returned list is never null but may be empty if no valid boundaries are defined.
      */
     public @NotNull List<Block> getAllOuterBlocks() {
         List<Block> blocks = new ArrayList<>();
-        int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
-        int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
-        int minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
-        int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
-        int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
-        int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
 
-        for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    if (x == minX || x == maxX || y == minY || y == maxY || z == minZ || z == maxZ) {
+        for (int x = (int) minX; x <= (int) maxX; x++) {
+            for (int y = (int) minY; y <= (int) maxY; y++) {
+                for (int z = (int) minZ; z <= (int) maxZ; z++) {
+                    if (x == (int) minX || x == (int) maxX || y == (int) minY || y == (int) maxY || z == (int) minZ || z == (int) maxZ) {
                         blocks.add(pos1.getWorld().getBlockAt(x, y, z));
                     }
                 }

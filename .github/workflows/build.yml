@@ -2,21 +2,21 @@ name: Build
 
 on:
   push:
-    branches:
-      - dev
-  pull_request:
-    branches:
+    branches-ignore:
       - main
       - master
+  pull_request:
+    branches:
+      - '**'
 
 permissions:
   contents: read
   checks: write
   pull-requests: write
+  statuses: write
 
 jobs:
   build:
-    if: ${{ github.event.pull_request == null || (github.event.pull_request.number == null) }}
     name: Build Project
     runs-on: ubuntu-latest
     steps:
@@ -40,10 +40,29 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
+        id: build
         run: ./gradlew build
 
-      - name: Upload Build Artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: build/libs/
+
+      - name: Report build status
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const sha = context.sha;
+            const buildResult = '${{ steps.build.outcome }}' === 'success' ? 'success' : 'failure';
+
+            await github.rest.repos.createCommitStatus({
+              owner,
+              repo,
+              sha,
+              state: buildResult,
+              context: 'Build / Gradle Build',
+              description: buildResult === 'success' ? 'Build succeeded' : 'Build failed'
+            });

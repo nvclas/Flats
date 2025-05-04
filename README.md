@@ -51,10 +51,20 @@ flats and their attributes whereas `settings.yml` contains general settings like
 You can change the active language by editing the language code inside the `settings.yml`.
 Currently, the plugin supports the following languages:
 
-- `de_de` - Deutsch (Deutschland)
 - `en_us` - English (USA)
 - `es_es` - Español (España)
+- `pt_pt` - Português (Portugal)
 - `fr_fr` - Français (France)
+- `de_de` - Deutsch (Deutschland)
+- `it_it` - Italiano (Italia)
+- `pl_pl` - Polski (Polska)
+- `nl_nl` - Nederlands (Nederland)
+- `ja_jp` - 日本語 (日本)
+- `sv_se` - Svenska (Sverige)
+- `ro_ro` - Română (România)
+- `el_gr` - Ελληνικά (Ελλάδα)
+- `hu_hu` - Magyar (Magyarország)
+- `uk_ua` - Українська (Україна)
 
 ## Commands
 

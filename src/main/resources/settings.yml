@@ -1,5 +1,19 @@
 # Sets the language for the plugin
-# Supported are: en_us, de_de, fr_fr, es_es
+# Supported languages:
+#   - English (US):     en_us
+#   - German:           de_de  
+#   - French:           fr_fr
+#   - Spanish:          es_es
+#   - Greek:            el_gr
+#   - Hungarian:        hu_hu
+#   - Italian:          it_it
+#   - Japanese:         ja_jp
+#   - Dutch:            nl_nl 
+#   - Polish:           pl_pl
+#   - Portuguese:       pt_pt
+#   - Romanian:         ro_ro
+#   - Swedish:          sv_se
+#   - Ukrainian:        uk_ua
 language: en_us
 
 # Sets the auto save interval for all flats in seconds

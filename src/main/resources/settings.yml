@@ -1,18 +1,18 @@
 # Sets the language for the plugin
 # Supported languages:
 #   - English (US):     en_us
-#   - German:           de_de  
-#   - French:           fr_fr
 #   - Spanish:          es_es
+#   - Portuguese:       pt_pt
+#   - French:           fr_fr
+#   - German:           de_de
+#   - Italian:          it_it
+#   - Polish:           pl_pl
+#   - Dutch:            nl_nl
+#   - Japanese:         ja_jp
+#   - Swedish:          sv_se
+#   - Romanian:         ro_ro
 #   - Greek:            el_gr
 #   - Hungarian:        hu_hu
-#   - Italian:          it_it
-#   - Japanese:         ja_jp
-#   - Dutch:            nl_nl 
-#   - Polish:           pl_pl
-#   - Portuguese:       pt_pt
-#   - Romanian:         ro_ro
-#   - Swedish:          sv_se
 #   - Ukrainian:        uk_ua
 language: en_us
 

@@ -29,21 +29,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * Unit tests for testing command functionality in the Flats plugin.
+ * Unit tests for the {@code Flats} plugin commands.
  * <p>
- * Test cases include validation of permissions, command success and failure cases,
- * handling of edge cases, and integration scenarios.
+ * This class defines comprehensive test cases for commands like "add", "remove", 
+ * "claim", "unclaim", and others, simulating player interactions within the plugin.
  * <p>
- * The class is structured into nested test categories:
- * <ul>
- * <li>General Command Tests: Validates generic command behavior and error handling.</li>
- * <li>Select Command Tests: Focuses on the "select" command.</li>
- * <li>Add/Remove Command Tests: Validates flat creation and deletion commands.</li>
- * <li>Claim/Unclaim Command Tests: Verifies the claiming and unclaiming functionality of flats.</li>
- * </ul>
+ * Tests cover various scenarios, including permission checks, command validation, 
+ * and behavior when interacting with flat areas.
  * <p>
- * Helper methods are used throughout to abstract repetitive tasks like setting up a valid
- * flat selection, performing commands, and asserting expected outcomes.
+ * Supports mocking the server environment and testing plugin-specific features 
+ * such as flat creation, ownership, selection, and error handling during command execution.
  */
 @DisplayName("Flats Command Tests")
 class FlatsCommandTest {

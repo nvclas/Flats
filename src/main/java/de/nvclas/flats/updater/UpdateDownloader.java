@@ -218,4 +218,4 @@ public class UpdateDownloader {
                     .log(Level.SEVERE, e, () -> "Failed to move file to plugins directory: " + e.getMessage());
         }
     }
-}
+} 

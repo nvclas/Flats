@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "de.nvclas"
-version = "1.0.0"
+version = "0.9.1"
 
 repositories {
     mavenCentral()

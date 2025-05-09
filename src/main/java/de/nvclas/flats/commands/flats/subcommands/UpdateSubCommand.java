@@ -32,6 +32,7 @@ public class UpdateSubCommand implements SubCommand {
             }
             case NOT_FOUND -> player.sendMessage(Flats.PREFIX + I18n.translate("update.not_found"));
             case FAILED -> player.sendMessage(Flats.PREFIX + I18n.translate("update.failed"));
+            case ALREADY_UP_TO_DATE -> player.sendMessage(Flats.PREFIX + I18n.translate("update.already_up_to_date"));
         }
     }
 }

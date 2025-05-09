@@ -31,13 +31,13 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Unit tests for the {@code Flats} plugin commands.
  * <p>
- * This class defines comprehensive test cases for commands like "add", "remove", 
+ * This class defines comprehensive test cases for commands like "add", "remove",
  * "claim", "unclaim", and others, simulating player interactions within the plugin.
  * <p>
- * Tests cover various scenarios, including permission checks, command validation, 
+ * Tests cover various scenarios, including permission checks, command validation,
  * and behavior when interacting with flat areas.
  * <p>
- * Supports mocking the server environment and testing plugin-specific features 
+ * Supports mocking the server environment and testing plugin-specific features
  * such as flat creation, ownership, selection, and error handling during command execution.
  */
 @DisplayName("Flats Command Tests")

@@ -8,6 +8,7 @@ minecraft = "1.21.5"
 mockbukkit = "latest.release"
 junit-jupiter = "latest.release"
 junit-platform-launcher = "latest.release"
+mockito-core = "latest.release"
 
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
@@ -15,6 +16,7 @@ lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" 
 mockbukkit = { group = "org.mockbukkit.mockbukkit", name = "mockbukkit-v1.21", version.ref = "mockbukkit" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit-jupiter" }
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-platform-launcher" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito-core" }
 
 [plugins]
 runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }

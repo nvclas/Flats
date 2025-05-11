@@ -12,7 +12,6 @@ import de.nvclas.flats.listeners.protection.EntityDamageListener;
 import de.nvclas.flats.listeners.protection.PlayerInteractListener;
 import de.nvclas.flats.schedulers.AutoSaveScheduler;
 import de.nvclas.flats.schedulers.CommandDelayScheduler;
-import de.nvclas.flats.updater.OldFileRemover;
 import de.nvclas.flats.util.I18n;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -73,9 +72,6 @@ public class Flats extends JavaPlugin {
         //Schedulers
         autoSaveScheduler = new AutoSaveScheduler(this);
         autoSaveScheduler.start();
-
-        // Delete old plugin files
-        OldFileRemover.deleteMarkedFiles();
 
         //Commands
         Objects.requireNonNull(getCommand("flats")).setExecutor(new FlatsCommand(this));

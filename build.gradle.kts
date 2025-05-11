@@ -28,7 +28,6 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockbukkit)
-    testImplementation(libs.mockito.core)
 }
 
 paperweight {

@@ -194,24 +194,13 @@ public class UpdateDownloader {
         markCurrentJarForDeletion();
     }
 
-    /**
-     * Marks the current jar file for deletion when the JVM exits.
-     * This is necessary because the file cannot be deleted while it's in use.
-     */
     private void markCurrentJarForDeletion() {
-        try {
-            // Get the current jar file
-            File currentJar = new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
-            String currentJarName = currentJar.getName();
-
-            // Mark the file for deletion on JVM exit
-            currentJar.deleteOnExit();
-            plugin.getLogger().log(Level.INFO, () -> "Marked current jar file for deletion: " + currentJarName);
-
-        } catch (Exception e) {
-            plugin.getLogger()
-                    .log(Level.WARNING, e, () -> "Failed to mark plugin jar file for deletion: " + e.getMessage());
+        File currentJar = new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
+        File newJar = new File(currentJar.getPath() + "_DELETE");
+        if (!currentJar.renameTo(newJar)) {
+            plugin.getLogger().warning("Failed to rename current jar file");
         }
+        newJar.deleteOnExit();
     }
 
     /**

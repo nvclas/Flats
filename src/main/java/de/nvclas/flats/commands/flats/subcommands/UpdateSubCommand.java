@@ -27,7 +27,7 @@ public class UpdateSubCommand implements SubCommand {
         UpdateStatus status = updateDownloader.downloadLatestRelease();
         switch (status) {
             case SUCCESS -> {
-                updateDownloader.unloadPluginAndDeleteJar();
+                updateDownloader.unloadPlugin();
                 player.sendMessage(Flats.PREFIX + I18n.translate("update.success", updateDownloader.getFileName()));
             }
             case NOT_FOUND -> player.sendMessage(Flats.PREFIX + I18n.translate("update.not_found"));

@@ -158,7 +158,7 @@ class FlatsCommandTest {
      * Verifies that the next message received by the player matches the expected message.
      *
      * @param expectedMessageKey the translation key for the expected message.
-     * @param formatArgs optional arguments to format the expected message.
+     * @param formatArgs         optional arguments to format the expected message.
      */
     private void verifyMessageEquals(String expectedMessageKey, Object... formatArgs) {
         String expectedMessage = Flats.PREFIX + I18n.translate(expectedMessageKey, formatArgs);

@@ -81,8 +81,7 @@ public class UpdateDownloader {
      * @return A CompletableFuture containing the UpdateStatus
      */
     private CompletableFuture<UpdateStatus> executeUpdateProcess() {
-        return fetchLatestReleaseUrlAsync()
-                .thenCompose(this::processDownloadUrl)
+        return fetchLatestReleaseUrlAsync().thenCompose(this::processDownloadUrl)
                 .exceptionally(this::handleUpdateException);
     }
 
@@ -117,11 +116,10 @@ public class UpdateDownloader {
      */
     private void logVersionStatus(String currentVersion, String latestVersion, boolean isUpToDate) {
         if (isUpToDate) {
-            plugin.getLogger().log(Level.INFO,
-                    () -> "Current version " + currentVersion + " is already up to date with latest version " + latestVersion);
+            plugin.getLogger().log(Level.INFO, () -> "Current version " + currentVersion + " is already up to date");
         } else {
-            plugin.getLogger().log(Level.INFO,
-                    () -> "Updating from version " + currentVersion + " to " + latestVersion);
+            plugin.getLogger()
+                    .log(Level.INFO, () -> "Updating from version " + currentVersion + " to " + latestVersion);
         }
     }
 
@@ -132,19 +130,8 @@ public class UpdateDownloader {
      * @return A CompletableFuture containing the UpdateStatus
      */
     private CompletableFuture<UpdateStatus> downloadAndMoveFile(String downloadUrl) {
-        return downloadFileAsync(downloadUrl).thenApply(v -> {
-            logCurrentJarInfo();
-            return moveJarToPlugins() ? UpdateStatus.SUCCESS : UpdateStatus.FAILED;
-        });
-    }
-
-    /**
-     * Logs information about the current JAR file.
-     */
-    private void logCurrentJarInfo() {
-        File currentJar = new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
-        String currentJarName = currentJar.getName();
-        plugin.getLogger().log(Level.INFO, () -> "Current jar file: " + currentJarName);
+        return downloadFileAsync(downloadUrl)
+                .thenApply(v -> moveJarToPlugins() ? UpdateStatus.SUCCESS : UpdateStatus.FAILED);
     }
 
     /**
@@ -154,7 +141,8 @@ public class UpdateDownloader {
      * @return UpdateStatus.FAILED
      */
     private UpdateStatus handleUpdateException(Throwable e) {
-        plugin.getLogger().log(Level.SEVERE, e, () -> "An error occurred during the update process: " + e.getMessage());
+        plugin.getLogger().log(Level.SEVERE, e,
+                () -> "An error occurred during the update process: " + e.getMessage());
         return UpdateStatus.FAILED;
     }
 
@@ -169,48 +157,21 @@ public class UpdateDownloader {
         if (currentVersion == null || latestVersion == null) {
             return false;
         }
-
-        // Simply check if the versions are equal
         return currentVersion.equals(latestVersion);
     }
 
 
     /**
-     * Unloads the current plugin and deletes its jar file.
+     * Unloads the current plugin.
      * <p>
      * This method disables the plugin using the Bukkit Plugin Manager to ensure
-     * it is no longer active. It then attempts to delete the plugin's jar file
-     * from the plugins directory.
-     * <p>
-     * Since the plugin is still running when this method is called, the actual
-     * deletion will typically happen after the server restarts. This method
-     * marks the file for deletion on JVM exit.
+     * it is no longer active.
      */
-    public void unloadPluginAndDeleteJar() {
+    public void unloadPlugin() {
         Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(plugin.getName());
         if (targetPlugin != null) {
             Bukkit.getPluginManager().disablePlugin(targetPlugin);
-        }
-        markCurrentJarForDeletion();
-    }
-
-    /**
-     * Marks the current jar file for deletion when the JVM exits.
-     * This is necessary because the file cannot be deleted while it's in use.
-     */
-    private void markCurrentJarForDeletion() {
-        try {
-            // Get the current jar file
-            File currentJar = new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
-            String currentJarName = currentJar.getName();
-
-            // Mark the file for deletion on JVM exit
-            currentJar.deleteOnExit();
-            plugin.getLogger().log(Level.INFO, () -> "Marked current jar file for deletion: " + currentJarName);
-
-        } catch (Exception e) {
-            plugin.getLogger()
-                    .log(Level.WARNING, e, () -> "Failed to mark plugin jar file for deletion: " + e.getMessage());
+            plugin.getLogger().log(Level.INFO, () -> "Plugin " + plugin.getName() + " has been disabled.");
         }
     }
 
@@ -218,7 +179,7 @@ public class UpdateDownloader {
      * Fetches the latest release URL asynchronously from the GitHub API.
      *
      * @return A CompletableFuture containing the download URL for the latest release JAR file,
-     *         or an empty string if no suitable release was found or an error occurred.
+     * or an empty string if no suitable release was found or an error occurred.
      */
     private @NotNull CompletableFuture<String> fetchLatestReleaseUrlAsync() {
         return CompletableFuture.supplyAsync(() -> {
@@ -393,10 +354,8 @@ public class UpdateDownloader {
      * @param fileName    The name to save the file as
      */
     private void saveDownloadedFile(InputStream inputStream, String fileName) {
-        try (
-                BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-                FileOutputStream fileOutputStream = new FileOutputStream(fileName)
-        ) {
+        try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream); FileOutputStream fileOutputStream = new FileOutputStream(
+                fileName)) {
             byte[] dataBuffer = new byte[1024];
             int bytesRead;
             long totalBytesRead = 0;
@@ -423,9 +382,9 @@ public class UpdateDownloader {
         long fileSize = downloadedFile.length();
 
         if (fileSize != totalBytesRead) {
-            plugin.getLogger().log(Level.SEVERE,
-                    () -> "Downloaded file is incomplete. Expected: " + totalBytesRead +
-                            " bytes, actual file size: " + fileSize + " bytes.");
+            plugin.getLogger()
+                    .log(Level.SEVERE,
+                            () -> "Downloaded file is incomplete. Expected: " + totalBytesRead + " bytes, actual file size: " + fileSize + " bytes.");
         } else {
             plugin.getLogger().log(Level.INFO, () -> "Download completed: " + fileName);
         }

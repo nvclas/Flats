@@ -55,12 +55,6 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks {
-    runServer {
-        minecraftVersion(libs.versions.minecraft.get())
-    }
-}
-
 tasks.processResources {
     val props = mapOf("version" to version)
     inputs.properties(props)

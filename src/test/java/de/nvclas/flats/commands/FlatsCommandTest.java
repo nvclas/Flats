@@ -235,7 +235,7 @@ class FlatsCommandTest {
         @ParameterizedTest(name = "Command \"{0}\" should show message key \"{1}\"")
         @CsvSource({"flats unknown, help.header", "flats, help.header", "flats add testFlat, error.nothing_selected", "flats remove testFlat, error.flat_not_exist", "flats claim, error.not_in_flat"})
         @DisplayName("Command failure cases")
-        void testCommandFailures(String command, String messageKey) {
+        void commandFailures(String command, String messageKey) {
             executeCommandAsOp(command);
             verifyMessageEquals(messageKey);
         }
@@ -250,14 +250,14 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Player without permission cannot use select command")
-        void testSelectCommandNoPermission() {
+        void selectCommandNoPermission() {
             executeCommand("flats select");
             verifyMessageEquals("error.no_permission");
         }
 
         @Test
         @DisplayName("Player with permission receives selection item")
-        void testSelectCommand() {
+        void selectCommand() {
             executeCommandAsOp("flats select");
             assertTrue(player.getInventory().contains(SelectionItem.getItem()),
                     "Player should receive the selection item.");
@@ -273,7 +273,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Add command creates a new flat")
-        void testAddCommand() {
+        void addCommand() {
             setupValidSelection();
             executeCommandAsOp("flats add " + testFlatName);
             verifyMessageEquals("add.success", testFlatName);
@@ -282,7 +282,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Creating a flat that intersects an existing flat returns error message")
-        void testFlatIntersectionError() {
+        void flatIntersectionError() {
             createValidFlat();
             Selection selection = Selection.getSelection(player);
             // Create a selection that overlaps with the existing flat
@@ -300,7 +300,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Remove command deletes an existing flat")
-        void testRemoveCommand() {
+        void removeCommand() {
             createValidFlat();
             executeCommandAsOp("flats remove " + testFlatName);
             verifyMessageEquals("remove.success", testFlatName);
@@ -309,7 +309,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Save operation works even with deleted world")
-        void testSaveWorldWithDeletedWorld() {
+        void saveWorldWithDeletedWorld() {
             createValidFlat();
             server.removeWorld(world);
             assertDoesNotThrow(() -> flatsCache.saveAll(),
@@ -326,7 +326,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Claim command sets player as owner")
-        void testClaimCommand() {
+        void claimCommand() {
             Flat createdFlat = createValidFlat();
             placePlayerInFlat();
             executeCommand("flats claim");
@@ -336,7 +336,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Cannot claim more flats than the limit")
-        void testClaimLimit() {
+        void claimLimit() {
             for (int i = 0; i < 3; i++) {
                 Flat flat = createAndClaimFlat();
                 assertTrue(flat.isOwner(player), "Player should be the owner of the claimed flat " + (i + 1));
@@ -351,7 +351,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Unclaim command removes ownership")
-        void testUnclaimCommand() {
+        void unclaimCommand() {
             Flat flat = createValidFlat();
             flat.setOwner(player);
             placePlayerInFlat();
@@ -363,7 +363,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Cannot unclaim flat owned by another player")
-        void testUnclaimCommandWithoutOwnership() {
+        void unclaimCommandWithoutOwnership() {
             Flat flat = createValidFlat();
             flat.setOwner(target);
             placePlayerInFlat();
@@ -383,7 +383,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Trust command adds online player to trusted list")
-        void testTrustCommandWithOnlineTarget() {
+        void trustCommandWithOnlineTarget() {
             createAndClaimFlat();
 
             executeCommand("flats trust " + target.getName());
@@ -395,7 +395,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Trust command works with offline player")
-        void testTrustCommandWithOfflineTarget() {
+        void trustCommandWithOfflineTarget() {
             createAndClaimFlat();
             target.kick();
 
@@ -408,7 +408,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Untrust command removes online player from trusted list")
-        void testUntrustCommandWithOnlineTarget() {
+        void untrustCommandWithOnlineTarget() {
             createAndClaimFlat();
             executeCommand("flats trust " + target.getName());
             verifyMessageEquals("trust.success", target.getName());
@@ -421,7 +421,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Untrust command works with offline player")
-        void testUntrustCommandWithOfflineTarget() {
+        void untrustCommandWithOfflineTarget() {
             createAndClaimFlat();
             executeCommand("flats trust " + target.getName());
             verifyMessageEquals("trust.success", target.getName());
@@ -443,7 +443,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Info command shows flat details when player is in a flat")
-        void testInfoCommandWhenInFlat() {
+        void infoCommandWhenInFlat() {
             createAndClaimFlat();
 
             executeCommand("flats info");
@@ -453,7 +453,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Info command shows error when player is not in a flat")
-        void testInfoCommandWhenNotInFlat() {
+        void infoCommandWhenNotInFlat() {
             placePlayerFarFromFlats();
 
             executeCommand("flats info");
@@ -462,7 +462,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("List command shows all flats")
-        void testListCommand() {
+        void listCommand() {
             createValidFlat();
 
             executeCommandAsOp("flats list");
@@ -473,7 +473,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Show command highlights nearby flats")
-        void testShowCommand() {
+        void showCommand() {
             createValidFlat();
             placePlayerInFlat();
             System.out.println(selectionMaxY);
@@ -484,7 +484,7 @@ class FlatsCommandTest {
 
         @Test
         @DisplayName("Show command works when no flats are nearby")
-        void testShowCommandNoNearbyFlats() {
+        void showCommandNoNearbyFlats() {
             placePlayerFarFromFlats();
 
             executeCommandAsOp("flats show");

@@ -5,8 +5,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -158,21 +156,6 @@ public class UpdateDownloader {
             return false;
         }
         return currentVersion.equals(latestVersion);
-    }
-
-
-    /**
-     * Unloads the current plugin.
-     * <p>
-     * This method disables the plugin using the Bukkit Plugin Manager to ensure
-     * it is no longer active.
-     */
-    public void unloadPlugin() {
-        Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(plugin.getName());
-        if (targetPlugin != null) {
-            Bukkit.getPluginManager().disablePlugin(targetPlugin);
-            plugin.getLogger().log(Level.INFO, () -> "Plugin " + plugin.getName() + " has been disabled.");
-        }
     }
 
     /**

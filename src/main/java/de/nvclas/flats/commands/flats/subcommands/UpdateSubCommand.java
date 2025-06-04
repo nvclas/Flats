@@ -26,10 +26,8 @@ public class UpdateSubCommand implements SubCommand {
                 "https://api.github.com/repos/nvclas/Flats/releases/latest");
         UpdateStatus status = updateDownloader.downloadLatestRelease();
         switch (status) {
-            case SUCCESS -> {
-                updateDownloader.unloadPlugin();
-                player.sendMessage(Flats.PREFIX + I18n.translate("update.success", updateDownloader.getFileName()));
-            }
+            case SUCCESS ->
+                    player.sendMessage(Flats.PREFIX + I18n.translate("update.success", updateDownloader.getFileName()));
             case NOT_FOUND -> player.sendMessage(Flats.PREFIX + I18n.translate("update.not_found"));
             case FAILED -> player.sendMessage(Flats.PREFIX + I18n.translate("update.failed"));
             case ALREADY_UP_TO_DATE -> player.sendMessage(Flats.PREFIX + I18n.translate("update.already_up_to_date"));

@@ -1,13 +1,13 @@
 [versions]
-annotations = "latest.release"
-lombok = "latest.release"
-runPaper = "latest.release"
-paperweight-userdev = "latest.release"
+annotations = "26.0.+"
+lombok = "1.18.+"
+runPaper = "2.3.+"
+paperweight-userdev = "2.0.+"
 paper = "1.21.5-R0.1-SNAPSHOT"
 minecraft = "1.21.5"
-mockbukkit = "latest.release"
-junit-jupiter = "latest.release"
-junit-platform-launcher = "latest.release"
+mockbukkit = "4.50.+"
+junit-jupiter = "5.13.+"
+junit-platform-launcher = "1.13.+"
 
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }

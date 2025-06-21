@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "de.nvclas"
-version = "0.9.2"
+version = "0.9.3"
 
 repositories {
     mavenCentral()
@@ -53,12 +53,6 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
-}
-
-tasks {
-    runServer {
-        minecraftVersion(libs.versions.minecraft.get())
-    }
 }
 
 tasks.processResources {

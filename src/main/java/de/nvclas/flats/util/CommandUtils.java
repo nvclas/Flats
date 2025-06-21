@@ -1,10 +1,12 @@
 package de.nvclas.flats.util;
 
 import de.nvclas.flats.Flats;
+import de.nvclas.flats.schedulers.CommandDelayScheduler;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -28,6 +30,15 @@ public class CommandUtils {
             return null;
         }
         return target;
+    }
+
+    public boolean isCommandOnCooldown(@NotNull Player player, @NotNull String fullCommandName) {
+        long delay = CommandDelayScheduler.getDelay(player, fullCommandName);
+        if (delay != 0) {
+            player.sendMessage(Flats.PREFIX + I18n.translate("error.command_delay", delay));
+            return true;
+        }
+        return false;
     }
 
 }

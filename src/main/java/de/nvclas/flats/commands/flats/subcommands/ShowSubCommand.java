@@ -54,7 +54,7 @@ public class ShowSubCommand implements SubCommand {
         }
 
         if (flatsAmount == 1) {
-            player.sendMessage(Flats.PREFIX + I18n.translate("show.success.singular"));
+            player.sendMessage(Flats.PREFIX + I18n.translate("show.success.singular", DEFAULT_SHOW_TIME));
         } else {
             player.sendMessage(Flats.PREFIX + I18n.translate("show.success.plural", flatsAmount, DEFAULT_SHOW_TIME));
         }

@@ -478,7 +478,7 @@ class FlatsCommandTest {
             placePlayerInFlat();
             System.out.println(selectionMaxY);
             executeCommandAsOp("flats show");
-            verifyMessageEquals("show.success", 10);
+            verifyMessageEquals("show.success.plural", 1, 10);
             // Visual assertion isn't applicable in tests but confirm no errors occur.
         }
 
@@ -488,7 +488,7 @@ class FlatsCommandTest {
             placePlayerFarFromFlats();
 
             executeCommandAsOp("flats show");
-            verifyMessageEquals("show.success", 10);
+            verifyMessageEquals("show.none");
             // Visual assertion isn't applicable in tests but confirm no errors occur.
         }
     }

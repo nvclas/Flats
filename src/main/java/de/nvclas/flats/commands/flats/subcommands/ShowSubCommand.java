@@ -53,7 +53,7 @@ public class ShowSubCommand implements SubCommand {
             return;
         }
 
-        player.sendMessage(Flats.PREFIX + I18n.translate("show.success", flatsAmount, DEFAULT_SHOW_TIME));
+        player.sendMessage(Flats.PREFIX + I18n.translate("show.success.plural", flatsAmount, DEFAULT_SHOW_TIME));
         List<Block> blocksToChange = getBlocksToChange(player);
         scheduleBlockUpdates(player, blocksToChange);
     }

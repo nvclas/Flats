@@ -53,7 +53,11 @@ public class ShowSubCommand implements SubCommand {
             return;
         }
 
-        player.sendMessage(Flats.PREFIX + I18n.translate("show.success.plural", flatsAmount, DEFAULT_SHOW_TIME));
+        if (flatsAmount == 1) {
+            player.sendMessage(Flats.PREFIX + I18n.translate("show.success.singular"));
+        } else {
+            player.sendMessage(Flats.PREFIX + I18n.translate("show.success.plural", flatsAmount, DEFAULT_SHOW_TIME));
+        }
         List<Block> blocksToChange = getBlocksToChange(player);
         scheduleBlockUpdates(player, blocksToChange);
     }

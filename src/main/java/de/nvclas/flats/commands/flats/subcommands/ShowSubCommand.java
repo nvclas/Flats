@@ -42,7 +42,12 @@ public class ShowSubCommand implements SubCommand {
             return;
         }
 
-        player.sendMessage(Flats.PREFIX + I18n.translate("show.success", DEFAULT_SHOW_TIME));
+        long flatsAmount = flatsPlugin.getFlatsCache()
+                .getAllAreas()
+                .stream()
+                .filter(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE))
+                .count();
+        player.sendMessage(Flats.PREFIX + I18n.translate("show.success", flatsAmount, DEFAULT_SHOW_TIME));
 
         List<Block> blocksToChange = getBlocksToChange(player);
         scheduleBlockUpdates(player, blocksToChange);
@@ -75,11 +80,10 @@ public class ShowSubCommand implements SubCommand {
     }
 
     private void scheduleBlockRestore(@NotNull Player player, @NotNull List<Block> blocksToChange) {
-        Bukkit.getScheduler().runTaskLater(flatsPlugin,
-                () -> player.sendBlockChanges(blocksToChange.stream()
-                        .map(Block::getState)
-                        .toList()),
-                20L * DEFAULT_SHOW_TIME);
+        Bukkit.getScheduler()
+                .runTaskLater(flatsPlugin,
+                              () -> player.sendBlockChanges(blocksToChange.stream().map(Block::getState).toList()),
+                              20L * DEFAULT_SHOW_TIME);
     }
 
     private @NotNull List<Block> getBlocksToChange(@NotNull Player player) {

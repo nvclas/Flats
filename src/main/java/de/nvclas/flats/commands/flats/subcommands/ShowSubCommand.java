@@ -47,8 +47,13 @@ public class ShowSubCommand implements SubCommand {
                 .stream()
                 .filter(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE))
                 .count();
-        player.sendMessage(Flats.PREFIX + I18n.translate("show.success", flatsAmount, DEFAULT_SHOW_TIME));
 
+        if (flatsAmount == 0) {
+            player.sendMessage(Flats.PREFIX + I18n.translate("show.none"));
+            return;
+        }
+
+        player.sendMessage(Flats.PREFIX + I18n.translate("show.success", flatsAmount, DEFAULT_SHOW_TIME));
         List<Block> blocksToChange = getBlocksToChange(player);
         scheduleBlockUpdates(player, blocksToChange);
     }

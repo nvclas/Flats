@@ -4,7 +4,7 @@ lombok = "1.18.+"
 runPaper = "2.3.+"
 paperweight-userdev = "2.0.+"
 paper = "1.21.8-R0.1-SNAPSHOT"
-mockbukkit = "4.50.+"
+mockbukkit = "4.72.+"
 junit-jupiter = "5.13.+"
 junit-platform-launcher = "1.13.+"
 

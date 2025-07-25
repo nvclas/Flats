@@ -3,6 +3,7 @@ package de.nvclas.flats.commands.flats.subcommands;
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.commands.flats.SubCommand;
+import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Area;
@@ -12,17 +13,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class AddSubCommand implements SubCommand {
 
-    private final Flats flatsPlugin;
+    private final SettingsConfig settingsConfig;
     private final FlatsCache flatsCache;
 
     public AddSubCommand(Flats flatsPlugin) {
-        this.flatsPlugin = flatsPlugin;
+        this.settingsConfig = flatsPlugin.getSettingsConfig();
         this.flatsCache = flatsPlugin.getFlatsCache();
     }
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
+        if (!Permissions.canEditFlats(player, settingsConfig)) {
+            Permissions.showNoPermissionMessage(player);
             return;
         }
         if (args.length < 2) {
@@ -53,7 +55,7 @@ public class AddSubCommand implements SubCommand {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.nothing_selected"));
             return false;
         }
-        if (volume > flatsPlugin.getSettingsConfig().getMaxFlatSize()) {
+        if (volume > settingsConfig.getMaxFlatSize()) {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.selection_too_large"));
             return false;
         }

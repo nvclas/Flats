@@ -12,6 +12,7 @@ import de.nvclas.flats.commands.flats.subcommands.TrustSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.UnclaimSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.UntrustSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.UpdateSubCommand;
+import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
 import org.bukkit.command.Command;
@@ -31,11 +32,13 @@ import java.util.Map;
 public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private final Flats flatsPlugin;
+    private final SettingsConfig settingsConfig;
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
 
     public FlatsCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
+        this.settingsConfig = flatsPlugin.getSettingsConfig();
         registerSubCommands();
     }
 
@@ -47,7 +50,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0 || !subCommands.containsKey(args[0].toLowerCase())) {
-            sendAdminAndPlayerHelpMessages(player);
+            sendHelpMessages(player);
             return true;
         }
 
@@ -55,29 +58,61 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    private void sendAdminAndPlayerHelpMessages(Player player) {
+    private void sendHelpMessages(Player player) {
         player.sendMessage(Flats.PREFIX + I18n.translate("help.header"));
-        if (player.hasPermission(Permissions.ADMIN)) {
+        if (Permissions.canEditFlats(player, settingsConfig)) {
+            sendEditHelpMessages(player);
+        }
+        if (Permissions.canListFlats(player, settingsConfig)) {
+            sendListHelpMessages(player);
+        }
+        if (Permissions.canInfoFlats(player, settingsConfig)) {
+            sendInfoHelpMessages(player);
+        }
+        if (Permissions.canClaimFlats(player, settingsConfig)) {
+            sendClaimHelpMessages(player);
+        }
+        if (Permissions.canTrustPlayers(player, settingsConfig)) {
+            sendTrustHelpMessages(player);
+        }
+        if (Permissions.canShowFlats(player, settingsConfig)) {
+            sendShowHelpMessages(player);
+        }
+        if (Permissions.hasAdminPermission(player)) {
             sendAdminHelpMessages(player);
         }
-        sendPlayerHelpMessages(player);
     }
 
-    private void sendAdminHelpMessages(Player player) {
+    private void sendEditHelpMessages(Player player) {
         player.sendMessage(I18n.translate("help.select"));
         player.sendMessage(I18n.translate("help.add"));
         player.sendMessage(I18n.translate("help.remove"));
-        player.sendMessage(I18n.translate("help.list"));
-        player.sendMessage(I18n.translate("help.update"));
     }
 
-    private void sendPlayerHelpMessages(Player player) {
+    private void sendListHelpMessages(Player player) {
+        player.sendMessage(I18n.translate("help.list"));
+    }
+
+    private void sendInfoHelpMessages(Player player) {
+        player.sendMessage(I18n.translate("help.info"));
+    }
+
+    private void sendClaimHelpMessages(Player player) {
         player.sendMessage(I18n.translate("help.claim"));
         player.sendMessage(I18n.translate("help.unclaim"));
+    }
+
+    private void sendTrustHelpMessages(Player player) {
         player.sendMessage(I18n.translate("help.trust"));
         player.sendMessage(I18n.translate("help.untrust"));
-        player.sendMessage(I18n.translate("help.info"));
+    }
+
+    private void sendShowHelpMessages(Player player) {
         player.sendMessage(I18n.translate("help.show"));
+    }
+
+    private void sendAdminHelpMessages(Player player) {
+        player.sendMessage(I18n.translate("help.update"));
     }
 
 
@@ -118,7 +153,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void registerSubCommands() {
-        subCommands.put(FlatsSubCommand.SELECT.getSubCommandName(), new SelectSubCommand());
+        subCommands.put(FlatsSubCommand.SELECT.getSubCommandName(), new SelectSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.UPDATE.getSubCommandName(), new UpdateSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.LIST.getSubCommandName(), new ListSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.INFO.getSubCommandName(), new InfoSubCommand(flatsPlugin));

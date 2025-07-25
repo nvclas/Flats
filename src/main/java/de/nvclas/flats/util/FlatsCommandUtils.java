@@ -19,11 +19,11 @@ public class FlatsCommandUtils {
      * If the player is not within a flat or does not own the flat at their location, an appropriate
      * error message is sent to the player, and {@code null} is returned.
      *
-     * @param player The {@link Player} whose owned flat at their current location is to be retrieved.
-     *               Must not be null.
+     * @param player     The {@link Player} whose owned flat at their current location is to be retrieved.
+     *                   Must not be null.
      * @param flatsCache The {@link FlatsCache} instance used to fetch flats by location. Must not be null.
      * @return The {@link Flat} owned by the player at their current location, or {@code null} if the
-     *         player is not in a flat or does not own the flat at their location.
+     * player is not in a flat or does not own the flat at their location.
      */
     public @Nullable Flat getOwnedFlatAtPlayerLocation(Player player, FlatsCache flatsCache) {
         Flat flat = flatsCache.getFlatByLocation(player.getLocation());

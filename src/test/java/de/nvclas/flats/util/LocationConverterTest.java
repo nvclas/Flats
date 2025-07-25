@@ -54,7 +54,8 @@ class LocationConverterTest {
         Location location2 = new Location(worldMock, 4, 5, 6);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> LocationConverter.getStringFromLocations(location1, location2));
+                                                          () -> LocationConverter.getStringFromLocations(location1,
+                                                                                                         location2));
         assertEquals("First position has no world reference", exception.getMessage());
     }
 }

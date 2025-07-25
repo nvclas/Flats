@@ -146,10 +146,10 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private boolean isAdminCommand(String command) {
         return List.of(FlatsSubCommand.SELECT.getSubCommandName(),
-                FlatsSubCommand.ADD.getSubCommandName(),
-                FlatsSubCommand.REMOVE.getSubCommandName(),
-                FlatsSubCommand.LIST.getSubCommandName(),
-                FlatsSubCommand.UPDATE.getSubCommandName()).contains(command);
+                       FlatsSubCommand.ADD.getSubCommandName(),
+                       FlatsSubCommand.REMOVE.getSubCommandName(),
+                       FlatsSubCommand.LIST.getSubCommandName(),
+                       FlatsSubCommand.UPDATE.getSubCommandName()).contains(command);
     }
 
     private void registerSubCommands() {

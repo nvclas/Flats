@@ -140,7 +140,7 @@ public class UpdateDownloader {
      */
     private UpdateStatus handleUpdateException(Throwable e) {
         plugin.getLogger().log(Level.SEVERE, e,
-                () -> "An error occurred during the update process: " + e.getMessage());
+                               () -> "An error occurred during the update process: " + e.getMessage());
         return UpdateStatus.FAILED;
     }
 
@@ -281,7 +281,7 @@ public class UpdateDownloader {
             try {
                 HttpRequest request = createDownloadRequest(downloadUrl);
                 HttpResponse<InputStream> response = HTTP_CLIENT.send(request,
-                        HttpResponse.BodyHandlers.ofInputStream());
+                                                                      HttpResponse.BodyHandlers.ofInputStream());
 
                 if (response.statusCode() != 200) {
                     logHttpError("Failed to download file", response.statusCode());
@@ -367,7 +367,7 @@ public class UpdateDownloader {
         if (fileSize != totalBytesRead) {
             plugin.getLogger()
                     .log(Level.SEVERE,
-                            () -> "Downloaded file is incomplete. Expected: " + totalBytesRead + " bytes, actual file size: " + fileSize + " bytes.");
+                         () -> "Downloaded file is incomplete. Expected: " + totalBytesRead + " bytes, actual file size: " + fileSize + " bytes.");
         } else {
             plugin.getLogger().log(Level.INFO, () -> "Download completed: " + fileName);
         }

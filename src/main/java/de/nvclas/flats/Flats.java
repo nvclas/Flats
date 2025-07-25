@@ -15,6 +15,7 @@ import de.nvclas.flats.listeners.protection.EntityChangeBlockListener;
 import de.nvclas.flats.listeners.protection.EntityDamageByEntityListener;
 import de.nvclas.flats.listeners.protection.EntityDamageListener;
 import de.nvclas.flats.listeners.protection.EntityExplodeListener;
+import de.nvclas.flats.listeners.protection.HangingBreakByEntityListener;
 import de.nvclas.flats.listeners.protection.PlayerInteractListener;
 import de.nvclas.flats.schedulers.AutoSaveScheduler;
 import de.nvclas.flats.schedulers.CommandDelayScheduler;
@@ -96,6 +97,7 @@ public class Flats extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EntityExplodeListener(this), this);
         getServer().getPluginManager().registerEvents(new EntityDamageByEntityListener(this), this);
         getServer().getPluginManager().registerEvents(new EntityChangeBlockListener(this), this);
+        getServer().getPluginManager().registerEvents(new HangingBreakByEntityListener(this), this);
 
         getLogger().log(Level.INFO, () -> "Flats initialized successfully");
     }

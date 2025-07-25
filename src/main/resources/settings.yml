@@ -28,7 +28,7 @@ maxFlatSize: 10000
 maxClaimableFlats: 3
 
 # Set this to true if you prefer to use fine grained permissions using a permission management plugin
-useAdvancedPermissions: true
+useAdvancedPermissions: false
 
 # Automatic gamemode change on flat entering or leaving
 enableAutoGamemode: false # true if enabled, false if disabled

@@ -53,9 +53,11 @@ public class ShowSubCommand implements SubCommand {
                                                                                                           flatsPlugin);
         }
 
-        long flatsAmount = flatsCache.getAllAreas()
+        long flatsAmount = flatsCache.getAllFlats()
                 .stream()
-                .filter(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE))
+                .filter(flat -> flat.getAreas()
+                        .stream()
+                        .anyMatch(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE)))
                 .count();
 
         if (flatsAmount == 0) {

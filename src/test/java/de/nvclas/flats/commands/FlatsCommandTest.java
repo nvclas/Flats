@@ -85,10 +85,29 @@ class FlatsCommandTest {
 
     @BeforeEach
     void setUp() {
+        setupConfiguration();
         flatsCache = plugin.getFlatsCache();
 
         random = new Random();
         randomizeTestFlatValues();
+    }
+
+    @AfterEach
+    void tearDown() {
+        MockBukkit.unmock();
+        if (plugin.getDataFolder().exists() && !plugin.getDataFolder().delete()) {
+            fail("Could not delete plugin data folder.");
+        }
+    }
+
+    /**
+     * Configures the plugin settings to enable the use of advanced permissions.
+     * <p>
+     * This method modifies the settings configuration file and is typically invoked
+     * during the test setup phase to ensure consistent configuration behavior.
+     */
+    private void setupConfiguration() {
+        plugin.getSettingsConfig().getConfigFile().set("useAdvancedPermissions", true);
     }
 
     /**
@@ -109,14 +128,6 @@ class FlatsCommandTest {
         flatInteriorX = selectionMinX + (FLAT_SIZE / 2);
         flatInteriorY = selectionMinY + (FLAT_SIZE / 2);
         flatInteriorZ = selectionMinZ + (FLAT_SIZE / 2);
-    }
-
-    @AfterEach
-    void tearDown() {
-        MockBukkit.unmock();
-        if (plugin.getDataFolder().exists() && !plugin.getDataFolder().delete()) {
-            fail("Could not delete plugin data folder.");
-        }
     }
 
     /**

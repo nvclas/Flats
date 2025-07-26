@@ -85,7 +85,16 @@ The plugin provides several commands to interact with the areas:
 
 The plugin uses a permission system to control access to certain commands:
 
-- `flats.admin` - Permission for administrative commands like creating and deleting flats.
+## Permissions
+
+- `flats.admin` - Administrative permission for commands like plugin updates and system management.
+- `flats.edit` - Allows creating, modifying, and deleting flats.
+- `flats.claim` - Enables claiming and unclaiming existing flats.
+- `flats.show` - Grants access to `/flats show` command to highlight nearby flats visually.
+- `flats.list` - Permission to view a list of all existing flats.
+- `flats.info` - Allows viewing detailed information about individual flats.
+- `flats.trust` - Enables trusting and untrusting other players, allowing them to build on claimed flats.
+- `flats.skip_command_delay` - Bypasses cooldown restrictions on commands that normally have a delay.
 
 ## Developer
 

@@ -27,7 +27,7 @@ maxFlatSize: 10000
 # Sets the maximum number of claimable flats per player
 maxClaimableFlats: 3
 
-# Set this to true if you prefer to use fine grained permissions using a permission management plugin
+# Set this to true if you prefer to use fine-grained permissions using a permission management plugin
 useAdvancedPermissions: false
 
 # Automatic gamemode change on flat entering or leaving

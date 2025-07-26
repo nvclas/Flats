@@ -62,7 +62,7 @@ public class InfoSubCommand implements SubCommand {
         player.sendMessage(Flats.PREFIX + I18n.translate("info.trusted_header"));
         for (OfflinePlayer trustedPlayer : flat.getTrusted()) {
             String messageKey = flat.getTrusted()
-                    .getLast() == trustedPlayer ? "info.trusted_last" : "info.trusted_item";
+                                        .getLast() == trustedPlayer ? "info.trusted_last" : "info.trusted_item";
             player.sendMessage(Flats.PREFIX + I18n.translate(messageKey, trustedPlayer.getName()));
         }
     }

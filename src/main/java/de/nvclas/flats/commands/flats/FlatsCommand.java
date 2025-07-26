@@ -15,6 +15,7 @@ import de.nvclas.flats.commands.flats.subcommands.UpdateSubCommand;
 import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -23,7 +24,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +47,11 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         if (!"flats".equalsIgnoreCase(command.getName()) || !(sender instanceof Player player)) {
             sender.sendMessage(Flats.PREFIX + I18n.translate("error.only_players"));
             return false;
+        }
+
+        if (Permissions.hasZeroPermissions(player, settingsConfig)) {
+            Permissions.showNoPermissionMessage(player);
+            return true;
         }
 
         if (args.length == 0 || !subCommands.containsKey(args[0].toLowerCase())) {
@@ -122,35 +127,66 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return null;
         }
 
-        if (args.length == 0) return List.of();
-
-        List<String> completions = new ArrayList<>();
-        String input = args[0].toLowerCase();
-
-        if (args.length == 1) {
-            completions = subCommands.keySet().stream()
-                    .filter(cmd -> cmd.startsWith(input) && (player.hasPermission(Permissions.ADMIN) || !isAdminCommand(
-                            cmd)))
-                    .toList();
-        } else if (args.length == 2 && args[0].equalsIgnoreCase(FlatsSubCommand.REMOVE.getSubCommandName()) && player.hasPermission(
-                Permissions.ADMIN)) {
-            completions = flatsPlugin.getFlatsCache()
-                    .getAllFlatNames()
-                    .stream()
-                    .filter(flatName -> flatName.toLowerCase().startsWith(args[1].toLowerCase()))
-                    .toList();
+        if (args.length == 0) {
+            return List.of();
         }
 
-        return completions;
+        return switch (args.length) {
+            case 1 -> getSubCommandCompletions(player, args[0]);
+            case 2 -> getSecondArgumentCompletions(player, args[0], args[1]);
+            default -> List.of();
+        };
     }
 
-    private boolean isAdminCommand(String command) {
-        return List.of(FlatsSubCommand.SELECT.getSubCommandName(),
-                       FlatsSubCommand.ADD.getSubCommandName(),
-                       FlatsSubCommand.REMOVE.getSubCommandName(),
-                       FlatsSubCommand.LIST.getSubCommandName(),
-                       FlatsSubCommand.UPDATE.getSubCommandName()).contains(command);
+    private List<String> getSubCommandCompletions(Player player, String input) {
+        String lowerInput = input.toLowerCase();
+        return subCommands.keySet()
+                .stream()
+                .filter(cmd -> cmd.startsWith(lowerInput) && hasPermissionForCommand(player, cmd))
+                .toList();
     }
+
+    private List<String> getSecondArgumentCompletions(Player player, String subCommand, String input) {
+        if (FlatsSubCommand.REMOVE.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canEditFlats(player,
+                                                                                                                settingsConfig)) {
+            return getFlatNameCompletions(input);
+        }
+
+        if ((FlatsSubCommand.TRUST.getSubCommandName()
+                     .equalsIgnoreCase(subCommand) || FlatsSubCommand.UNTRUST.getSubCommandName()
+                     .equalsIgnoreCase(subCommand)) && Permissions.canTrustPlayers(player, settingsConfig)) {
+            return getOnlinePlayerCompletions();
+        }
+
+        return List.of();
+    }
+
+    private List<String> getFlatNameCompletions(String input) {
+        String lowerInput = input.toLowerCase();
+        return flatsPlugin.getFlatsCache()
+                .getAllFlatNames()
+                .stream()
+                .filter(flatName -> flatName.toLowerCase().startsWith(lowerInput))
+                .toList();
+    }
+
+    private List<String> getOnlinePlayerCompletions() {
+        return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+    }
+
+    private boolean hasPermissionForCommand(Player player, String command) {
+        return switch (command.toLowerCase()) {
+            case "select", "add", "remove" -> Permissions.canEditFlats(player, settingsConfig);
+            case "list" -> Permissions.canListFlats(player, settingsConfig);
+            case "info" -> Permissions.canInfoFlats(player, settingsConfig);
+            case "claim", "unclaim" -> Permissions.canClaimFlats(player, settingsConfig);
+            case "trust", "untrust" -> Permissions.canTrustPlayers(player, settingsConfig);
+            case "show" -> Permissions.canShowFlats(player, settingsConfig);
+            case "update" -> Permissions.hasAdminPermission(player);
+            default -> false;
+        };
+    }
+
 
     private void registerSubCommands() {
         subCommands.put(FlatsSubCommand.SELECT.getSubCommandName(), new SelectSubCommand(flatsPlugin));

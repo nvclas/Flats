@@ -91,9 +91,8 @@ public class Area {
      * {@code false} otherwise.
      */
     public boolean isWithinBounds(@NotNull Location location) {
-        return location.getBlockX() >= minX && location.getBlockX() <= maxX &&
-                location.getBlockY() >= minY && location.getBlockY() <= maxY &&
-                location.getBlockZ() >= minZ && location.getBlockZ() <= maxZ;
+        return location.getBlockX() >= minX && location.getBlockX() <= maxX && location.getBlockY() >= minY &&
+               location.getBlockY() <= maxY && location.getBlockZ() >= minZ && location.getBlockZ() <= maxZ;
     }
 
     /**
@@ -109,9 +108,10 @@ public class Area {
      * from either {@code pos1} or {@code pos2}; {@code false} otherwise.
      */
     public boolean isWithinDistance(@NotNull Location location, double range) {
-        return (Math.abs(location.getX() - pos1.getX()) <= range && Math.abs(location.getY() - pos1.getY()) <= range && Math.abs(
-                location.getZ() - pos1.getZ()) <= range) || (Math.abs(location.getX() - pos2.getX()) <= range && Math.abs(
-                location.getY() - pos2.getY()) <= range && Math.abs(location.getZ() - pos2.getZ()) <= range);
+        return (Math.abs(location.getX() - pos1.getX()) <= range && Math.abs(location.getY() - pos1.getY()) <= range &&
+                Math.abs(location.getZ() - pos1.getZ()) <= range) ||
+               (Math.abs(location.getX() - pos2.getX()) <= range && Math.abs(location.getY() - pos2.getY()) <= range &&
+                Math.abs(location.getZ() - pos2.getZ()) <= range);
     }
 
     /**
@@ -129,7 +129,8 @@ public class Area {
         for (int x = (int) minX; x <= (int) maxX; x++) {
             for (int y = (int) minY; y <= (int) maxY; y++) {
                 for (int z = (int) minZ; z <= (int) maxZ; z++) {
-                    if (x == (int) minX || x == (int) maxX || y == (int) minY || y == (int) maxY || z == (int) minZ || z == (int) maxZ) {
+                    if (x == (int) minX || x == (int) maxX || y == (int) minY || y == (int) maxY || z == (int) minZ ||
+                        z == (int) maxZ) {
                         blocks.add(pos1.getWorld().getBlockAt(x, y, z));
                     }
                 }

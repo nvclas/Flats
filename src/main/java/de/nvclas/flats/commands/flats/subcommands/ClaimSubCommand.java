@@ -39,7 +39,8 @@ public class ClaimSubCommand implements SubCommand {
             player.sendMessage(Flats.PREFIX + I18n.translate("claim.already_owned_by", flat.getOwner().getName()));
             return;
         }
-        if (!player.hasPermission(Permissions.ADMIN) && flatsCache.getOwnedFlatsCount(player) >= settingsConfig.getMaxClaimableFlats()) {
+        if (!Permissions.hasAdminPermission(player) &&
+            flatsCache.getOwnedFlatsCount(player) >= settingsConfig.getMaxClaimableFlats()) {
             player.sendMessage(Flats.PREFIX + I18n.translate("claim.max_claimable_flats_reached",
                                                              settingsConfig.getMaxClaimableFlats()));
             return;

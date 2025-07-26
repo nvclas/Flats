@@ -122,7 +122,8 @@ public class FlatsConfig extends Config {
         try {
             return Area.fromString(locationString, flatName);
         } catch (IllegalArgumentException e) {
-            logWarning("Flat '" + flatName + "' has an invalid area string '" + locationString + "' and will not be loaded.");
+            logWarning("Flat '" + flatName + "' has an invalid area string '" + locationString +
+                       "' and will not be loaded.");
             return null;
         }
     }

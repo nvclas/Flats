@@ -24,7 +24,7 @@ public class FlatEnteredOrLeftListener implements Listener {
         SettingsConfig settings = flatsPlugin.getSettingsConfig();
         Player player = event.getPlayer();
 
-        if (!settings.isAutoGamemodeEnabled() || player.hasPermission(Permissions.ADMIN)) {
+        if (!settings.isAutoGamemodeEnabled() || Permissions.hasAdminPermission(player)) {
             return;
         }
 

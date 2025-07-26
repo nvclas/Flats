@@ -1,7 +1,7 @@
 # Sets the language for the plugin
 # Supported languages:
 #   - English (US):           en_us
-#   - Español (España):       es_es 
+#   - Español (España):       es_es
 #   - Português (Portugal):   pt_pt
 #   - Français (France):      fr_fr
 #   - Deutsch (Deutschland):  de_de
@@ -26,6 +26,9 @@ maxFlatSize: 10000
 
 # Sets the maximum number of claimable flats per player
 maxClaimableFlats: 3
+
+# Set this to true if you prefer to use fine grained permissions using a permission management plugin
+useAdvancedPermissions: false
 
 # Automatic gamemode change on flat entering or leaving
 enableAutoGamemode: false # true if enabled, false if disabled

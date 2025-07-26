@@ -128,8 +128,8 @@ public class UpdateDownloader {
      * @return A CompletableFuture containing the UpdateStatus
      */
     private CompletableFuture<UpdateStatus> downloadAndMoveFile(String downloadUrl) {
-        return downloadFileAsync(downloadUrl)
-                .thenApply(v -> moveJarToPlugins() ? UpdateStatus.SUCCESS : UpdateStatus.FAILED);
+        return downloadFileAsync(downloadUrl).thenApply(
+                v -> moveJarToPlugins() ? UpdateStatus.SUCCESS : UpdateStatus.FAILED);
     }
 
     /**
@@ -139,8 +139,7 @@ public class UpdateDownloader {
      * @return UpdateStatus.FAILED
      */
     private UpdateStatus handleUpdateException(Throwable e) {
-        plugin.getLogger().log(Level.SEVERE, e,
-                () -> "An error occurred during the update process: " + e.getMessage());
+        plugin.getLogger().log(Level.SEVERE, e, () -> "An error occurred during the update process: " + e.getMessage());
         return UpdateStatus.FAILED;
     }
 
@@ -281,7 +280,7 @@ public class UpdateDownloader {
             try {
                 HttpRequest request = createDownloadRequest(downloadUrl);
                 HttpResponse<InputStream> response = HTTP_CLIENT.send(request,
-                        HttpResponse.BodyHandlers.ofInputStream());
+                                                                      HttpResponse.BodyHandlers.ofInputStream());
 
                 if (response.statusCode() != 200) {
                     logHttpError("Failed to download file", response.statusCode());
@@ -337,8 +336,8 @@ public class UpdateDownloader {
      * @param fileName    The name to save the file as
      */
     private void saveDownloadedFile(InputStream inputStream, String fileName) {
-        try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream); FileOutputStream fileOutputStream = new FileOutputStream(
-                fileName)) {
+        try (BufferedInputStream bufferedInputStream = new BufferedInputStream(
+                inputStream); FileOutputStream fileOutputStream = new FileOutputStream(fileName)) {
             byte[] dataBuffer = new byte[1024];
             int bytesRead;
             long totalBytesRead = 0;
@@ -366,8 +365,8 @@ public class UpdateDownloader {
 
         if (fileSize != totalBytesRead) {
             plugin.getLogger()
-                    .log(Level.SEVERE,
-                            () -> "Downloaded file is incomplete. Expected: " + totalBytesRead + " bytes, actual file size: " + fileSize + " bytes.");
+                    .log(Level.SEVERE, () -> "Downloaded file is incomplete. Expected: " + totalBytesRead +
+                                             " bytes, actual file size: " + fileSize + " bytes.");
         } else {
             plugin.getLogger().log(Level.INFO, () -> "Download completed: " + fileName);
         }

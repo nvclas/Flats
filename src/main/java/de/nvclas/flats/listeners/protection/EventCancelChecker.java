@@ -6,11 +6,12 @@ import lombok.experimental.UtilityClass;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
+import org.jetbrains.annotations.NotNull;
 
 @UtilityClass
 public class EventCancelChecker {
 
-    public void cancelEventIfPlayerNotTrustedOrOwner(Cancellable event, Flat flat, Entity entity) {
+    public void cancelEventIfPlayerNotTrustedOrOwner(@NotNull Cancellable event, Flat flat, @NotNull Entity entity) {
         if (flat == null || entity.hasPermission(Permissions.ADMIN)) {
             return;
         }

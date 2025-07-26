@@ -19,11 +19,12 @@ public class UpdateSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (Permissions.hasNoPermission(player, Permissions.ADMIN)) {
+        if (!Permissions.hasAdminPermission(player)) {
+            Permissions.showNoPermissionMessage(player);
             return;
         }
         UpdateDownloader updateDownloader = new UpdateDownloader(flatsPlugin,
-                "https://api.github.com/repos/nvclas/Flats/releases/latest");
+                                                                 "https://api.github.com/repos/nvclas/Flats/releases/latest");
         UpdateStatus status = updateDownloader.downloadLatestRelease();
         switch (status) {
             case SUCCESS ->

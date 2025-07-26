@@ -51,7 +51,7 @@ public class AutoSaveScheduler {
 
         flatsPlugin.getLogger()
                 .log(Level.INFO,
-                        () -> "Started AutoSaveScheduler with interval " + settingsConfig.getAutoSaveInterval());
+                     () -> "Started AutoSaveScheduler with interval " + settingsConfig.getAutoSaveInterval());
         running = true;
         task = new BukkitRunnable() {
 

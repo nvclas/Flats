@@ -6,18 +6,23 @@ import de.nvclas.flats.commands.flats.FlatsCommand;
 import de.nvclas.flats.items.SelectionItem;
 import de.nvclas.flats.testutil.TestUtil;
 import de.nvclas.flats.util.I18n;
+import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Flat;
 import de.nvclas.flats.volumes.Selection;
 import org.bukkit.Location;
+import org.bukkit.permissions.PermissionAttachment;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockbukkit.mockbukkit.MockBukkit;
+import org.mockbukkit.mockbukkit.MockBukkitExtension;
+import org.mockbukkit.mockbukkit.MockBukkitInject;
 import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 import org.mockbukkit.mockbukkit.world.WorldMock;
@@ -42,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * It includes setup and teardown methods, helper methods for command execution,
  * and utilities for validating flat-related operations.
  */
+@ExtendWith(MockBukkitExtension.class)
 @DisplayName("Flats Command Tests")
 class FlatsCommandTest {
 
@@ -52,10 +58,15 @@ class FlatsCommandTest {
     private static final int FAR_AWAY_COORD = 1000;
 
     // Test fixtures
+    @MockBukkitInject
     private ServerMock server;
+    @MockBukkitInject
     private Flats plugin;
+    @MockBukkitInject
     private PlayerMock player;
+    @MockBukkitInject
     private PlayerMock target;
+    @MockBukkitInject
     private WorldMock world;
     private FlatsCache flatsCache;
     private Random random;
@@ -74,15 +85,29 @@ class FlatsCommandTest {
 
     @BeforeEach
     void setUp() {
-        server = MockBukkit.mock();
-        plugin = MockBukkit.load(Flats.class);
-        world = server.addSimpleWorld("world");
-        player = server.addPlayer();
-        target = server.addPlayer();
+        setupConfiguration();
         flatsCache = plugin.getFlatsCache();
 
         random = new Random();
         randomizeTestFlatValues();
+    }
+
+    @AfterEach
+    void tearDown() {
+        MockBukkit.unmock();
+        if (plugin.getDataFolder().exists() && !plugin.getDataFolder().delete()) {
+            fail("Could not delete plugin data folder.");
+        }
+    }
+
+    /**
+     * Configures the plugin settings to enable the use of advanced permissions.
+     * <p>
+     * This method modifies the settings configuration file and is typically invoked
+     * during the test setup phase to ensure consistent configuration behavior.
+     */
+    private void setupConfiguration() {
+        plugin.getSettingsConfig().getConfigFile().set("useAdvancedPermissions", true);
     }
 
     /**
@@ -105,14 +130,6 @@ class FlatsCommandTest {
         flatInteriorZ = selectionMinZ + (FLAT_SIZE / 2);
     }
 
-    @AfterEach
-    void tearDown() {
-        MockBukkit.unmock();
-        if (plugin.getDataFolder().exists() && !plugin.getDataFolder().delete()) {
-            fail("Could not delete plugin data folder.");
-        }
-    }
-
     /**
      * Creates a valid {@link Flat} instance, assigns the current player as the owner,
      * and moves the player into the created flat.
@@ -127,6 +144,13 @@ class FlatsCommandTest {
         flat.setOwner(player);
         placePlayerInFlat();
         return flat;
+    }
+
+    private void executeCommandWithPermission(String command, String permission) {
+        PermissionAttachment permissions = player.addAttachment(plugin);
+        permissions.setPermission(permission, true);
+        executeCommand(command);
+        player.removeAttachment(permissions);
     }
 
     /**
@@ -177,8 +201,8 @@ class FlatsCommandTest {
         selection.setPos1(new Location(world, selectionMinX, selectionMinY, selectionMinZ));
         selection.setPos2(new Location(world, selectionMaxX, selectionMaxY, selectionMaxZ));
         assertEquals(SELECTION_VOLUME,
-                selection.calculateVolume(),
-                "Selection volume should be " + SELECTION_VOLUME + ".");
+                     selection.calculateVolume(),
+                     "Selection volume should be " + SELECTION_VOLUME + ".");
     }
 
     /**
@@ -192,7 +216,7 @@ class FlatsCommandTest {
     private @NotNull Flat createValidFlat() {
         randomizeTestFlatValues();
         setupValidSelection();
-        executeCommandAsOp("flats add " + testFlatName);
+        executeCommandWithPermission("flats add " + testFlatName, Permissions.EDIT_FLATS);
         verifyMessageEquals("add.success", testFlatName);
         return flatsCache.getExistingFlat(testFlatName);
     }
@@ -210,10 +234,7 @@ class FlatsCommandTest {
      * and assigns them to the player's location in the given world.
      */
     private void placePlayerInFlat() {
-        player.setLocation(new Location(world,
-                flatInteriorX,
-                flatInteriorY,
-                flatInteriorZ));
+        player.setLocation(new Location(world, flatInteriorX, flatInteriorY, flatInteriorZ));
     }
 
     /**
@@ -258,9 +279,9 @@ class FlatsCommandTest {
         @Test
         @DisplayName("Player with permission receives selection item")
         void selectCommand() {
-            executeCommandAsOp("flats select");
+            executeCommandWithPermission("flats select", Permissions.EDIT_FLATS);
             assertTrue(player.getInventory().contains(SelectionItem.getItem()),
-                    "Player should receive the selection item.");
+                       "Player should receive the selection item.");
         }
     }
 
@@ -275,7 +296,7 @@ class FlatsCommandTest {
         @DisplayName("Add command creates a new flat")
         void addCommand() {
             setupValidSelection();
-            executeCommandAsOp("flats add " + testFlatName);
+            executeCommandWithPermission("flats add " + testFlatName, Permissions.EDIT_FLATS);
             verifyMessageEquals("add.success", testFlatName);
             assertTrue(flatsCache.existsFlat(testFlatName), "Flat should exist after being added.");
         }
@@ -287,22 +308,19 @@ class FlatsCommandTest {
             Selection selection = Selection.getSelection(player);
             // Create a selection that overlaps with the existing flat
             selection.setPos1(new Location(world, selectionMinX, selectionMinY, selectionMinZ));
-            selection.setPos2(new Location(world,
-                    selectionMaxX + 5,
-                    selectionMaxY + 5,
-                    selectionMaxZ + 5));
+            selection.setPos2(new Location(world, selectionMaxX + 5, selectionMaxY + 5, selectionMaxZ + 5));
 
-            executeCommandAsOp("flats add newFlat");
+            executeCommandWithPermission("flats add newFlat", Permissions.EDIT_FLATS);
             verifyMessageEquals("error.flat_intersect");
             assertFalse(flatsCache.existsFlat("newFlat"),
-                    "Flat should not be created when intersecting with existing flat.");
+                        "Flat should not be created when intersecting with existing flat.");
         }
 
         @Test
         @DisplayName("Remove command deletes an existing flat")
         void removeCommand() {
             createValidFlat();
-            executeCommandAsOp("flats remove " + testFlatName);
+            executeCommandWithPermission("flats remove " + testFlatName, Permissions.EDIT_FLATS);
             verifyMessageEquals("remove.success", testFlatName);
             assertFalse(flatsCache.existsFlat(testFlatName), "Flat should not exist after removal.");
         }
@@ -313,7 +331,7 @@ class FlatsCommandTest {
             createValidFlat();
             server.removeWorld(world);
             assertDoesNotThrow(() -> flatsCache.saveAll(),
-                    "Save operation should not throw an exception even if the world is deleted.");
+                               "Save operation should not throw an exception even if the world is deleted.");
         }
     }
 
@@ -329,7 +347,7 @@ class FlatsCommandTest {
         void claimCommand() {
             Flat createdFlat = createValidFlat();
             placePlayerInFlat();
-            executeCommand("flats claim");
+            executeCommandWithPermission("flats claim", Permissions.CLAIM_FLATS);
             verifyMessageEquals("claim.success");
             assertTrue(createdFlat.isOwner(player), "Player should be the owner of the claimed flat.");
         }
@@ -344,7 +362,8 @@ class FlatsCommandTest {
             Flat fourthFlat = createValidFlat();
             placePlayerInFlat();
 
-            executeCommand("flats claim");
+
+            executeCommandWithPermission("flats claim", Permissions.CLAIM_FLATS);
             verifyMessageEquals("claim.max_claimable_flats_reached", plugin.getSettingsConfig().getMaxClaimableFlats());
             assertFalse(fourthFlat.isOwner(player), "Player should not be able to claim more than the limit of flats");
         }
@@ -356,7 +375,7 @@ class FlatsCommandTest {
             flat.setOwner(player);
             placePlayerInFlat();
 
-            executeCommand("flats unclaim");
+            executeCommandWithPermission("flats unclaim", Permissions.CLAIM_FLATS);
             verifyMessageEquals("unclaim.success");
             assertFalse(flat.hasOwner(), "Flat should no longer have an owner after unclaiming.");
         }
@@ -368,7 +387,7 @@ class FlatsCommandTest {
             flat.setOwner(target);
             placePlayerInFlat();
 
-            executeCommand("flats unclaim");
+            executeCommandWithPermission("flats unclaim", Permissions.CLAIM_FLATS);
             verifyMessageEquals("error.not_your_flat");
             assertTrue(flat.isOwner(target), "Flat should still have owner after unauthorized unclaim attempt.");
         }
@@ -386,7 +405,7 @@ class FlatsCommandTest {
         void trustCommandWithOnlineTarget() {
             createAndClaimFlat();
 
-            executeCommand("flats trust " + target.getName());
+            executeCommandWithPermission("flats trust " + target.getName(), Permissions.TRUST_PLAYERS);
             verifyMessageEquals("trust.success", target.getName());
 
             Flat flat = flatsCache.getExistingFlat(testFlatName);
@@ -399,7 +418,7 @@ class FlatsCommandTest {
             createAndClaimFlat();
             target.kick();
 
-            executeCommand("flats trust " + target.getName());
+            executeCommandWithPermission("flats trust " + target.getName(), Permissions.TRUST_PLAYERS);
             verifyMessageEquals("trust.success", target.getName());
 
             Flat flat = flatsCache.getExistingFlat(testFlatName);
@@ -410,10 +429,10 @@ class FlatsCommandTest {
         @DisplayName("Untrust command removes online player from trusted list")
         void untrustCommandWithOnlineTarget() {
             createAndClaimFlat();
-            executeCommand("flats trust " + target.getName());
+            executeCommandWithPermission("flats trust " + target.getName(), Permissions.TRUST_PLAYERS);
             verifyMessageEquals("trust.success", target.getName());
 
-            executeCommand("flats untrust " + target.getName());
+            executeCommandWithPermission("flats untrust " + target.getName(), Permissions.TRUST_PLAYERS);
             verifyMessageEquals("untrust.success", target.getName());
             Flat flat = flatsCache.getExistingFlat(testFlatName);
             assertFalse(flat.isTrusted(target), "Target player should no longer be trusted after untrusting.");
@@ -423,11 +442,11 @@ class FlatsCommandTest {
         @DisplayName("Untrust command works with offline player")
         void untrustCommandWithOfflineTarget() {
             createAndClaimFlat();
-            executeCommand("flats trust " + target.getName());
+            executeCommandWithPermission("flats trust " + target.getName(), Permissions.TRUST_PLAYERS);
             verifyMessageEquals("trust.success", target.getName());
             target.kick();
 
-            executeCommand("flats untrust " + target.getName());
+            executeCommandWithPermission("flats untrust " + target.getName(), Permissions.TRUST_PLAYERS);
             verifyMessageEquals("untrust.success", target.getName());
             Flat flat = flatsCache.getExistingFlat(testFlatName);
             assertFalse(flat.isTrusted(target), "Offline target player should no longer be trusted after untrusting.");
@@ -446,7 +465,7 @@ class FlatsCommandTest {
         void infoCommandWhenInFlat() {
             createAndClaimFlat();
 
-            executeCommand("flats info");
+            executeCommandWithPermission("flats info", Permissions.INFO_FLATS);
             verifyMessageEquals("info.flat", testFlatName);
             verifyMessageEquals("info.owner", player.getName());
         }
@@ -456,7 +475,7 @@ class FlatsCommandTest {
         void infoCommandWhenNotInFlat() {
             placePlayerFarFromFlats();
 
-            executeCommand("flats info");
+            executeCommandWithPermission("flats info", Permissions.INFO_FLATS);
             verifyMessageEquals("error.not_in_flat");
         }
 
@@ -465,7 +484,7 @@ class FlatsCommandTest {
         void listCommand() {
             createValidFlat();
 
-            executeCommandAsOp("flats list");
+            executeCommandWithPermission("flats list", Permissions.LIST_FLATS);
             verifyMessageEquals("list.title");
             verifyMessageEquals("info.flat", testFlatName);
             verifyMessageEquals("info.unoccupied");
@@ -476,9 +495,8 @@ class FlatsCommandTest {
         void showCommand() {
             createValidFlat();
             placePlayerInFlat();
-            System.out.println(selectionMaxY);
-            executeCommandAsOp("flats show");
-            verifyMessageEquals("show.success", 10);
+            executeCommandWithPermission("flats show", Permissions.SHOW_FLATS);
+            verifyMessageEquals("show.success.singular", 10);
             // Visual assertion isn't applicable in tests but confirm no errors occur.
         }
 
@@ -487,8 +505,8 @@ class FlatsCommandTest {
         void showCommandNoNearbyFlats() {
             placePlayerFarFromFlats();
 
-            executeCommandAsOp("flats show");
-            verifyMessageEquals("show.success", 10);
+            executeCommandWithPermission("flats show", Permissions.SHOW_FLATS);
+            verifyMessageEquals("show.none");
             // Visual assertion isn't applicable in tests but confirm no errors occur.
         }
     }

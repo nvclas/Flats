@@ -17,6 +17,7 @@ public class SettingsConfig extends Config {
     private static final long DEFAULT_AUTO_SAVE_INTERVAL = 600;
     private static final int DEFAULT_MAX_FLAT_SIZE = 10000;
     private static final int DEFAULT_MAX_CLAIMABLE_FLATS = 3;
+    private static final boolean DEFAULT_USE_ADVANCED_PERMISSIONS = false;
     private static final boolean DEFAULT_ENABLE_AUTO_GAMEMODE = false;
     private static final String DEFAULT_INSIDE_GAMEMODE = "creative";
     private static final String DEFAULT_OUTSIDE_GAMEMODE = "adventure";
@@ -77,6 +78,17 @@ public class SettingsConfig extends Config {
      */
     public int getMaxClaimableFlats() {
         return getConfigValue(Paths.MAX_CLAIMABLE_FLATS, Integer.class, DEFAULT_MAX_CLAIMABLE_FLATS);
+    }
+
+    /**
+     * Retrieves the advanced permissions setting from the configuration.
+     * <p>
+     * If the value is not explicitly set in the configuration, a default value is returned.
+     *
+     * @return {@code true} if advanced permissions are enabled; {@code false} otherwise.
+     */
+    public boolean getAdvancedPermissions() {
+        return getConfigValue(Paths.USE_ADVANCED_PERMISSIONS, Boolean.class, DEFAULT_USE_ADVANCED_PERMISSIONS);
     }
 
     /**

@@ -3,7 +3,9 @@ package de.nvclas.flats.commands.flats.subcommands;
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.commands.flats.SubCommand;
+import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.util.I18n;
+import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.OfflinePlayer;
@@ -12,14 +14,21 @@ import org.jetbrains.annotations.NotNull;
 
 public class InfoSubCommand implements SubCommand {
 
+    private final SettingsConfig settingsConfig;
     private final FlatsCache flatsCache;
 
     public InfoSubCommand(Flats flatsPlugin) {
+        settingsConfig = flatsPlugin.getSettingsConfig();
         flatsCache = flatsPlugin.getFlatsCache();
     }
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
+        if (!Permissions.canInfoFlats(player, settingsConfig)) {
+            Permissions.showNoPermissionMessage(player);
+            return;
+        }
+
         for (Area area : flatsCache.getAllAreas()) {
             if (area.isWithinBounds(player.getLocation())) {
                 sendFlatInfo(player, area);
@@ -53,7 +62,7 @@ public class InfoSubCommand implements SubCommand {
         player.sendMessage(Flats.PREFIX + I18n.translate("info.trusted_header"));
         for (OfflinePlayer trustedPlayer : flat.getTrusted()) {
             String messageKey = flat.getTrusted()
-                    .getLast() == trustedPlayer ? "info.trusted_last" : "info.trusted_item";
+                                        .getLast() == trustedPlayer ? "info.trusted_last" : "info.trusted_item";
             player.sendMessage(Flats.PREFIX + I18n.translate(messageKey, trustedPlayer.getName()));
         }
     }

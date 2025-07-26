@@ -57,9 +57,9 @@ public class LocationConverter {
         }
         try {
             return new Location(Bukkit.getWorld(worldName),
-                    Integer.parseInt(x),
-                    Integer.parseInt(y),
-                    Integer.parseInt(z));
+                                Integer.parseInt(x),
+                                Integer.parseInt(y),
+                                Integer.parseInt(z));
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid coordinates in location string");
         }

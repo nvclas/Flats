@@ -74,13 +74,13 @@ public class FlatsConfig extends Config {
 
     private void saveFlat(String flatName, Flat flat) {
         getConfigFile().set(Paths.getOwnerPath(flatName),
-                flat.getOwner() == null ? null : flat.getOwner().getUniqueId().toString());
+                            flat.getOwner() == null ? null : flat.getOwner().getUniqueId().toString());
 
         getConfigFile().set(Paths.getAreasPath(flatName),
-                flat.getAreas().stream().map(Area::getLocationString).toList());
+                            flat.getAreas().stream().map(Area::getLocationString).toList());
 
         getConfigFile().set(Paths.getTrustedPath(flatName),
-                flat.getTrusted().stream().map(player -> player.getUniqueId().toString()).toList());
+                            flat.getTrusted().stream().map(player -> player.getUniqueId().toString()).toList());
     }
 
     private @Nullable Flat loadFlat(String flatName) {
@@ -122,7 +122,8 @@ public class FlatsConfig extends Config {
         try {
             return Area.fromString(locationString, flatName);
         } catch (IllegalArgumentException e) {
-            logWarning("Flat '" + flatName + "' has an invalid area string '" + locationString + "' and will not be loaded.");
+            logWarning("Flat '" + flatName + "' has an invalid area string '" + locationString +
+                       "' and will not be loaded.");
             return null;
         }
     }

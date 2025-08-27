@@ -18,12 +18,10 @@ public class BlockExplodeListener implements Listener {
 
     @EventHandler
     public void onBlockExplode(BlockExplodeEvent event) {
-        for (Block block : event.blockList()) {
+        event.blockList().removeIf(block -> {
             Flat flat = flatsCache.getFlatByLocation(block.getLocation());
-            if (flat != null) {
-                event.blockList().remove(block);
-            }
-        }
+            return flat != null;
+        });
     }
 
 }

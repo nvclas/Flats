@@ -1,6 +1,7 @@
 package de.nvclas.flats.commands.flats;
 
 import de.nvclas.flats.Flats;
+import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.commands.flats.subcommands.AddSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.ClaimSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.InfoSubCommand;
@@ -18,6 +19,7 @@ import de.nvclas.flats.commands.flats.subcommands.UpdateSubCommand;
 import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
+import de.nvclas.flats.volumes.Flat;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -36,12 +38,14 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private final Flats flatsPlugin;
     private final SettingsConfig settingsConfig;
+    private final FlatsCache flatsCache;
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
 
     public FlatsCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
         this.settingsConfig = flatsPlugin.getSettingsConfig();
+        this.flatsCache = flatsPlugin.getFlatsCache();
         registerSubCommands();
     }
 
@@ -140,6 +144,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         return switch (args.length) {
             case 1 -> getSubCommandCompletions(player, args[0]);
             case 2 -> getSecondArgumentCompletions(player, args[0], args[1]);
+            case 3 -> getThirdArgumentCompletions(player, args[0], args[1], args[2]);
             default -> List.of();
         };
     }
@@ -164,6 +169,16 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return getOnlinePlayerCompletions();
         }
 
+        // Tab completion for rename command (first argument is old name)
+        if (FlatsSubCommand.RENAME.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canClaimFlats(player, settingsConfig)) {
+            return getOwnedFlatNameCompletions(player, input);
+        }
+
+        // Tab completion for teleport command
+        if (FlatsSubCommand.TELEPORT.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canClaimFlats(player, settingsConfig)) {
+            return getOwnedFlatNameCompletions(player, input);
+        }
+
         return List.of();
     }
 
@@ -178,6 +193,24 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private List<String> getOnlinePlayerCompletions() {
         return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+    }
+
+    private List<String> getOwnedFlatNameCompletions(Player player, String input) {
+        String lowerInput = input.toLowerCase();
+        return flatsCache.getAllFlats()
+                .stream()
+                .filter(flat -> flat.getOwner() != null && player.getUniqueId().equals(flat.getOwner().getUniqueId()))
+                .map(Flat::getName)
+                .filter(name -> name.toLowerCase().startsWith(lowerInput))
+                .toList();
+    }
+
+    private List<String> getThirdArgumentCompletions(Player player, String subCommand, String secondArg, String input) {
+        // For rename command, third argument is the new name - no specific completions
+        if (FlatsSubCommand.RENAME.getSubCommandName().equalsIgnoreCase(subCommand)) {
+            return List.of(); // No completions for new names
+        }
+        return List.of();
     }
 
     private boolean hasPermissionForCommand(Player player, String command) {

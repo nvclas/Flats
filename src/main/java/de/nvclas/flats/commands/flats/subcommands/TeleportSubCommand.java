@@ -4,6 +4,7 @@ import de.nvclas.flats.Flats;
 import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.commands.flats.SubCommand;
 import de.nvclas.flats.config.SettingsConfig;
+import de.nvclas.flats.schedulers.CommandDelayScheduler;
 import de.nvclas.flats.util.CommandUtils;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
@@ -51,6 +52,9 @@ public class TeleportSubCommand implements SubCommand {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.not_your_flat"));
             return;
         }
+
+        // Add teleport cooldown delay using the settings config
+        CommandDelayScheduler.addDelay(player, "flats tp", settingsConfig.getTeleportCooldown());
 
         // Find the center of the first area and teleport there
         Area firstArea = flat.getAreas().get(0);

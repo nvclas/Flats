@@ -34,3 +34,6 @@ useAdvancedPermissions: false
 enableAutoGamemode: false # true if enabled, false if disabled
 insideFlatGamemode: creative # Possible values: survival, creative, adventure, spectator
 outsideFlatGamemode: adventure # Possible values: survival, creative, adventure, spectator
+
+# Teleport cooldown in seconds (prevents spam teleporting)
+teleportCooldown: 5

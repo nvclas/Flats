@@ -663,5 +663,55 @@ class FlatsCommandTest {
             executeCommandWithPermission("flats tp", Permissions.CLAIM_FLATS);
             verifyMessageEquals("teleport.usage");
         }
+
+        @Test
+        @DisplayName("Unclaim command requires confirmation")
+        void unclaimCommandRequiresConfirmation() {
+            createValidFlat();
+            claimFlat();
+            placePlayerInFlat();
+            
+            // First unclaim command should show confirmation message
+            executeCommandWithPermission("flats unclaim", Permissions.CLAIM_FLATS);
+            verifyMessageEquals("unclaim.confirmation", testFlatName);
+            
+            // Flat should still be owned
+            Flat flat = flatsCache.getExistingFlat(testFlatName);
+            assertTrue(flat.hasOwner(), "Flat should still be owned after first unclaim attempt");
+            
+            // Second unclaim command (within timeout) should actually unclaim
+            executeCommandWithPermission("flats unclaim", Permissions.CLAIM_FLATS);
+            verifyMessageEquals("unclaim.success");
+            
+            // Now flat should not be owned
+            assertFalse(flat.hasOwner(), "Flat should no longer be owned after confirmation");
+        }
+
+        @Test
+        @DisplayName("Enhanced tab completion works for new commands")
+        void enhancedTabCompletion() {
+            createValidFlat();
+            claimFlat();
+            
+            FlatsCommand command = new FlatsCommand(flatsPlugin);
+            
+            // Test tab completion for rename command with owned flat
+            List<String> completions = command.onTabComplete(executorPlayer, null, "flats", new String[]{"rename", ""});
+            assertNotNull(completions);
+            assertTrue(completions.contains(testFlatName), "Should suggest owned flat names for rename command");
+            
+            // Test tab completion for teleport command
+            completions = command.onTabComplete(executorPlayer, null, "flats", new String[]{"tp", ""});
+            assertNotNull(completions);
+            assertTrue(completions.contains(testFlatName), "Should suggest owned flat names for teleport command");
+            
+            // Test that non-owned flats are not suggested
+            setupValidSelection();
+            executorPlayer.setLocation(new Location(testWorld, 100, 64, 100));
+            executeCommandWithPermission("flats add other_flat", Permissions.EDIT_FLATS);
+            
+            completions = command.onTabComplete(executorPlayer, null, "flats", new String[]{"tp", ""});
+            assertFalse(completions.contains("other_flat"), "Should not suggest non-owned flats for teleport command");
+        }
     }
 }

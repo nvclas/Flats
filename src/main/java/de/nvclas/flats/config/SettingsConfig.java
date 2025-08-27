@@ -21,6 +21,7 @@ public class SettingsConfig extends Config {
     private static final boolean DEFAULT_ENABLE_AUTO_GAMEMODE = false;
     private static final String DEFAULT_INSIDE_GAMEMODE = "creative";
     private static final String DEFAULT_OUTSIDE_GAMEMODE = "adventure";
+    private static final int DEFAULT_TELEPORT_COOLDOWN = 5;
 
     /**
      * Constructs a new {@code SettingsConfig} instance with the specified file name and plugin reference.
@@ -124,6 +125,17 @@ public class SettingsConfig extends Config {
     @NotNull
     public String getOutsideGamemode() {
         return getConfigValue(Paths.OUTSIDE_GAMEMODE, String.class, DEFAULT_OUTSIDE_GAMEMODE);
+    }
+
+    /**
+     * Retrieves the teleport cooldown setting from the configuration.
+     * <p>
+     * If the value is not explicitly set in the configuration, a default value is returned.
+     *
+     * @return the teleport cooldown in seconds as an {@code int}.
+     */
+    public int getTeleportCooldown() {
+        return getConfigValue(Paths.TELEPORT_COOLDOWN, Integer.class, DEFAULT_TELEPORT_COOLDOWN);
     }
 
     private <T> T getConfigValue(String path, Class<T> type, T defaultValue) {

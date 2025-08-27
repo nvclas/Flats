@@ -8,3 +8,4 @@ description: Creating flats with build permission
 commands:
   flats:
     description: Plugin base command
+    aliases: [flat, f]

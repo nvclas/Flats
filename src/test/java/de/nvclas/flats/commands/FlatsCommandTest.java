@@ -510,4 +510,158 @@ class FlatsCommandTest {
             // Visual assertion isn't applicable in tests but confirm no errors occur.
         }
     }
+
+    /**
+     * Tests for the new quality of life commands: "rename", "tp", and "mylist".
+     */
+    @Nested
+    @DisplayName("Quality of Life Command Tests")
+    class QualityOfLifeCommandTests {
+
+        @Test
+        @DisplayName("Rename command renames owned flat successfully")
+        void renameCommandSuccess() {
+            createValidFlat();
+            claimFlat();
+            String oldName = testFlatName;
+            String newName = testFlatName + "_renamed";
+
+            executeCommandWithPermission("flats rename " + oldName + " " + newName, Permissions.CLAIM_FLATS);
+            verifyMessageEquals("rename.success", oldName, newName);
+            assertTrue(flatsCache.existsFlat(newName), "Renamed flat should exist");
+            assertFalse(flatsCache.existsFlat(oldName), "Old flat name should not exist");
+        }
+
+        @Test
+        @DisplayName("Rename command fails when flat does not exist")
+        void renameCommandFlatNotExist() {
+            executeCommandWithPermission("flats rename nonexistent newname", Permissions.CLAIM_FLATS);
+            verifyMessageEquals("error.flat_not_exist");
+        }
+
+        @Test
+        @DisplayName("Rename command fails when new name is taken")
+        void renameCommandNameTaken() {
+            createValidFlat();
+            claimFlat();
+            String oldName = testFlatName;
+            String existingName = "existing_flat";
+            
+            // Create another flat with the target name
+            setupValidSelection();
+            executorPlayer.setLocation(new Location(testWorld, 100, 64, 100));
+            executeCommandWithPermission("flats add " + existingName, Permissions.EDIT_FLATS);
+
+            executeCommandWithPermission("flats rename " + oldName + " " + existingName, Permissions.CLAIM_FLATS);
+            verifyMessageEquals("rename.name_taken", existingName);
+        }
+
+        @Test
+        @DisplayName("Rename command fails for non-owned flat")
+        void renameCommandNotOwned() {
+            createValidFlat();
+            // Don't claim the flat
+            executeCommandWithPermission("flats rename " + testFlatName + " newname", Permissions.CLAIM_FLATS);
+            verifyMessageEquals("error.not_your_flat");
+        }
+
+        @Test
+        @DisplayName("Teleport command teleports to owned flat")
+        void teleportCommandSuccess() {
+            createValidFlat();
+            claimFlat();
+            
+            // Move player away from the flat
+            executorPlayer.setLocation(new Location(testWorld, 1000, 64, 1000));
+            
+            executeCommandWithPermission("flats tp " + testFlatName, Permissions.CLAIM_FLATS);
+            verifyMessageEquals("teleport.success", testFlatName);
+            
+            // Check if player is now within the flat bounds
+            Flat flat = flatsCache.getExistingFlat(testFlatName);
+            assertTrue(flat.isWithinBounds(executorPlayer.getLocation()), 
+                      "Player should be teleported within flat bounds");
+        }
+
+        @Test
+        @DisplayName("Teleport command fails when flat does not exist")
+        void teleportCommandFlatNotExist() {
+            executeCommandWithPermission("flats tp nonexistent", Permissions.CLAIM_FLATS);
+            verifyMessageEquals("error.flat_not_exist");
+        }
+
+        @Test
+        @DisplayName("Teleport command fails for non-owned flat")
+        void teleportCommandNotOwned() {
+            createValidFlat();
+            // Don't claim the flat
+            executeCommandWithPermission("flats tp " + testFlatName, Permissions.CLAIM_FLATS);
+            verifyMessageEquals("error.not_your_flat");
+        }
+
+        @Test
+        @DisplayName("MyList command shows owned flats")
+        void myListCommandSuccess() {
+            createValidFlat();
+            claimFlat();
+            
+            executeCommandWithPermission("flats mylist", Permissions.LIST_FLATS);
+            verifyMessageEquals("mylist.title");
+            verifyMessageEquals("mylist.total", 1);
+        }
+
+        @Test
+        @DisplayName("MyList command shows empty message when no flats owned")
+        void myListCommandEmpty() {
+            executeCommandWithPermission("flats mylist", Permissions.LIST_FLATS);
+            verifyMessageEquals("mylist.empty");
+        }
+
+        @Test
+        @DisplayName("MyList command only shows player's own flats")
+        void myListCommandOnlyOwnFlats() {
+            createValidFlat();
+            claimFlat();
+            
+            // Create another flat owned by a different player
+            PlayerMock otherPlayer = server.addPlayer();
+            setupValidSelection();
+            executorPlayer.setLocation(new Location(testWorld, 100, 64, 100));
+            executeCommandWithPermission("flats add other_flat", Permissions.EDIT_FLATS);
+            Flat otherFlat = flatsCache.getExistingFlat("other_flat");
+            otherFlat.setOwner(otherPlayer);
+            
+            executeCommandWithPermission("flats mylist", Permissions.LIST_FLATS);
+            verifyMessageEquals("mylist.title");
+            verifyMessageEquals("mylist.total", 1); // Should only count the player's flat
+        }
+
+        @Test
+        @DisplayName("Commands require proper permissions")
+        void commandsRequirePermissions() {
+            createValidFlat();
+            claimFlat();
+            
+            removePermissions();
+            
+            executeCommand("flats rename " + testFlatName + " newname");
+            verifyMessageEquals("error.no_permission");
+            
+            executeCommand("flats tp " + testFlatName);
+            verifyMessageEquals("error.no_permission");
+            
+            executeCommand("flats mylist");
+            verifyMessageEquals("error.no_permission");
+        }
+
+        @Test
+        @DisplayName("Commands show usage when insufficient arguments provided")
+        void commandsShowUsage() {
+            executeCommandWithPermission("flats rename", Permissions.CLAIM_FLATS);
+            verifyMessageEquals("rename.usage");
+            
+            executeCommandWithPermission("flats tp", Permissions.CLAIM_FLATS);
+            verifyMessageEquals("teleport.usage");
+        }
+    }
 }

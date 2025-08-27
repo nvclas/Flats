@@ -17,7 +17,10 @@ public enum FlatsSubCommand {
     UNTRUST("untrust"),
     INFO("info"),
     LIST("list"),
+    MYLIST("mylist"),
     SHOW("show"),
+    RENAME("rename"),
+    TELEPORT("tp"),
     UPDATE("update");
 
     private final String subCommandName;

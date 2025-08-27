@@ -5,9 +5,12 @@ import de.nvclas.flats.commands.flats.subcommands.AddSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.ClaimSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.InfoSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.ListSubCommand;
+import de.nvclas.flats.commands.flats.subcommands.MyListSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.RemoveSubCommand;
+import de.nvclas.flats.commands.flats.subcommands.RenameSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.SelectSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.ShowSubCommand;
+import de.nvclas.flats.commands.flats.subcommands.TeleportSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.TrustSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.UnclaimSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.UntrustSubCommand;
@@ -96,6 +99,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private void sendListHelpMessages(Player player) {
         player.sendMessage(I18n.translate("help.list"));
+        player.sendMessage(I18n.translate("help.mylist"));
     }
 
     private void sendInfoHelpMessages(Player player) {
@@ -105,6 +109,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     private void sendClaimHelpMessages(Player player) {
         player.sendMessage(I18n.translate("help.claim"));
         player.sendMessage(I18n.translate("help.unclaim"));
+        player.sendMessage(I18n.translate("help.rename"));
+        player.sendMessage(I18n.translate("help.teleport"));
     }
 
     private void sendTrustHelpMessages(Player player) {
@@ -177,9 +183,9 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     private boolean hasPermissionForCommand(Player player, String command) {
         return switch (command.toLowerCase()) {
             case "select", "add", "remove" -> Permissions.canEditFlats(player, settingsConfig);
-            case "list" -> Permissions.canListFlats(player, settingsConfig);
+            case "list", "mylist" -> Permissions.canListFlats(player, settingsConfig);
             case "info" -> Permissions.canInfoFlats(player, settingsConfig);
-            case "claim", "unclaim" -> Permissions.canClaimFlats(player, settingsConfig);
+            case "claim", "unclaim", "rename", "tp" -> Permissions.canClaimFlats(player, settingsConfig);
             case "trust", "untrust" -> Permissions.canTrustPlayers(player, settingsConfig);
             case "show" -> Permissions.canShowFlats(player, settingsConfig);
             case "update" -> Permissions.hasAdminPermission(player);
@@ -192,6 +198,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         subCommands.put(FlatsSubCommand.SELECT.getSubCommandName(), new SelectSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.UPDATE.getSubCommandName(), new UpdateSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.LIST.getSubCommandName(), new ListSubCommand(flatsPlugin));
+        subCommands.put(FlatsSubCommand.MYLIST.getSubCommandName(), new MyListSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.INFO.getSubCommandName(), new InfoSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.SHOW.getSubCommandName(), new ShowSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.ADD.getSubCommandName(), new AddSubCommand(flatsPlugin));
@@ -200,6 +207,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         subCommands.put(FlatsSubCommand.UNCLAIM.getSubCommandName(), new UnclaimSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.TRUST.getSubCommandName(), new TrustSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.UNTRUST.getSubCommandName(), new UntrustSubCommand(flatsPlugin));
+        subCommands.put(FlatsSubCommand.RENAME.getSubCommandName(), new RenameSubCommand(flatsPlugin));
+        subCommands.put(FlatsSubCommand.TELEPORT.getSubCommandName(), new TeleportSubCommand(flatsPlugin));
     }
 
 }

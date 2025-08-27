@@ -758,5 +758,41 @@ class FlatsCommandTest {
             // Should not get permission error (would need more complex verification for exact message)
             // For now, just ensure it doesn't throw an exception
         }
+
+        @Test
+        @DisplayName("Flat name validation prevents invalid names")
+        void flatNameValidation() {
+            setupValidSelection();
+            
+            // Test invalid names
+            executeCommandWithPermission("flats add ab", Permissions.EDIT_FLATS); // Too short
+            verifyMessageEquals("validation.invalid_name");
+            
+            executeCommandWithPermission("flats add invalid@name!", Permissions.EDIT_FLATS); // Invalid characters
+            verifyMessageEquals("validation.invalid_name");
+            
+            executeCommandWithPermission("flats add admin", Permissions.EDIT_FLATS); // Reserved name
+            verifyMessageEquals("validation.reserved_name", "admin");
+            
+            // Test that flat was not created
+            assertFalse(flatsCache.existsFlat("ab"), "Invalid short name should not create flat");
+            assertFalse(flatsCache.existsFlat("invalid@name!"), "Invalid characters should not create flat");
+            assertFalse(flatsCache.existsFlat("admin"), "Reserved name should not create flat");
+        }
+
+        @Test
+        @DisplayName("Rename command validates new flat names")
+        void renameValidation() {
+            createValidFlat();
+            claimFlat();
+            
+            // Test renaming to invalid name
+            executeCommandWithPermission("flats rename " + testFlatName + " ab", Permissions.CLAIM_FLATS);
+            verifyMessageEquals("validation.invalid_name");
+            
+            // Test that flat name didn't change
+            assertTrue(flatsCache.existsFlat(testFlatName), "Original flat should still exist");
+            assertFalse(flatsCache.existsFlat("ab"), "Invalid new name should not exist");
+        }
     }
 }

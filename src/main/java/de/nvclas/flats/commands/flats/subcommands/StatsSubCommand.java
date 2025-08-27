@@ -35,12 +35,12 @@ public class StatsSubCommand implements SubCommand {
             return;
         }
 
-        if (args.length < 1) {
+        if (args.length < 2) {
             player.sendMessage(Flats.PREFIX + I18n.translate("stats.usage"));
             return;
         }
 
-        String flatName = args[0];
+        String flatName = args[1];
 
         if (!flatsCache.existsFlat(flatName)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_not_exist"));

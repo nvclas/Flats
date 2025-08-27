@@ -7,6 +7,7 @@ import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.util.CommandUtils;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
+import de.nvclas.flats.util.ValidationUtils;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -32,13 +33,19 @@ public class RenameSubCommand implements SubCommand {
             return;
         }
 
-        if (args.length < 2) {
+        if (args.length < 3) {
             player.sendMessage(Flats.PREFIX + I18n.translate("rename.usage"));
             return;
         }
 
-        String oldName = args[0];
-        String newName = args[1];
+        String oldName = args[1];
+        String newName = args[2];
+
+        if (!ValidationUtils.isValidFlatName(player, newName)) {
+            String suggested = ValidationUtils.suggestValidName(newName);
+            player.sendMessage(Flats.PREFIX + I18n.translate("validation.suggestion", suggested));
+            return;
+        }
 
         if (!flatsCache.existsFlat(oldName)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_not_exist"));

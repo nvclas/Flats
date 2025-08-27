@@ -6,6 +6,7 @@ import de.nvclas.flats.commands.flats.SubCommand;
 import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
+import de.nvclas.flats.util.ValidationUtils;
 import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Selection;
 import org.bukkit.entity.Player;
@@ -32,12 +33,18 @@ public class AddSubCommand implements SubCommand {
             return;
         }
 
+        String flatName = args[1];
+        if (!ValidationUtils.isValidFlatName(player, flatName)) {
+            String suggested = ValidationUtils.suggestValidName(flatName);
+            player.sendMessage(Flats.PREFIX + I18n.translate("validation.suggestion", suggested));
+            return;
+        }
+
         Selection selection = Selection.getSelection(player);
         if (!isSelectionValid(player, selection) || doesSelectionIntersect(player, selection)) {
             return;
         }
 
-        String flatName = args[1];
         Area area = Area.fromSelection(selection, flatName);
 
         if (!flatsCache.existsFlat(flatName)) {

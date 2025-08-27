@@ -21,6 +21,7 @@ public enum FlatsSubCommand {
     SHOW("show"),
     RENAME("rename"),
     TELEPORT("tp"),
+    STATS("stats"),
     UPDATE("update");
 
     private final String subCommandName;

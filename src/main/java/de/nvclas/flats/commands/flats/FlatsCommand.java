@@ -11,6 +11,7 @@ import de.nvclas.flats.commands.flats.subcommands.RemoveSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.RenameSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.SelectSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.ShowSubCommand;
+import de.nvclas.flats.commands.flats.subcommands.StatsSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.TeleportSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.TrustSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.UnclaimSubCommand;
@@ -108,6 +109,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private void sendInfoHelpMessages(Player player) {
         player.sendMessage(I18n.translate("help.info"));
+        player.sendMessage(I18n.translate("help.stats"));
     }
 
     private void sendClaimHelpMessages(Player player) {
@@ -179,6 +181,15 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return getOwnedFlatNameCompletions(player, input);
         }
 
+        // Tab completion for stats command (can view stats for owned flats, trusted flats, or any if admin)
+        if (FlatsSubCommand.STATS.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canInfoFlats(player, settingsConfig)) {
+            if (Permissions.hasAdminPermission(player)) {
+                return getFlatNameCompletions(input);
+            } else {
+                return getOwnedAndTrustedFlatNameCompletions(player, input);
+            }
+        }
+
         return List.of();
     }
 
@@ -205,6 +216,17 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
                 .toList();
     }
 
+    private List<String> getOwnedAndTrustedFlatNameCompletions(Player player, String input) {
+        String lowerInput = input.toLowerCase();
+        return flatsCache.getAllFlats()
+                .stream()
+                .filter(flat -> (flat.getOwner() != null && player.getUniqueId().equals(flat.getOwner().getUniqueId())) ||
+                               flat.getTrusted().contains(player))
+                .map(Flat::getName)
+                .filter(name -> name.toLowerCase().startsWith(lowerInput))
+                .toList();
+    }
+
     private List<String> getThirdArgumentCompletions(Player player, String subCommand, String secondArg, String input) {
         // For rename command, third argument is the new name - no specific completions
         if (FlatsSubCommand.RENAME.getSubCommandName().equalsIgnoreCase(subCommand)) {
@@ -217,7 +239,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         return switch (command.toLowerCase()) {
             case "select", "add", "remove" -> Permissions.canEditFlats(player, settingsConfig);
             case "list", "mylist" -> Permissions.canListFlats(player, settingsConfig);
-            case "info" -> Permissions.canInfoFlats(player, settingsConfig);
+            case "info", "stats" -> Permissions.canInfoFlats(player, settingsConfig);
             case "claim", "unclaim", "rename", "tp" -> Permissions.canClaimFlats(player, settingsConfig);
             case "trust", "untrust" -> Permissions.canTrustPlayers(player, settingsConfig);
             case "show" -> Permissions.canShowFlats(player, settingsConfig);
@@ -242,6 +264,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         subCommands.put(FlatsSubCommand.UNTRUST.getSubCommandName(), new UntrustSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.RENAME.getSubCommandName(), new RenameSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.TELEPORT.getSubCommandName(), new TeleportSubCommand(flatsPlugin));
+        subCommands.put(FlatsSubCommand.STATS.getSubCommandName(), new StatsSubCommand(flatsPlugin));
     }
 
 }

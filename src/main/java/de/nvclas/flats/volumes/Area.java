@@ -139,4 +139,20 @@ public class Area {
         return blocks;
     }
 
+    /**
+     * Calculates and returns the volume of this area in blocks.
+     * <p>
+     * The volume is calculated as the product of the length, width, and height of the area.
+     * The calculation includes the boundary blocks, so the dimensions are calculated as
+     * the absolute difference plus one.
+     *
+     * @return The volume of the area as an {@code int}.
+     */
+    public int calculateVolume() {
+        int length = (int) (maxX - minX + 1);
+        int height = (int) (maxY - minY + 1);
+        int width = (int) (maxZ - minZ + 1);
+        return length * height * width;
+    }
+
 }

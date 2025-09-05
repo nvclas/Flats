@@ -18,17 +18,17 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.annotations)
     paperweight.paperDevBundle(libs.versions.paper)
+    implementation(libs.annotations)
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
 
-    testCompileOnly(libs.lombok)
-    testAnnotationProcessor(libs.lombok)
-    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.paper)
     testImplementation(libs.mockbukkit)
+    testCompileOnly(libs.lombok)
+    testAnnotationProcessor(libs.lombok)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 paperweight {

@@ -4,7 +4,7 @@ import de.nvclas.flats.Flats;
 import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.commands.flats.FlatsCommand;
 import de.nvclas.flats.items.SelectionItem;
-import de.nvclas.flats.testutil.TestUtil;
+import de.nvclas.flats.testutil.TestUtils;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Flat;
@@ -190,7 +190,7 @@ class FlatsCommandTest {
         String expectedMessage = Flats.PREFIX + I18n.translate(expectedMessageKey, formatArgs);
         String actualMessage = player.nextMessage();
         assertNotNull(actualMessage, "Player should receive a message.");
-        TestUtil.assertEqualMessage(expectedMessage, actualMessage);
+        TestUtils.assertEqualMessage(expectedMessage, actualMessage);
     }
 
     /**

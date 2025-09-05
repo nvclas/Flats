@@ -96,7 +96,29 @@ public class SpatialIndex {
                 return flat;
             }
         }
+        return null;
+    }
 
+    /**
+     * Retrieves the {@link Area} that contains the specified {@link Location}, if any.
+     * <p>
+     * This method searches through the grid cells and evaluates candidate flats
+     * to determine whether the given {@link Location} lies within any of their areas.
+     *
+     * @param location The {@link Location} to find the {@link Area} for. Must not be null.
+     * @return The {@link Area} that contains the specified {@link Location}, or {@code null} if none is found.
+     */
+    public @Nullable Area getAreaAtLocation(@NotNull Location location) {
+        GridKey key = getGridKey(location);
+        List<Flat> candidates = gridMap.getOrDefault(key, List.of());
+
+        for (Flat flat : candidates) {
+            for (Area area : flat.getAreas()) {
+                if (area.isWithinBounds(location)) {
+                    return area;
+                }
+            }
+        }
         return null;
     }
 

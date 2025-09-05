@@ -27,6 +27,7 @@ dependencies {
     testAnnotationProcessor(libs.lombok)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.paper)
     testImplementation(libs.mockbukkit)
 }
 

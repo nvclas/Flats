@@ -4,16 +4,18 @@ lombok = "1.18.+"
 runPaper = "2.3.+"
 paperweight-userdev = "2.0.+"
 paper = "1.21.8-R0.1-SNAPSHOT"
-mockbukkit = "4.72.+"
+mockbukkit = "4.76.+"
 junit-jupiter = "5.13.+"
 junit-platform-launcher = "1.13.+"
 
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+paper = { group = "io.papermc.paper", name = "paper-api", version.ref = "paper" }
 mockbukkit = { group = "org.mockbukkit.mockbukkit", name = "mockbukkit-v1.21", version.ref = "mockbukkit" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit-jupiter" }
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-platform-launcher" }
+
 
 [plugins]
 runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }

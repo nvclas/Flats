@@ -29,11 +29,10 @@ public class InfoSubCommand implements SubCommand {
             return;
         }
 
-        for (Area area : flatsCache.getAllAreas()) {
-            if (area.isWithinBounds(player.getLocation())) {
-                sendFlatInfo(player, area);
-                return;
-            }
+        Area area = flatsCache.getAreaAtLocation(player.getLocation());
+        if (area != null) {
+            sendFlatInfo(player, area);
+            return;
         }
         player.sendMessage(Flats.PREFIX + I18n.translate("error.not_in_flat"));
     }

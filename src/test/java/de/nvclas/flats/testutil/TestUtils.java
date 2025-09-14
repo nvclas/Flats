@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions;
  * Utility class providing helper methods for testing Minecraft-specific functionality.
  */
 @UtilityClass
-public class TestUtil {
+public class TestUtils {
 
     /**
      * Asserts that two messages are equal after removing Minecraft color codes.

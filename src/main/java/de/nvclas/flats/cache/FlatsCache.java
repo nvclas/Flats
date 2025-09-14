@@ -160,6 +160,10 @@ public class FlatsCache {
         return spatialIndex.getFlatAtLocation(location);
     }
 
+    public @Nullable Area getAreaAtLocation(@NotNull Location location) {
+        return spatialIndex.getAreaAtLocation(location);
+    }
+
     /**
      * Retrieves the number of flats owned by the specified player.
      * <p>

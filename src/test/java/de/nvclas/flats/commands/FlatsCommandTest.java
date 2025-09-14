@@ -4,7 +4,7 @@ import de.nvclas.flats.Flats;
 import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.commands.flats.FlatsCommand;
 import de.nvclas.flats.items.SelectionItem;
-import de.nvclas.flats.testutil.TestUtil;
+import de.nvclas.flats.testutil.TestUtils;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Flat;
@@ -14,7 +14,6 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -48,7 +47,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  * It includes setup and teardown methods, helper methods for command execution,
  * and utilities for validating flat-related operations.
  */
-@Disabled // Disabled due to breaking Paper API changes
 @ExtendWith(MockBukkitExtension.class)
 @DisplayName("Flats Command Tests")
 class FlatsCommandTest {
@@ -190,7 +188,7 @@ class FlatsCommandTest {
         String expectedMessage = Flats.PREFIX + I18n.translate(expectedMessageKey, formatArgs);
         String actualMessage = player.nextMessage();
         assertNotNull(actualMessage, "Player should receive a message.");
-        TestUtil.assertEqualMessage(expectedMessage, actualMessage);
+        TestUtils.assertEqualMessage(expectedMessage, actualMessage);
     }
 
     /**

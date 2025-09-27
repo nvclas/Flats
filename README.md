@@ -3,7 +3,8 @@
 ![Latest Release](https://img.shields.io/github/v/release/nvclas/Flats)
 ![License](https://img.shields.io/github/license/nvclas/Flats)
 
-Flats (british for "Apartments") is a plugin that allows you to create 3-dimensional areas and let players claim them. It provides an
+Flats (British for "Apartments") is a plugin that allows you to create 3-dimensional areas and let players claim them.
+It provides an
 easy way to manage plots and ensure that players have their own designated areas to build and interact in.
 
 ## Features

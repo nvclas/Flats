@@ -25,19 +25,19 @@ easy way to manage plots and ensure that players have their own designated areas
 Once the plugin is installed, follow these steps to create and claim your first flat:
 
 1. **Select an area:**
-   - Use `/flats select` to get the selection tool.
-   - Mark two corners of a cubic area you want to define as a flat.
-   - One block at any bottom corner and one block at the opposite top corner.
+    - Use `/flats select` to get the selection tool.
+    - Mark two corners of a cubic area you want to define as a flat.
+    - One block at any bottom corner and one block at the opposite top corner.
 
 2. **Create a flat:**
-   - Run `/flats add <name>` to register the selected area as a flat.
+    - Run `/flats add <name>` to register the selected area as a flat.
 
 3. **Claim the flat:**
-   - Stand inside the area and use `/flats claim` to make it yours.
+    - Stand inside the area and use `/flats claim` to make it yours.
 
 4. **Manage access:**
-   - Use `/flats trust <player>` to allow other players to build in your flat.
-   - Use `/flats untrust <player>` to remove their access.
+    - Use `/flats trust <player>` to allow other players to build in your flat.
+    - Use `/flats untrust <player>` to remove their access.
 
 You're now ready to use Flats and manage your own space in the world!
 

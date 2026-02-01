@@ -103,7 +103,8 @@ public class I18n {
      * @param args Optional arguments to format the translated text using {@link String#format}.
      * @return The formatted translation string if found, or {@code null} if no matching translation exists.
      */
-    public static @Nullable String getTranslation(@PropertyKey(resourceBundle = BUNDLE_NAME) String key, Object... args) {
+    public static @Nullable String getTranslation(@PropertyKey(resourceBundle = BUNDLE_NAME) String key,
+            Object... args) {
         String translation = null;
 
         if (translations != null && translations.containsKey(key)) {

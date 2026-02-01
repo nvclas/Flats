@@ -50,7 +50,7 @@ public class ShowSubCommand implements SubCommand {
 
         if (!Permissions.canSkipCommandDelay(player, settingsConfig)) {
             new CommandDelayScheduler(FlatsSubCommand.SHOW.getFullCommandName(), DEFAULT_SHOW_TIME).start(player,
-                                                                                                          flatsPlugin);
+                    flatsPlugin);
         }
 
         long flatsAmount = flatsCache.getAllFlats()
@@ -103,8 +103,8 @@ public class ShowSubCommand implements SubCommand {
     private void scheduleBlockRestore(@NotNull Player player, @NotNull List<Block> blocksToChange) {
         Bukkit.getScheduler()
                 .runTaskLater(flatsPlugin,
-                              () -> player.sendBlockChanges(blocksToChange.stream().map(Block::getState).toList()),
-                              20L * DEFAULT_SHOW_TIME);
+                        () -> player.sendBlockChanges(blocksToChange.stream().map(Block::getState).toList()),
+                        20L * DEFAULT_SHOW_TIME);
     }
 
     private @NotNull List<Block> getBlocksToChange(@NotNull Player player) {

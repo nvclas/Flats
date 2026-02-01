@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "de.nvclas"
-version = "1.0.1"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
@@ -26,6 +26,7 @@ dependencies {
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.paper)
     testImplementation(libs.mockbukkit)
+    testImplementation(libs.sqlite)
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
     testRuntimeOnly(libs.junit.platform.launcher)

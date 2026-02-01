@@ -22,12 +22,12 @@ public class Area {
     private final String flatName;
     private final String locationString;
 
-    private final double minX;
-    private final double maxX;
-    private final double minY;
-    private final double maxY;
-    private final double minZ;
-    private final double maxZ;
+    private final int minX;
+    private final int maxX;
+    private final int minY;
+    private final int maxY;
+    private final int minZ;
+    private final int maxZ;
 
     /**
      * Constructs a new {@code Area} with the specified corner positions and flat name.
@@ -91,8 +91,8 @@ public class Area {
      * {@code false} otherwise.
      */
     public boolean isWithinBounds(@NotNull Location location) {
-        return location.getBlockX() >= minX && location.getBlockX() <= maxX && location.getBlockY() >= minY &&
-               location.getBlockY() <= maxY && location.getBlockZ() >= minZ && location.getBlockZ() <= maxZ;
+        return location.getBlockX() >= minX && location.getBlockX() <= maxX && location.getBlockY() >= minY
+                && location.getBlockY() <= maxY && location.getBlockZ() >= minZ && location.getBlockZ() <= maxZ;
     }
 
     /**
@@ -108,10 +108,10 @@ public class Area {
      * from either {@code pos1} or {@code pos2}; {@code false} otherwise.
      */
     public boolean isWithinDistance(@NotNull Location location, double range) {
-        return (Math.abs(location.getX() - pos1.getX()) <= range && Math.abs(location.getY() - pos1.getY()) <= range &&
-                Math.abs(location.getZ() - pos1.getZ()) <= range) ||
-               (Math.abs(location.getX() - pos2.getX()) <= range && Math.abs(location.getY() - pos2.getY()) <= range &&
-                Math.abs(location.getZ() - pos2.getZ()) <= range);
+        return (Math.abs(location.getX() - pos1.getX()) <= range && Math.abs(location.getY() - pos1.getY()) <= range
+                && Math.abs(location.getZ() - pos1.getZ()) <= range) || (
+                Math.abs(location.getX() - pos2.getX()) <= range && Math.abs(location.getY() - pos2.getY()) <= range
+                        && Math.abs(location.getZ() - pos2.getZ()) <= range);
     }
 
     /**
@@ -126,11 +126,10 @@ public class Area {
     public @NotNull List<Block> getAllOuterBlocks() {
         List<Block> blocks = new ArrayList<>();
 
-        for (int x = (int) minX; x <= (int) maxX; x++) {
-            for (int y = (int) minY; y <= (int) maxY; y++) {
-                for (int z = (int) minZ; z <= (int) maxZ; z++) {
-                    if (x == (int) minX || x == (int) maxX || y == (int) minY || y == (int) maxY || z == (int) minZ ||
-                        z == (int) maxZ) {
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    if (x == minX || x == maxX || y == minY || y == maxY || z == minZ || z == maxZ) {
                         blocks.add(pos1.getWorld().getBlockAt(x, y, z));
                     }
                 }

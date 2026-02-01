@@ -87,9 +87,9 @@ public class Permissions {
 
     public static boolean hasZeroPermissions(@NotNull Player player, @NotNull SettingsConfig settingsConfig) {
         return !canEditFlats(player, settingsConfig) && !canClaimFlats(player, settingsConfig) &&
-               !canShowFlats(player, settingsConfig) && !canListFlats(player, settingsConfig) &&
-               !canInfoFlats(player, settingsConfig) && !canTrustPlayers(player, settingsConfig) &&
-               !canSkipCommandDelay(player, settingsConfig);
+                !canShowFlats(player, settingsConfig) && !canListFlats(player, settingsConfig) &&
+                !canInfoFlats(player, settingsConfig) && !canTrustPlayers(player, settingsConfig) &&
+                !canSkipCommandDelay(player, settingsConfig);
     }
 
 }

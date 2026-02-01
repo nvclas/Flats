@@ -13,7 +13,6 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class Paths {
     public static final String LANGUAGE = "language";
-    public static final String AUTO_SAVE_INTERVAL = "autoSaveInterval";
     public static final String MAX_FLAT_SIZE = "maxFlatSize";
     public static final String ENABLE_AUTO_GAMEMODE = "enableAutoGamemode";
     public static final String INSIDE_GAMEMODE = "insideFlatGamemode";

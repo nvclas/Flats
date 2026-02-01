@@ -1,16 +1,14 @@
 package de.nvclas.flats.cache;
 
-import de.nvclas.flats.Flats;
-import de.nvclas.flats.config.FlatsConfig;
+import de.nvclas.flats.storage.FlatsStorage;
 import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,123 +18,106 @@ import java.util.Objects;
  *
  * <p>
  * The {@code FlatsCache} class handles the storage and operations related to
- * flat management, such as adding, retrieving, saving, and deleting flats.
- * It uses a configuration source to persist and load data.
- *
- * <p>
- * Instances of this class are initialized with a reference to the
- * {@link FlatsConfig}, enabling seamless integration with the underlying storage.
+ * flat management, such as adding, retrieving, and deleting flats.
+ * It uses a SQLite database to persist data and a spatial index for efficient queries.
  */
 public class FlatsCache {
 
-    private final Map<String, Flat> allFlats = new HashMap<>();
-    private final FlatsConfig config;
+    /**
+     * An LRU cache to store {@link Flat} objects in memory.
+     * This prevents loading all flats into RAM while keeping frequently used ones accessible.
+     */
+    private final Map<String, Flat> flatCache = new LinkedHashMap<>(100, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, Flat> eldest) {
+            return size() > 1000;
+        }
+    };
+
+    private final FlatsStorage flatsStorage;
     private final SpatialIndex spatialIndex = new SpatialIndex();
 
-    public FlatsCache(Flats flatsPlugin) {
-        this.config = flatsPlugin.getFlatsConfig();
+    public FlatsCache(FlatsStorage flatsStorage) {
+        this.flatsStorage = flatsStorage;
         loadAll();
     }
 
     /**
-     * Loads all flats into the cache by clearing the current data and reloading it from the configuration.
-     * <p>
-     * This method ensures that the cached flat data is synchronized with the data stored in the configuration source.
-     * It also rebuilds the spatial index for efficient location-based queries.
+     * Loads the spatial index from the database.
+     * Full flat objects are not loaded into memory until requested.
      */
     public void loadAll() {
-        allFlats.clear();
+        flatCache.clear();
         spatialIndex.clear();
 
-        Map<String, Flat> loadedFlats = config.loadFlats();
-        allFlats.putAll(loadedFlats);
-
-        for (Flat flat : loadedFlats.values()) {
-            spatialIndex.addFlat(flat);
+        List<Area> allAreas = flatsStorage.loadAllAreas();
+        for (Area area : allAreas) {
+            spatialIndex.addArea(area);
         }
     }
 
     /**
-     * Saves all flats managed by this cache to the underlying configuration.
-     *
-     * <p>
-     * This method ensures that the current state of all flats is persisted,
-     * allowing changes to be safely stored and restored in future sessions.
-     *
-     * <p>
-     * Utilizes the associated {@link FlatsConfig} instance to handle the persistence.
-     *
-     * @throws IllegalStateException if an error occurs during the save process.
+     * No longer used as data is saved on every change.
      */
     public void saveAll() {
-        config.saveFlats(allFlats);
+        // Ignored in new architecture
     }
 
     /**
-     * Retrieves a list of all flat names currently available in the cache.
+     * Retrieves a list of all flat names currently available in the database.
      *
-     * <p>
-     * The returned list is unmodifiable, ensuring that operations on this list
-     * do not affect the internal state of the cache.
-     *
-     * @return an unmodifiable {@link List} of flat names. Never {@code null}.
+     * @return a {@link List} of flat names. Never {@code null}.
      */
     public @NotNull List<String> getAllFlatNames() {
-        return List.copyOf(allFlats.keySet());
+        return flatsStorage.getAllFlatNames();
     }
 
     /**
-     * Retrieves a list of all flats currently stored in the cache.
-     *
+     * Retrieves a list of all flats.
      * <p>
-     * The returned list is immutable and contains all the {@link Flat} objects
-     * managed by the cache. Modifications to the returned list are not allowed.
+     * WARNING: This method will load all flats from the database into the cache.
+     * Use sparingly.
      *
-     * @return an unmodifiable {@link List} containing all {@link Flat} instances in the cache.
+     * @return an unmodifiable {@link List} containing all {@link Flat} instances.
      */
     public @NotNull List<Flat> getAllFlats() {
-        return List.copyOf(allFlats.values());
+        return getAllFlatNames().stream()
+                .map(this::getFlat)
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     /**
-     * Retrieves all {@link Area} instances associated with all flats managed by this cache.
+     * Retrieves all {@link Area} instances associated with all flats.
      *
-     * <p>
-     * The method aggregates areas from all flats stored within the cache and returns
-     * them as a single list.
-     * <p>
-     * This implementation uses direct iteration for better performance compared to stream operations.
-     *
-     * @return A non-null {@link List} of {@link Area} instances representing all areas.
-     * The returned list may be empty if no areas are defined.
+     * @return A non-null {@link List} of {@link Area} instances.
      */
     public @NotNull List<Area> getAllAreas() {
-        List<Area> allAreas = new ArrayList<>();
-        for (Flat flat : allFlats.values()) {
-            allAreas.addAll(flat.getAreas());
-        }
-        return allAreas;
+        return spatialIndex.getAllAreas();
     }
 
     /**
      * Retrieves a {@link Flat} by its name.
      * <p>
+     * Attempts to retrieve from the LRU cache first, otherwise loads from the database.
      * Returns null if no flat with the specified name exists.
      *
      * @param name The name of the flat to retrieve. Must not be null.
      * @return The {@link Flat} with the given name, or {@code null} if no such flat exists.
      */
     public @Nullable Flat getFlat(@NotNull String name) {
-        if (!existsFlat(name)) {
-            return null;
+        Flat flat = flatCache.get(name);
+        if (flat == null) {
+            flat = flatsStorage.loadFlat(name);
+            if (flat != null) {
+                flatCache.put(name, flat);
+            }
         }
-        return Objects.requireNonNull(allFlats.get(name));
+        return flat;
     }
 
     /**
      * Retrieves an existing {@link Flat} by its name.
-     * <p>
-     * If no flat with the specified name exists, a {@link NullPointerException} is thrown.
      *
      * @param name The name of the flat to retrieve. Must not be null.
      * @return The {@link Flat} corresponding to the provided name.
@@ -148,16 +129,13 @@ public class FlatsCache {
 
     /**
      * Retrieves the {@link Flat} that contains the provided {@link Location}.
-     * <p>
-     * The method uses a spatial index to efficiently find the flat that contains the location.
-     * This provides significant performance improvements over checking all flats, especially
-     * when there are many flats in the system.
      *
      * @param location the {@link Location} to find a flat for. Must not be {@code null}.
      * @return the {@link Flat} containing the specified location, or {@code null} if no flat contains the location.
      */
     public @Nullable Flat getFlatByLocation(@NotNull Location location) {
-        return spatialIndex.getFlatAtLocation(location);
+        String name = spatialIndex.getFlatNameAtLocation(location);
+        return name != null ? getFlat(name) : null;
     }
 
     public @Nullable Area getAreaAtLocation(@NotNull Location location) {
@@ -166,31 +144,16 @@ public class FlatsCache {
 
     /**
      * Retrieves the number of flats owned by the specified player.
-     * <p>
-     * Ownership is determined by checking if the given player is marked as
-     * the owner of any flats in the cache.
-     * <p>
-     * This implementation uses direct iteration for better performance compared to stream operations.
      *
      * @param player The {@link OfflinePlayer} whose owned flats are to be counted. Must not be {@code null}.
      * @return The number of flats owned by the specified player.
      */
     public int getOwnedFlatsCount(@NotNull OfflinePlayer player) {
-        int count = 0;
-        for (Flat flat : allFlats.values()) {
-            if (flat.isOwner(player)) {
-                count++;
-            }
-        }
-        return count;
+        return flatsStorage.getOwnedFlatsCount(player);
     }
 
     /**
      * Creates a new flat with the specified name and area.
-     *
-     * <p>
-     * The created flat is stored in the internal cache and added to the spatial index.
-     * If a flat with the same name already exists, an exception is thrown.
      *
      * @param name the name of the flat to be created, must not be null
      * @param area the area of the flat to be created, must not be null
@@ -201,14 +164,13 @@ public class FlatsCache {
             throw new IllegalStateException("A flat with this name already exists.");
         }
         Flat newFlat = new Flat(name, area);
-        allFlats.put(name, newFlat);
-        spatialIndex.addFlat(newFlat);
+        flatsStorage.saveFlat(newFlat);
+        flatCache.put(name, newFlat);
+        spatialIndex.addArea(area);
     }
 
     /**
      * Deletes the specified flat by its name.
-     *
-     * <p>Removes the flat from the underlying cache and spatial index if it exists.
      *
      * @param name the name of the flat to delete; must not be {@code null}.
      * @throws IllegalStateException if no flat with the specified name exists.
@@ -217,19 +179,39 @@ public class FlatsCache {
         if (!existsFlat(name)) {
             throw new IllegalStateException("No flat exists with the given name: " + name);
         }
-        Flat flat = allFlats.get(name);
-        spatialIndex.removeFlat(flat);
-        allFlats.remove(name);
+        flatsStorage.deleteFlat(name);
+        flatCache.remove(name);
+        spatialIndex.removeFlat(name);
     }
 
     /**
-     * Checks if a flat with the specified name exists in the cache.
+     * Checks if a flat with the specified name exists.
      *
      * @param name the name of the flat to check; must not be null.
      * @return {@code true} if a flat with the given name exists, {@code false} otherwise.
      */
     public boolean existsFlat(@NotNull String name) {
-        return allFlats.containsKey(name);
+        return getAllFlatNames().contains(name);
     }
 
+    /**
+     * Saves the current state of a flat to the database.
+     *
+     * @param flat The flat to save. Must not be null.
+     */
+    public void save(@NotNull Flat flat) {
+        flatsStorage.saveFlat(flat);
+    }
+
+    /**
+     * Adds an area to an existing flat and persists the changes.
+     *
+     * @param flat The flat to add the area to.
+     * @param area The area to add.
+     */
+    public void addAreaToFlat(@NotNull Flat flat, @NotNull Area area) {
+        flat.addArea(area);
+        save(flat);
+        spatialIndex.addArea(area);
+    }
 }

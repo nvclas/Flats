@@ -38,12 +38,14 @@ public class UntrustSubCommand implements SubCommand {
             return;
         }
         OfflinePlayer target = CommandUtils.findOfflinePlayer(player, args[1]);
-        if (target == null) return;
+        if (target == null)
+            return;
         if (!flat.isTrusted(target)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("untrust.not_trusted", target.getName()));
             return;
         }
         flat.removeTrusted(target);
+        flatsCache.save(flat);
         player.sendMessage(Flats.PREFIX + I18n.translate("untrust.success", target.getName()));
     }
 

@@ -2,7 +2,6 @@ package de.nvclas.flats;
 
 import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.commands.flats.FlatsCommand;
-import de.nvclas.flats.config.FlatsConfig;
 import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.listeners.FlatEnteredOrLeftListener;
 import de.nvclas.flats.listeners.PlayerChangedWorldListener;
@@ -17,8 +16,9 @@ import de.nvclas.flats.listeners.protection.EntityDamageListener;
 import de.nvclas.flats.listeners.protection.EntityExplodeListener;
 import de.nvclas.flats.listeners.protection.HangingBreakByEntityListener;
 import de.nvclas.flats.listeners.protection.PlayerInteractListener;
-import de.nvclas.flats.schedulers.AutoSaveScheduler;
+import de.nvclas.flats.migration.MigrationManager;
 import de.nvclas.flats.schedulers.CommandDelayScheduler;
+import de.nvclas.flats.storage.FlatsStorage;
 import de.nvclas.flats.util.I18n;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -42,10 +42,9 @@ public class Flats extends JavaPlugin {
 
     public static final String PREFIX = "§7[§6Flats§7] §r";
 
-    private FlatsConfig flatsConfig;
+    private FlatsStorage flatsStorage;
     private SettingsConfig settingsConfig;
     private FlatsCache flatsCache;
-    private AutoSaveScheduler autoSaveScheduler;
 
     /**
      * Initializes the plugin when it is enabled by the server.
@@ -54,8 +53,9 @@ public class Flats extends JavaPlugin {
      * <ol>
      *   <li>Loads configuration files</li>
      *   <li>Sets up internationalization</li>
+     *   <li>Initializes the SQLite storage</li>
+     *   <li>Migrates data from YAML if necessary</li>
      *   <li>Initializes the flats cache</li>
-     *   <li>Starts the auto-save scheduler</li>
      *   <li>Registers commands</li>
      *   <li>Registers event listeners</li>
      * </ol>
@@ -63,22 +63,20 @@ public class Flats extends JavaPlugin {
     @Override
     public void onEnable() {
         //Configs
-        flatsConfig = new FlatsConfig("flats.yml", this);
         settingsConfig = new SettingsConfig("settings.yml", this);
 
         //Translations
         I18n.initialize(this);
         I18n.loadTranslations(settingsConfig.getLanguage());
 
+        //Storage
+        flatsStorage = new FlatsStorage(this);
+
+        //Migration
+        MigrationManager.migrate(this, flatsStorage);
+
         //Managers
-        flatsCache = new FlatsCache(this);
-
-        //Flats
-        flatsCache.loadAll();
-
-        //Schedulers
-        autoSaveScheduler = new AutoSaveScheduler(this);
-        autoSaveScheduler.start();
+        flatsCache = new FlatsCache(flatsStorage);
 
         //Commands
         Objects.requireNonNull(getCommand("flats")).setExecutor(new FlatsCommand(this));
@@ -103,26 +101,26 @@ public class Flats extends JavaPlugin {
     }
 
     /**
-     * Performs cleanup operations when the plugin is disabled by the server.
+     * Performs cleanup operations when the server disables the plugin.
      * <p>
      * This method ensures that all plugin resources are properly released and
      * data is saved before the plugin is disabled. It performs the following tasks:
      * <ol>
-     *   <li>Saves all flats data to persistent storage</li>
-     *   <li>Stops the auto-save scheduler</li>
      *   <li>Stops all command delay schedulers</li>
+     *   <li>Closes the database connection</li>
      * </ol>
      */
     @Override
     public void onDisable() {
-        //Save flats
-        flatsCache.saveAll();
-
         //Stop schedulers
-        autoSaveScheduler.stop();
         CommandDelayScheduler.stopAll();
 
-        getLogger().log(Level.INFO, () -> "All flats saved and schedulers stopped");
+        //Close storage
+        if (flatsStorage != null) {
+            flatsStorage.close();
+        }
+
+        getLogger().log(Level.INFO, () -> "Schedulers stopped and storage closed");
     }
 
 }

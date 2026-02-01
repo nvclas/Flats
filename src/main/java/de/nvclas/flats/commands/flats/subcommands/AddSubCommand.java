@@ -45,7 +45,7 @@ public class AddSubCommand implements SubCommand {
             player.sendMessage(Flats.PREFIX + I18n.translate("add.success", flatName));
             return;
         }
-        flatsCache.getExistingFlat(flatName).addArea(area);
+        flatsCache.addAreaToFlat(flatsCache.getExistingFlat(flatName), area);
         player.sendMessage(Flats.PREFIX + I18n.translate("add.area_added", flatName));
     }
 
@@ -66,8 +66,8 @@ public class AddSubCommand implements SubCommand {
         return flatsCache.getAllAreas().stream().filter(selection::intersects).findFirst().map(area -> {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_intersect"));
             player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_intersect.details",
-                                                             area.getFlatName(),
-                                                             area.getLocationString()));
+                    area.getFlatName(),
+                    area.getLocationString()));
             return true;
         }).orElse(false);
     }

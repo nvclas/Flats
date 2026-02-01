@@ -16,11 +16,6 @@
 #   - Українська (Україна):   uk_ua
 language: en_us
 
-# Sets the auto save interval for all flats in seconds
-# 600 seconds equal 10 minutes
-# Set to 0 to disable auto save
-autoSaveInterval: 600
-
 # Sets the maximum volume of a flat in blocks
 maxFlatSize: 10000
 

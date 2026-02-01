@@ -14,7 +14,6 @@ import org.jetbrains.annotations.NotNull;
 public class SettingsConfig extends Config {
 
     private static final String DEFAULT_LANGUAGE = "en_US";
-    private static final long DEFAULT_AUTO_SAVE_INTERVAL = 600;
     private static final int DEFAULT_MAX_FLAT_SIZE = 10000;
     private static final int DEFAULT_MAX_CLAIMABLE_FLATS = 3;
     private static final boolean DEFAULT_USE_ADVANCED_PERMISSIONS = false;
@@ -47,16 +46,6 @@ public class SettingsConfig extends Config {
         return getConfigValue(Paths.LANGUAGE, String.class, DEFAULT_LANGUAGE);
     }
 
-    /**
-     * Retrieves the auto-save interval setting from the configuration.
-     * <p>
-     * If the value is not explicitly set in the configuration, a default value is returned.
-     *
-     * @return the auto-save interval in milliseconds as a {@code long}.
-     */
-    public long getAutoSaveInterval() {
-        return getConfigValue(Paths.AUTO_SAVE_INTERVAL, Long.class, DEFAULT_AUTO_SAVE_INTERVAL);
-    }
 
     /**
      * Retrieves the maximum allowed size for a flat from the configuration.

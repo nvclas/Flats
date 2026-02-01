@@ -38,12 +38,14 @@ public class TrustSubCommand implements SubCommand {
             return;
         }
         OfflinePlayer target = CommandUtils.findOfflinePlayer(player, args[1]);
-        if (target == null) return;
+        if (target == null)
+            return;
         if (flat.isTrusted(target)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("trust.already_trusted", target.getName()));
             return;
         }
         flat.addTrusted(target);
+        flatsCache.save(flat);
         player.sendMessage(Flats.PREFIX + I18n.translate("trust.success", target.getName()));
     }
 

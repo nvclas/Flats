@@ -43,7 +43,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
+            @NotNull String @NotNull [] args) {
         if (!"flats".equalsIgnoreCase(command.getName()) || !(sender instanceof Player player)) {
             sender.sendMessage(Flats.PREFIX + I18n.translate("error.only_players"));
             return false;
@@ -122,7 +123,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
 
     @Override
-    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
+            @NotNull String label, @NotNull String @NotNull [] args) {
         if (!"flats".equalsIgnoreCase(command.getName()) || !(sender instanceof Player player)) {
             return null;
         }
@@ -148,13 +150,13 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private List<String> getSecondArgumentCompletions(Player player, String subCommand, String input) {
         if (FlatsSubCommand.REMOVE.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canEditFlats(player,
-                                                                                                                settingsConfig)) {
+                settingsConfig)) {
             return getFlatNameCompletions(input);
         }
 
         if ((FlatsSubCommand.TRUST.getSubCommandName()
-                     .equalsIgnoreCase(subCommand) || FlatsSubCommand.UNTRUST.getSubCommandName()
-                     .equalsIgnoreCase(subCommand)) && Permissions.canTrustPlayers(player, settingsConfig)) {
+                .equalsIgnoreCase(subCommand) || FlatsSubCommand.UNTRUST.getSubCommandName()
+                .equalsIgnoreCase(subCommand)) && Permissions.canTrustPlayers(player, settingsConfig)) {
             return getOnlinePlayerCompletions();
         }
 

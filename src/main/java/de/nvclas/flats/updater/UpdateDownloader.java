@@ -272,7 +272,7 @@ public class UpdateDownloader {
             try {
                 HttpRequest request = createDownloadRequest(downloadUrl);
                 HttpResponse<InputStream> response = HTTP_CLIENT.send(request,
-                                                                      HttpResponse.BodyHandlers.ofInputStream());
+                        HttpResponse.BodyHandlers.ofInputStream());
 
                 if (response.statusCode() != 200) {
                     logHttpError("Failed to download file", response.statusCode());
@@ -329,7 +329,7 @@ public class UpdateDownloader {
      */
     private void saveDownloadedFile(InputStream inputStream, String fileName) {
         try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-             FileOutputStream fileOutputStream = new FileOutputStream(fileName)) {
+                FileOutputStream fileOutputStream = new FileOutputStream(fileName)) {
             byte[] dataBuffer = new byte[1024];
             int bytesRead;
             long totalBytesRead = 0;
@@ -358,7 +358,7 @@ public class UpdateDownloader {
         if (fileSize != totalBytesRead) {
             plugin.getLogger()
                     .log(Level.SEVERE, () -> "Downloaded file is incomplete. Expected: " + totalBytesRead +
-                                             " bytes, actual file size: " + fileSize + " bytes.");
+                            " bytes, actual file size: " + fileSize + " bytes.");
         } else {
             plugin.getLogger().log(Level.INFO, () -> "Download completed: " + fileName);
         }

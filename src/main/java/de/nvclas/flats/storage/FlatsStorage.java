@@ -35,6 +35,9 @@ public class FlatsStorage {
     private final Flats plugin;
     private Connection connection;
 
+    private static final String INIT_SQL = "db/init.sql";
+    private static final String DATABASE_NAME = "flats.db";
+
     public FlatsStorage(Flats plugin) {
         this.plugin = plugin;
         initConnection();
@@ -43,7 +46,7 @@ public class FlatsStorage {
 
     private void initConnection() {
         try {
-            String url = "jdbc:sqlite:" + plugin.getDataFolder().getAbsolutePath() + "/flats.db";
+            String url = "jdbc:sqlite:" + plugin.getDataFolder().getAbsolutePath() + "/" + DATABASE_NAME;
             connection = DriverManager.getConnection(url);
             try (Statement statement = connection.createStatement()) {
                 statement.execute("PRAGMA foreign_keys = ON;");
@@ -54,9 +57,9 @@ public class FlatsStorage {
     }
 
     private void initTables() {
-        try (InputStream is = plugin.getResource("db/init.sql")) {
+        try (InputStream is = plugin.getResource(INIT_SQL)) {
             if (is == null) {
-                plugin.getLogger().log(Level.SEVERE, () -> "Could not find db/init.sql in resources");
+                plugin.getLogger().log(Level.SEVERE, () -> "Could not find " + INIT_SQL + " in resources");
                 return;
             }
             try (BufferedReader reader = new BufferedReader(

@@ -3,6 +3,7 @@ package de.nvclas.flats.volumes;
 import de.nvclas.flats.util.LocationConverter;
 import lombok.Getter;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
 
@@ -115,27 +116,59 @@ public class Area {
     }
 
     /**
-     * Retrieves a list of all blocks that form the outer boundary of the current area.
+     * Retrieves all outer boundary blocks of the area defined by this {@link Area} object.
      * <p>
-     * The method uses cached boundary values to efficiently determine the outer boundary,
-     * effectively including all blocks located on the edges of the rectangular cuboid defined by the area.
+     * The method calculates and includes blocks along the edges of the three-dimensional
+     * space defined by the corner points {@code pos1} and {@code pos2}.
      *
-     * @return A {@link List} of {@link Block} instances representing the outer boundary of the area.
-     * The returned list is never null but may be empty if no valid boundaries are defined.
+     * @return A non-null {@link List} of {@link Block} objects representing the outer boundary
+     * blocks of the defined area. The list will be empty if the world associated with
+     * {@code pos1} is {@code null}.
      */
     public @NotNull List<Block> getAllOuterBlocks() {
         List<Block> blocks = new ArrayList<>();
+        World world = pos1.getWorld();
+        if (world == null) {
+            return blocks;
+        }
 
+        addXYPlanes(blocks, world);
+        addXZPlanes(blocks, world);
+        addYZPlanes(blocks, world);
+        return blocks;
+    }
+
+    private void addXYPlanes(List<Block> blocks, World world) {
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    if (x == minX || x == maxX || y == minY || y == maxY || z == minZ || z == maxZ) {
-                        blocks.add(pos1.getWorld().getBlockAt(x, y, z));
-                    }
+                blocks.add(world.getBlockAt(x, y, minZ));
+                if (maxZ > minZ) {
+                    blocks.add(world.getBlockAt(x, y, maxZ));
                 }
             }
         }
-        return blocks;
+    }
+
+    private void addXZPlanes(List<Block> blocks, World world) {
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ + 1; z < maxZ; z++) {
+                blocks.add(world.getBlockAt(x, minY, z));
+                if (maxY > minY) {
+                    blocks.add(world.getBlockAt(x, maxY, z));
+                }
+            }
+        }
+    }
+
+    private void addYZPlanes(List<Block> blocks, World world) {
+        for (int y = minY + 1; y < maxY; y++) {
+            for (int z = minZ + 1; z < maxZ; z++) {
+                blocks.add(world.getBlockAt(minX, y, z));
+                if (maxX > minX) {
+                    blocks.add(world.getBlockAt(maxX, y, z));
+                }
+            }
+        }
     }
 
 }

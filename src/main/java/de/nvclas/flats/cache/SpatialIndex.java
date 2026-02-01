@@ -30,7 +30,7 @@ public class SpatialIndex {
     /**
      * A mapping of grid cell coordinates to the list of {@link FlatArea} objects that intersect with those cells.
      */
-    private final Map<GridKey, List<FlatArea>> gridMap = new HashMap<>(1024);
+    private final Map<GridKey, List<FlatArea>> gridMap = HashMap.newHashMap(1024);
 
     /**
      * Adds an {@link Area} to the spatial index.

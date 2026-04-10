@@ -7,13 +7,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import org.flywaydb.core.Flyway;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -32,7 +29,6 @@ import java.util.logging.Level;
  */
 public class FlatsStorage {
 
-    private static final String INIT_SQL = "db/init.sql";
     private static final String DATABASE_NAME = "flats.db";
     private final Flats plugin;
     private Connection connection;
@@ -40,12 +36,12 @@ public class FlatsStorage {
     public FlatsStorage(Flats plugin) {
         this.plugin = plugin;
         initConnection();
-        initTables();
+        migrate();
     }
 
     private void initConnection() {
         try {
-            String url = "jdbc:sqlite:" + plugin.getDataFolder().getAbsolutePath() + "/" + DATABASE_NAME;
+            String url = getJdbcUrl();
             connection = DriverManager.getConnection(url);
             try (Statement statement = connection.createStatement()) {
                 statement.execute("PRAGMA foreign_keys = ON;");
@@ -55,31 +51,15 @@ public class FlatsStorage {
         }
     }
 
-    private void initTables() {
-        try (InputStream is = plugin.getResource(INIT_SQL)) {
-            if (is == null) {
-                plugin.getLogger().log(Level.SEVERE, () -> "Could not find " + INIT_SQL + " in resources");
-                return;
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                    Statement statement = connection.createStatement()) {
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String trimmed = line.trim();
-                    if (trimmed.isEmpty() || trimmed.startsWith("--")) {
-                        continue;
-                    }
-                    sb.append(line).append("\n");
-                    if (trimmed.endsWith(";")) {
-                        statement.execute(sb.toString());
-                        sb.setLength(0);
-                    }
-                }
-            }
-        } catch (IOException | SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not initialize database tables");
-        }
+    private @NotNull String getJdbcUrl() {
+        return "jdbc:sqlite:" + plugin.getDataFolder().getAbsolutePath() + "/" + DATABASE_NAME;
+    }
+
+    private void migrate() {
+        Flyway flyway = Flyway.configure()
+                .dataSource(getJdbcUrl(), null, null)
+                .load();
+        flyway.migrate();
     }
 
     /**

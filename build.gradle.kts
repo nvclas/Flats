@@ -4,6 +4,7 @@ plugins {
     java
     alias(libs.plugins.runPaper)
     alias(libs.plugins.paperweight.userdev)
+    alias(libs.plugins.flyway)
 }
 
 group = "de.nvclas"
@@ -20,6 +21,7 @@ repositories {
 dependencies {
     paperweight.paperDevBundle(libs.versions.paper)
     implementation(libs.annotations)
+    implementation(libs.flyway.core)
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
 

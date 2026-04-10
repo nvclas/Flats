@@ -78,7 +78,7 @@ public class Permissions {
      * <p>
      * The method checks the player's permissions if advanced permissions are enabled in the configuration.
      *
-     * @param player The player whose permissions are being checked. Must not be {@code null}.
+     * @param player         The player whose permissions are being checked. Must not be {@code null}.
      * @param settingsConfig The configuration object that provides relevant settings. Must not be {@code null}.
      * @return {@code true} if the player is allowed to claim flats, {@code false} otherwise.
      */
@@ -96,7 +96,7 @@ public class Permissions {
      * This method considers both the player's individual permissions and the advanced permissions setting
      * defined in {@link SettingsConfig}.
      *
-     * @param player The {@link Player} whose permissions are being checked. Must not be null.
+     * @param player         The {@link Player} whose permissions are being checked. Must not be null.
      * @param settingsConfig The {@link SettingsConfig} instance providing the configuration settings. Must not be null.
      * @return {@code true} if the player can view flats; {@code false} otherwise.
      */
@@ -113,7 +113,7 @@ public class Permissions {
      * <p>
      * Uses advanced permissions if enabled in the {@link SettingsConfig}.
      *
-     * @param player The player whose permissions are being checked. Must not be null.
+     * @param player         The player whose permissions are being checked. Must not be null.
      * @param settingsConfig The configuration containing permission settings. Must not be null.
      * @return {@code true} if the player has the required permission to list flats; {@code false} otherwise.
      */
@@ -132,7 +132,7 @@ public class Permissions {
      * If advanced permissions are enabled in the settings, the player must have the appropriate
      * permission to access this functionality.
      *
-     * @param player the {@link Player} whose permissions are being checked. Must not be null.
+     * @param player         the {@link Player} whose permissions are being checked. Must not be null.
      * @param settingsConfig the {@link SettingsConfig} object that contains permission settings. Must not be null.
      * @return {@code true} if the player is allowed to view flat information; {@code false} otherwise.
      */
@@ -149,7 +149,7 @@ public class Permissions {
      * <p>
      * Trust is granted either by default or based on the player's permission when advanced permissions are enabled.
      *
-     * @param player The {@link Player} whose trustworthiness is being checked. Must not be null.
+     * @param player         The {@link Player} whose trustworthiness is being checked. Must not be null.
      * @param settingsConfig The {@link SettingsConfig} instance containing permission-related settings. Must not be null.
      * @return {@code true} if the player can be trusted; {@code false} otherwise.
      */
@@ -167,7 +167,7 @@ public class Permissions {
      * This method checks if the player has the appropriate permission depending on the
      * advanced permissions setting in the {@link SettingsConfig}.
      *
-     * @param player the {@link Player} whose permissions are being checked. Must not be null.
+     * @param player         the {@link Player} whose permissions are being checked. Must not be null.
      * @param settingsConfig the {@link SettingsConfig} instance containing the configuration settings. Must not be null.
      * @return {@code true} if the player can skip the command delay, {@code false} otherwise.
      */
@@ -185,7 +185,7 @@ public class Permissions {
      * The permissions to edit, claim, show, list, view info, manage trust, and skip command delays
      * are evaluated based on the current settings.
      *
-     * @param player The player whose permissions are being checked. Must not be null.
+     * @param player         The player whose permissions are being checked. Must not be null.
      * @param settingsConfig The settings configuration governing the permission checks. Must not be null.
      * @return {@code true} if the player has none of the relevant permissions; {@code false} otherwise.
      */

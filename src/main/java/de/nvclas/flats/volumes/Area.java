@@ -81,22 +81,6 @@ public class Area {
     }
 
     /**
-     * Checks whether the specified {@link Location} is within the bounds defined
-     * by the two corners {@code pos1} and {@code pos2} of this {@link Area}.
-     * <p>
-     * The method performs a bounding box check across all dimensions (X, Y, Z).
-     * Uses cached boundary values for improved performance.
-     *
-     * @param location The {@link Location} to check. Must not be null.
-     * @return {@code true} if the {@code location} is within the bounds of the area;
-     * {@code false} otherwise.
-     */
-    public boolean isWithinBounds(@NotNull Location location) {
-        return location.getBlockX() >= minX && location.getBlockX() <= maxX && location.getBlockY() >= minY
-                && location.getBlockY() <= maxY && location.getBlockZ() >= minZ && location.getBlockZ() <= maxZ;
-    }
-
-    /**
      * Checks whether the given {@link Location} is within a specified distance from
      * any of the two positions defining this {@link Area}.
      * <p>

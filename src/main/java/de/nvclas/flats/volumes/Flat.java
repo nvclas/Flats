@@ -2,7 +2,6 @@ package de.nvclas.flats.volumes;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,23 +32,6 @@ public class Flat {
         this.owner = owner;
         this.areas = areas;
         this.trusted = trusted;
-    }
-
-    /**
-     * Checks whether the given {@link Location} is within the bounds of any {@link Area}
-     * in the current flat.
-     *
-     * @param location The {@link Location} to check. Must not be null.
-     * @return {@code true} if the {@code location} is within the bounds of at least one {@link Area};
-     * {@code false} otherwise.
-     */
-    public boolean isWithinBounds(@NotNull Location location) {
-        for (Area area : areas) {
-            if (area.isWithinBounds(location)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

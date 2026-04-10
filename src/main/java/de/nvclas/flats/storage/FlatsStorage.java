@@ -32,11 +32,10 @@ import java.util.logging.Level;
  */
 public class FlatsStorage {
 
-    private final Flats plugin;
-    private Connection connection;
-
     private static final String INIT_SQL = "db/init.sql";
     private static final String DATABASE_NAME = "flats.db";
+    private final Flats plugin;
+    private Connection connection;
 
     public FlatsStorage(Flats plugin) {
         this.plugin = plugin;
@@ -210,32 +209,6 @@ public class FlatsStorage {
         }
     }
 
-    public List<String> getAllFlatNames() {
-        List<String> names = new ArrayList<>();
-        try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(
-                "SELECT name FROM flats")) {
-            while (rs.next()) {
-                names.add(rs.getString("name"));
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get all flat names");
-        }
-        return names;
-    }
-
-    public List<Area> loadAllAreas() {
-        List<Area> areas = new ArrayList<>();
-        try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(
-                "SELECT id, flat_name, world, min_x, min_y, min_z, max_x, max_y, max_z FROM areas")) {
-            while (rs.next()) {
-                String flatName = rs.getString("flat_name");
-                addAreas(areas, rs, flatName);
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not load all areas");
-        }
-        return areas;
-    }
 
     public int getOwnedFlatsCount(@NotNull OfflinePlayer player) {
         try (PreparedStatement ps = connection.prepareStatement("SELECT COUNT(*) FROM flats WHERE owner_uuid = ?")) {
@@ -261,6 +234,84 @@ public class FlatsStorage {
             plugin.getLogger().log(Level.SEVERE, e, () -> "Could not check if database is empty");
         }
         return true;
+    }
+
+    public boolean existsFlat(@NotNull String name) {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT 1 FROM flats WHERE name = ?")) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not check if flat exists: " + name);
+        }
+        return false;
+    }
+
+    public int getTotalFlatsCount() {
+        try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(
+                "SELECT COUNT(*) FROM flats")) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get total flats count");
+        }
+        return 0;
+    }
+
+    public List<String> getPaginatedFlatNames(int offset, int limit) {
+        List<String> names = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT name FROM flats ORDER BY name LIMIT ? OFFSET ?")) {
+            ps.setInt(1, limit);
+            ps.setInt(2, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    names.add(rs.getString("name"));
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get paginated flat names");
+        }
+        return names;
+    }
+
+    public List<String> getFilteredFlatNames(String prefix, int limit) {
+        List<String> names = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement("SELECT name FROM flats WHERE name LIKE ? LIMIT ?")) {
+            ps.setString(1, prefix + "%");
+            ps.setInt(2, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    names.add(rs.getString("name"));
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get filtered flat names");
+        }
+        return names;
+    }
+
+    public List<Area> getAreasIntersecting(String worldName, int minX, int maxX, int minZ, int maxZ) {
+        List<Area> areas = new ArrayList<>();
+        String sql = "SELECT flat_name, world, min_x, min_y, min_z, max_x, max_y, max_z FROM areas " +
+                "WHERE world = ? AND NOT (max_x < ? OR min_x > ? OR max_z < ? OR min_z > ?)";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, worldName);
+            ps.setInt(2, minX);
+            ps.setInt(3, maxX);
+            ps.setInt(4, minZ);
+            ps.setInt(5, maxZ);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    addAreas(areas, rs, rs.getString("flat_name"));
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get areas intersecting " + worldName);
+        }
+        return areas;
     }
 
     private void addAreas(List<Area> areas, ResultSet rs, String flatName) throws SQLException {

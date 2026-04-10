@@ -9,6 +9,7 @@ import de.nvclas.flats.schedulers.CommandDelayScheduler;
 import de.nvclas.flats.util.CommandUtils;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
+import de.nvclas.flats.volumes.Area;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -53,11 +54,17 @@ public class ShowSubCommand implements SubCommand {
                     flatsPlugin);
         }
 
-        long flatsAmount = flatsCache.getAllFlats()
-                .stream()
-                .filter(flat -> flat.getAreas()
-                        .stream()
-                        .anyMatch(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE)))
+        int minX = (int) (player.getLocation().getX() - MAX_DISTANCE);
+        int maxX = (int) (player.getLocation().getX() + MAX_DISTANCE);
+        int minZ = (int) (player.getLocation().getZ() - MAX_DISTANCE);
+        int maxZ = (int) (player.getLocation().getZ() + MAX_DISTANCE);
+
+        List<Area> nearbyAreas = flatsCache.getAreasIntersecting(player.getWorld().getName(), minX, maxX, minZ, maxZ);
+
+        long flatsAmount = nearbyAreas.stream()
+                .filter(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE))
+                .map(Area::getFlatName)
+                .distinct()
                 .count();
 
         if (flatsAmount == 0) {
@@ -110,7 +117,12 @@ public class ShowSubCommand implements SubCommand {
     private @NotNull List<Block> getBlocksToChange(@NotNull Player player) {
         List<Block> blocksToChange = new ArrayList<>();
 
-        flatsCache.getAllAreas()
+        int minX = (int) (player.getLocation().getX() - MAX_DISTANCE);
+        int maxX = (int) (player.getLocation().getX() + MAX_DISTANCE);
+        int minZ = (int) (player.getLocation().getZ() - MAX_DISTANCE);
+        int maxZ = (int) (player.getLocation().getZ() + MAX_DISTANCE);
+
+        flatsCache.getAreasIntersecting(player.getWorld().getName(), minX, maxX, minZ, maxZ)
                 .stream()
                 .filter(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE))
                 .forEach(area -> blocksToChange.addAll(area.getAllOuterBlocks()));

@@ -32,6 +32,15 @@ public class CommandUtils {
         return target;
     }
 
+    /**
+     * Checks if the specified command is on cooldown for the given player.
+     * <p>
+     * If the command is on cooldown, informs the player of the remaining delay.
+     *
+     * @param player          The {@link Player} for whom the cooldown is being checked. Must not be null.
+     * @param fullCommandName The name of the command to check. Must not be null.
+     * @return {@code true} if the command is on cooldown for the player, {@code false} otherwise.
+     */
     public boolean isCommandOnCooldown(@NotNull Player player, @NotNull String fullCommandName) {
         long delay = CommandDelayScheduler.getDelay(player, fullCommandName);
         if (delay != 0) {

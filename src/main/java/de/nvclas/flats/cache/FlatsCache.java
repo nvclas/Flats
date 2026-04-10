@@ -43,58 +43,60 @@ public class FlatsCache {
     }
 
     /**
-     * Loads the spatial index from the database.
-     * Full flat objects are not loaded into memory until requested.
+     * No longer loads all areas at startup.
+     * Spatial index will be populated on demand.
      */
     public void loadAll() {
         flatCache.clear();
         spatialIndex.clear();
-
-        List<Area> allAreas = flatsStorage.loadAllAreas();
-        for (Area area : allAreas) {
-            spatialIndex.addArea(area);
-        }
     }
 
-    /**
-     * No longer used as data is saved on every change.
-     */
-    public void saveAll() {
-        // Ignored in new architecture
-    }
 
     /**
-     * Retrieves a list of all flat names currently available in the database.
+     * Retrieves a list of flat names with pagination.
      *
-     * @return a {@link List} of flat names. Never {@code null}.
+     * @param offset The number of names to skip.
+     * @param limit  The maximum number of names to return.
+     * @return A list of flat names.
      */
-    public @NotNull List<String> getAllFlatNames() {
-        return flatsStorage.getAllFlatNames();
+    public @NotNull List<String> getPaginatedFlatNames(int offset, int limit) {
+        return flatsStorage.getPaginatedFlatNames(offset, limit);
     }
 
     /**
-     * Retrieves a list of all flats.
-     * <p>
-     * WARNING: This method will load all flats from the database into the cache.
-     * Use sparingly.
+     * Retrieves the total number of flats.
      *
-     * @return an unmodifiable {@link List} containing all {@link Flat} instances.
+     * @return The total number of flats.
      */
-    public @NotNull List<Flat> getAllFlats() {
-        return getAllFlatNames().stream()
-                .map(this::getFlat)
-                .filter(Objects::nonNull)
-                .toList();
+    public int getTotalFlatsCount() {
+        return flatsStorage.getTotalFlatsCount();
     }
 
     /**
-     * Retrieves all {@link Area} instances associated with all flats.
+     * Retrieves a list of flat names that start with the given prefix.
      *
-     * @return A non-null {@link List} of {@link Area} instances.
+     * @param prefix The prefix to filter by.
+     * @param limit  The maximum number of names to return.
+     * @return A list of matching flat names.
      */
-    public @NotNull List<Area> getAllAreas() {
-        return spatialIndex.getAllAreas();
+    public @NotNull List<String> getFilteredFlatNames(String prefix, int limit) {
+        return flatsStorage.getFilteredFlatNames(prefix, limit);
     }
+
+    /**
+     * Retrieves all areas intersecting the given bounds.
+     *
+     * @param worldName The world name.
+     * @param minX      The minimum X.
+     * @param maxX      The maximum X.
+     * @param minZ      The minimum Z.
+     * @param maxZ      The maximum Z.
+     * @return A list of intersecting areas.
+     */
+    public List<Area> getAreasIntersecting(String worldName, int minX, int maxX, int minZ, int maxZ) {
+        return flatsStorage.getAreasIntersecting(worldName, minX, maxX, minZ, maxZ);
+    }
+
 
     /**
      * Retrieves a {@link Flat} by its name.
@@ -134,12 +136,31 @@ public class FlatsCache {
      * @return the {@link Flat} containing the specified location, or {@code null} if no flat contains the location.
      */
     public @Nullable Flat getFlatByLocation(@NotNull Location location) {
+        ensureLoaded(location);
         String name = spatialIndex.getFlatNameAtLocation(location);
         return name != null ? getFlat(name) : null;
     }
 
     public @Nullable Area getAreaAtLocation(@NotNull Location location) {
+        ensureLoaded(location);
         return spatialIndex.getAreaAtLocation(location);
+    }
+
+    private void ensureLoaded(@NotNull Location location) {
+        if (location.getWorld() == null) {
+            return;
+        }
+        if (!spatialIndex.isLoaded(location)) {
+            SpatialIndex.GridKey key = spatialIndex.getGridKey(location);
+            // GRID_SIZE is 16, which is one chunk.
+            int minX = key.x() * 16;
+            int maxX = minX + 15;
+            int minZ = key.z() * 16;
+            int maxZ = minZ + 15;
+
+            List<Area> areas = flatsStorage.getAreasIntersecting(location.getWorld().getName(), minX, maxX, minZ, maxZ);
+            spatialIndex.setAreas(key.x(), key.z(), areas);
+        }
     }
 
     /**
@@ -191,7 +212,7 @@ public class FlatsCache {
      * @return {@code true} if a flat with the given name exists, {@code false} otherwise.
      */
     public boolean existsFlat(@NotNull String name) {
-        return getAllFlatNames().contains(name);
+        return flatsStorage.existsFlat(name);
     }
 
     /**

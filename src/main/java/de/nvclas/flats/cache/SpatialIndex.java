@@ -9,10 +9,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Represents a spatial index that organizes and queries {@link Flat} objects based on their
@@ -29,8 +28,15 @@ public class SpatialIndex {
     private static final int GRID_SIZE = 16;
     /**
      * A mapping of grid cell coordinates to the list of {@link FlatArea} objects that intersect with those cells.
+     * If a key is present, the cell is considered "loaded". An empty list means no areas intersect the cell.
+     * Uses LRU policy to keep memory usage bounded.
      */
-    private final Map<GridKey, List<FlatArea>> gridMap = HashMap.newHashMap(1024);
+    private final Map<GridKey, List<FlatArea>> gridMap = new LinkedHashMap<>(1024, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<GridKey, List<FlatArea>> eldest) {
+            return size() > 2000;
+        }
+    };
 
     /**
      * Adds an {@link Area} to the spatial index.
@@ -47,9 +53,46 @@ public class SpatialIndex {
         for (int gridX = minGridX; gridX <= maxGridX; gridX++) {
             for (int gridZ = minGridZ; gridZ <= maxGridZ; gridZ++) {
                 GridKey key = new GridKey(gridX, gridZ);
-                gridMap.computeIfAbsent(key, k -> new ArrayList<>()).add(flatArea);
+                // Only add if the grid cell is already loaded, otherwise it will be loaded from DB when needed
+                if (gridMap.containsKey(key)) {
+                    gridMap.get(key).add(flatArea);
+                }
             }
         }
+    }
+
+    /**
+     * Sets the areas for a specific grid cell.
+     *
+     * @param gridX The grid X coordinate.
+     * @param gridZ The grid Z coordinate.
+     * @param areas The list of areas in this cell.
+     */
+    public void setAreas(int gridX, int gridZ, List<Area> areas) {
+        GridKey key = new GridKey(gridX, gridZ);
+        gridMap.put(key, new ArrayList<>(areas.stream().map(FlatArea::fromArea).toList()));
+    }
+
+    /**
+     * Checks if a grid cell is loaded.
+     *
+     * @param location The location to check.
+     * @return True if the cell containing the location is loaded.
+     */
+    public boolean isLoaded(@NotNull Location location) {
+        return gridMap.containsKey(getGridKey(location));
+    }
+
+    /**
+     * Gets the grid key for the given location.
+     *
+     * @param location The location.
+     * @return The grid key.
+     */
+    public GridKey getGridKey(@NotNull Location location) {
+        int gridX = Math.floorDiv(location.getBlockX(), GRID_SIZE);
+        int gridZ = Math.floorDiv(location.getBlockZ(), GRID_SIZE);
+        return new GridKey(gridX, gridZ);
     }
 
     /**
@@ -108,31 +151,6 @@ public class SpatialIndex {
         return null;
     }
 
-    /**
-     * Retrieves all areas currently indexed.
-     *
-     * @return A list of all {@link Area} objects.
-     */
-    public @NotNull List<Area> getAllAreas() {
-        return gridMap.values().stream()
-                .flatMap(List::stream)
-                .distinct()
-                .map(FlatArea::toArea)
-                .filter(Objects::nonNull)
-                .toList();
-    }
-
-    /**
-     * Computes the {@link GridKey} corresponding to the grid cell that contains the specified {@link Location}.
-     *
-     * @param location The {@link Location} for which the grid key is to be generated. Must not be null.
-     * @return A {@link GridKey} representing the grid cell coordinates for the specified {@link Location}.
-     */
-    private GridKey getGridKey(Location location) {
-        int gridX = Math.floorDiv(location.getBlockX(), GRID_SIZE);
-        int gridZ = Math.floorDiv(location.getBlockZ(), GRID_SIZE);
-        return new GridKey(gridX, gridZ);
-    }
 
     /**
      * Represents a simplified, lightweight version of an {@link Area} for use within the spatial index.
@@ -178,7 +196,7 @@ public class SpatialIndex {
     /**
      * A key for the grid map, representing a grid cell's coordinates.
      */
-    private record GridKey(int x, int z) {
+    public record GridKey(int x, int z) {
 
     }
 }

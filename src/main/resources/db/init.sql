@@ -25,3 +25,7 @@ CREATE TABLE IF NOT EXISTS trusted
     PRIMARY KEY (flat_name, player_uuid),
     FOREIGN KEY (flat_name) REFERENCES flats (name) ON DELETE CASCADE
 );
+
+CREATE INDEX IF NOT EXISTS idx_flats_owner_uuid ON flats (owner_uuid);
+CREATE INDEX IF NOT EXISTS idx_areas_flat_name ON areas (flat_name);
+CREATE INDEX IF NOT EXISTS idx_areas_spatial ON areas (world, min_x, max_x, min_z, max_z);

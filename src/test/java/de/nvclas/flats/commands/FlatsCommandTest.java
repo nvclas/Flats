@@ -30,7 +30,6 @@ import org.mockbukkit.mockbukkit.world.WorldMock;
 import java.util.Random;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -326,15 +325,6 @@ class FlatsCommandTest {
             verifyMessageEquals("remove.success", testFlatName);
             assertFalse(flatsCache.existsFlat(testFlatName), "Flat should not exist after removal.");
         }
-
-        @Test
-        @DisplayName("Save operation works even with deleted world")
-        void saveWorldWithDeletedWorld() {
-            createValidFlat();
-            server.removeWorld(world);
-            assertDoesNotThrow(() -> flatsCache.saveAll(),
-                    "Save operation should not throw an exception even if the world is deleted.");
-        }
     }
 
     /**
@@ -487,7 +477,7 @@ class FlatsCommandTest {
             createValidFlat();
 
             executeCommandWithPermission("flats list", Permissions.LIST_FLATS);
-            verifyMessageEquals("list.title");
+            verifyMessageEquals("list.title_page", 1, 1);
             verifyMessageEquals("info.flat", testFlatName);
             verifyMessageEquals("info.unoccupied");
         }

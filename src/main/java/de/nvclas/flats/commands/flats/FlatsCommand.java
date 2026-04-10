@@ -164,12 +164,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     }
 
     private List<String> getFlatNameCompletions(String input) {
-        String lowerInput = input.toLowerCase();
-        return flatsPlugin.getFlatsCache()
-                .getAllFlatNames()
-                .stream()
-                .filter(flatName -> flatName.toLowerCase().startsWith(lowerInput))
-                .toList();
+        return flatsPlugin.getFlatsCache().getFilteredFlatNames(input, 50);
     }
 
     private List<String> getOnlinePlayerCompletions() {

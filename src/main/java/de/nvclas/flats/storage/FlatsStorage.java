@@ -61,13 +61,17 @@ public class FlatsStorage {
                 plugin.getLogger().log(Level.SEVERE, () -> "Could not find " + INIT_SQL + " in resources");
                 return;
             }
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(is)); Statement statement = connection.createStatement()) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                    Statement statement = connection.createStatement()) {
                 StringBuilder sb = new StringBuilder();
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    String trimmed = line.trim();
+                    if (trimmed.isEmpty() || trimmed.startsWith("--")) {
+                        continue;
+                    }
                     sb.append(line).append("\n");
-                    if (line.trim().endsWith(";")) {
+                    if (trimmed.endsWith(";")) {
                         statement.execute(sb.toString());
                         sb.setLength(0);
                     }
@@ -78,6 +82,12 @@ public class FlatsStorage {
         }
     }
 
+    /**
+     * Closes the database connection associated with this storage instance.
+     * <p>
+     * If the connection is already closed or null, this method does nothing.
+     * Logs an error if a {@link SQLException} occurs while closing the connection.
+     */
     public void close() {
         try {
             if (connection != null && !connection.isClosed()) {
@@ -88,110 +98,121 @@ public class FlatsStorage {
         }
     }
 
+    /**
+     * Saves the specified {@link Flat} to the database. This includes persisting the flat's
+     * name, owner, associated areas, and trusted players. Existing database entries for
+     * the flat will be updated.
+     *
+     * <p>Database operations are encapsulated in a transaction. If an error occurs, the changes
+     * are rolled back.
+     *
+     * @param flat The {@link Flat} to be saved. Must not be null.
+     */
     public void saveFlat(@NotNull Flat flat) {
         try {
             connection.setAutoCommit(false);
 
-            // Upsert flat
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO flats (name, owner_uuid) VALUES (?, ?) "
-                            + "ON CONFLICT(name) DO UPDATE SET owner_uuid = EXCLUDED.owner_uuid")) {
-                ps.setString(1, flat.getName());
-                ps.setString(2, flat.getOwner() == null ? null : flat.getOwner().getUniqueId().toString());
-                ps.executeUpdate();
-            }
-
-            // Replace areas
-            try (PreparedStatement ps = connection.prepareStatement("DELETE FROM areas WHERE flat_name = ?")) {
-                ps.setString(1, flat.getName());
-                ps.executeUpdate();
-            }
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO areas (flat_name, world, min_x, min_y, min_z, max_x, max_y, max_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
-                for (Area area : flat.getAreas()) {
-                    ps.setString(1, flat.getName());
-                    ps.setString(2, area.getPos1().getWorld().getName());
-                    ps.setInt(3, area.getMinX());
-                    ps.setInt(4, area.getMinY());
-                    ps.setInt(5, area.getMinZ());
-                    ps.setInt(6, area.getMaxX());
-                    ps.setInt(7, area.getMaxY());
-                    ps.setInt(8, area.getMaxZ());
-                    ps.addBatch();
-                }
-                ps.executeBatch();
-            }
-
-            // Replace trusted
-            try (PreparedStatement ps = connection.prepareStatement("DELETE FROM trusted WHERE flat_name = ?")) {
-                ps.setString(1, flat.getName());
-                ps.executeUpdate();
-            }
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO trusted (flat_name, player_uuid) VALUES (?, ?)")) {
-                for (OfflinePlayer player : flat.getTrusted()) {
-                    ps.setString(1, flat.getName());
-                    ps.setString(2, player.getUniqueId().toString());
-                    ps.addBatch();
-                }
-                ps.executeBatch();
-            }
+            upsertFlatMetadata(flat);
+            replaceAreas(flat);
+            replaceTrustedPlayers(flat);
 
             connection.commit();
         } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException ex) {
-                plugin.getLogger().log(Level.SEVERE, e, () -> "Could not rollback transaction");
-            }
+            rollbackTransaction(e);
             plugin.getLogger().log(Level.SEVERE, e, () -> "Could not save flat " + flat.getName());
         } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, e, () -> "Could not set auto-commit to true");
-            }
+            resetAutoCommit();
         }
     }
 
+    private void upsertFlatMetadata(@NotNull Flat flat) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO flats (name, owner_uuid) VALUES (?, ?) "
+                        + "ON CONFLICT(name) DO UPDATE SET owner_uuid = EXCLUDED.owner_uuid")) {
+            ps.setString(1, flat.getName());
+            ps.setString(2, flat.getOwner() == null ? null : flat.getOwner().getUniqueId().toString());
+            ps.executeUpdate();
+        }
+    }
+
+    private void replaceAreas(@NotNull Flat flat) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM areas WHERE flat_name = ?")) {
+            ps.setString(1, flat.getName());
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO areas (flat_name, world, min_x, min_y, min_z, max_x, max_y, max_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+            for (Area area : flat.getAreas()) {
+                ps.setString(1, flat.getName());
+                ps.setString(2, area.getPos1().getWorld().getName());
+                ps.setInt(3, area.getMinX());
+                ps.setInt(4, area.getMinY());
+                ps.setInt(5, area.getMinZ());
+                ps.setInt(6, area.getMaxX());
+                ps.setInt(7, area.getMaxY());
+                ps.setInt(8, area.getMaxZ());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
+    private void replaceTrustedPlayers(@NotNull Flat flat) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM trusted WHERE flat_name = ?")) {
+            ps.setString(1, flat.getName());
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO trusted (flat_name, player_uuid) VALUES (?, ?)")) {
+            for (OfflinePlayer player : flat.getTrusted()) {
+                ps.setString(1, flat.getName());
+                ps.setString(2, player.getUniqueId().toString());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
+    private void rollbackTransaction(SQLException originalException) {
+        try {
+            if (connection != null) {
+                connection.rollback();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger()
+                    .log(Level.SEVERE, e,
+                            () -> "Could not rollback transaction after error: " + originalException.getMessage());
+        }
+    }
+
+    private void resetAutoCommit() {
+        try {
+            if (connection != null) {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not set auto-commit to true");
+        }
+    }
+
+    /**
+     * Loads a {@link Flat} by its name from persistent storage.
+     * <p>
+     * If the specified flat does not exist, {@code null} is returned.
+     * Trusted players and associated areas are also loaded as part of the flat.
+     *
+     * @param name The name of the flat to load. Must not be {@code null}.
+     * @return A {@link Flat} object if the flat exists; {@code null} otherwise.
+     */
     public @Nullable Flat loadFlat(@NotNull String name) {
         try {
-            OfflinePlayer owner = null;
-            try (PreparedStatement ps = connection.prepareStatement("SELECT owner_uuid FROM flats WHERE name = ?")) {
-                ps.setString(1, name);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        String uuidStr = rs.getString("owner_uuid");
-                        if (uuidStr != null && !uuidStr.isEmpty()) {
-                            owner = Bukkit.getOfflinePlayer(UUID.fromString(uuidStr));
-                        }
-                    } else {
-                        return null; // Flat not found
-                    }
-                }
+            OfflinePlayer owner = loadOwner(name);
+            if (owner == null && !existsFlat(name)) {
+                return null;
             }
 
-            List<Area> areas = new ArrayList<>();
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "SELECT id, flat_name, world, min_x, min_y, min_z, max_x, max_y, max_z FROM areas WHERE flat_name = ?")) {
-                ps.setString(1, name);
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        addAreas(areas, rs, name);
-                    }
-                }
-            }
-
-            List<OfflinePlayer> trusted = new ArrayList<>();
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "SELECT player_uuid FROM trusted WHERE flat_name = ?")) {
-                ps.setString(1, name);
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        trusted.add(Bukkit.getOfflinePlayer(UUID.fromString(rs.getString("player_uuid"))));
-                    }
-                }
-            }
+            List<Area> areas = loadAreas(name);
+            List<OfflinePlayer> trusted = loadTrustedPlayers(name);
 
             return new Flat(name, owner, areas, trusted);
         } catch (SQLException e) {
@@ -200,6 +221,62 @@ public class FlatsStorage {
         }
     }
 
+    private @Nullable OfflinePlayer loadOwner(@NotNull String flatName) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT owner_uuid FROM flats WHERE name = ?")) {
+            ps.setString(1, flatName);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String uuidStr = rs.getString("owner_uuid");
+                    if (uuidStr != null && !uuidStr.isEmpty()) {
+                        return Bukkit.getOfflinePlayer(UUID.fromString(uuidStr));
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private @NotNull List<Area> loadAreas(@NotNull String flatName) throws SQLException {
+        List<Area> areas = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, world, min_x, min_y, min_z, max_x, max_y, max_z FROM areas WHERE flat_name = ?")) {
+            ps.setString(1, flatName);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Area area = mapResultSetToArea(rs, flatName);
+                    if (area != null) {
+                        areas.add(area);
+                    }
+                }
+            }
+        }
+        return areas;
+    }
+
+    private @NotNull List<OfflinePlayer> loadTrustedPlayers(@NotNull String flatName) throws SQLException {
+        List<OfflinePlayer> trusted = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT player_uuid FROM trusted WHERE flat_name = ?")) {
+            ps.setString(1, flatName);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String uuidStr = rs.getString("player_uuid");
+                    if (uuidStr != null) {
+                        trusted.add(Bukkit.getOfflinePlayer(UUID.fromString(uuidStr)));
+                    }
+                }
+            }
+        }
+        return trusted;
+    }
+
+    /**
+     * Deletes a flat from the database based on its name.
+     * <p>
+     * This operation removes the flat record with the specified name from persistent storage.
+     *
+     * @param name the name of the flat to delete; must not be {@code null}.
+     */
     public void deleteFlat(@NotNull String name) {
         try (PreparedStatement ps = connection.prepareStatement("DELETE FROM flats WHERE name = ?")) {
             ps.setString(1, name);
@@ -210,6 +287,14 @@ public class FlatsStorage {
     }
 
 
+    /**
+     * Retrieves the number of flats owned by the specified player.
+     * <p>
+     * This method queries the database to determine how many flats are owned by the given player.
+     *
+     * @param player The {@link OfflinePlayer} whose owned flats are to be counted. Must not be {@code null}.
+     * @return The total number of flats owned by the specified player, or {@code 0} if none are found or an error occurs.
+     */
     public int getOwnedFlatsCount(@NotNull OfflinePlayer player) {
         try (PreparedStatement ps = connection.prepareStatement("SELECT COUNT(*) FROM flats WHERE owner_uuid = ?")) {
             ps.setString(1, player.getUniqueId().toString());
@@ -224,6 +309,14 @@ public class FlatsStorage {
         return 0;
     }
 
+    /**
+     * Checks whether the database table storing flat data is empty.
+     * <p>
+     * This method queries the database and returns {@code true} if there are no records in the table.
+     * In case of an error during the database access, the method returns {@code true} as a fallback.
+     *
+     * @return {@code true} if the database is empty or an error occurs; {@code false} otherwise.
+     */
     public boolean isEmpty() {
         try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(
                 "SELECT COUNT(*) FROM flats")) {
@@ -236,6 +329,15 @@ public class FlatsStorage {
         return true;
     }
 
+    /**
+     * Checks whether a flat with the given name exists in the database.
+     * <p>
+     * This method queries the database to determine the existence of a flat
+     * with the specified name.
+     *
+     * @param name the name of the flat to check; must not be {@code null}.
+     * @return {@code true} if a flat with the given name exists, {@code false} otherwise.
+     */
     public boolean existsFlat(@NotNull String name) {
         try (PreparedStatement ps = connection.prepareStatement("SELECT 1 FROM flats WHERE name = ?")) {
             ps.setString(1, name);
@@ -248,6 +350,16 @@ public class FlatsStorage {
         return false;
     }
 
+    /**
+     * Retrieves the total count of flats in the database.
+     *
+     * <p>
+     * Executes a query on the database to calculate and return the number of
+     * flats currently stored. If an error occurs during the query, logs the
+     * exception and returns {@code 0}.
+     *
+     * @return The total number of flats, or {@code 0} if an error occurs.
+     */
     public int getTotalFlatsCount() {
         try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(
                 "SELECT COUNT(*) FROM flats")) {
@@ -260,6 +372,15 @@ public class FlatsStorage {
         return 0;
     }
 
+    /**
+     * Retrieves a paginated list of flat names from the database.
+     * <p>
+     * The results are ordered by name and constrained by the provided offset and limit.
+     *
+     * @param offset The number of rows to skip before starting to retrieve results.
+     * @param limit  The maximum number of flat names to retrieve.
+     * @return A list of flat names, or an empty list if no results are found.
+     */
     public List<String> getPaginatedFlatNames(int offset, int limit) {
         List<String> names = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(
@@ -277,6 +398,16 @@ public class FlatsStorage {
         return names;
     }
 
+    /**
+     * Retrieves a list of flat names that start with the specified prefix, limited to a specific number of results.
+     *
+     * <p>
+     * This method fetches flat names from the database that match the given prefix and enforces a maximum result limit.
+     *
+     * @param prefix The prefix to filter flat names. Must not be {@code null}.
+     * @param limit  The maximum number of flat names to return. Must be a positive integer.
+     * @return A list of flat names matching the specified prefix. Returns an empty list if no matching names are found.
+     */
     public List<String> getFilteredFlatNames(String prefix, int limit) {
         List<String> names = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement("SELECT name FROM flats WHERE name LIKE ? LIMIT ?")) {
@@ -293,6 +424,16 @@ public class FlatsStorage {
         return names;
     }
 
+    /**
+     * Retrieves a list of areas that intersect with the specified rectangular boundaries within the given world.
+     *
+     * @param worldName the name of the world to query for intersecting areas.
+     * @param minX      the minimum x-coordinate of the boundary.
+     * @param maxX      the maximum x-coordinate of the boundary.
+     * @param minZ      the minimum z-coordinate of the boundary.
+     * @param maxZ      the maximum z-coordinate of the boundary.
+     * @return a list of {@link Area} objects representing the intersecting areas. If no areas intersect, an empty list is returned.
+     */
     public List<Area> getAreasIntersecting(String worldName, int minX, int maxX, int minZ, int maxZ) {
         List<Area> areas = new ArrayList<>();
         String sql = "SELECT flat_name, world, min_x, min_y, min_z, max_x, max_y, max_z FROM areas " +
@@ -305,7 +446,10 @@ public class FlatsStorage {
             ps.setInt(5, maxZ);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    addAreas(areas, rs, rs.getString("flat_name"));
+                    Area area = mapResultSetToArea(rs, rs.getString("flat_name"));
+                    if (area != null) {
+                        areas.add(area);
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -314,7 +458,7 @@ public class FlatsStorage {
         return areas;
     }
 
-    private void addAreas(List<Area> areas, ResultSet rs, String flatName) throws SQLException {
+    private @Nullable Area mapResultSetToArea(ResultSet rs, String flatName) throws SQLException {
         String worldName = rs.getString("world");
         int minX = rs.getInt("min_x");
         int minY = rs.getInt("min_y");
@@ -327,8 +471,9 @@ public class FlatsStorage {
         if (world != null) {
             Location pos1 = new Location(world, minX, minY, minZ);
             Location pos2 = new Location(world, maxX, maxY, maxZ);
-            areas.add(new Area(pos1, pos2, flatName));
+            return new Area(pos1, pos2, flatName);
         }
+        return null;
     }
 
 }

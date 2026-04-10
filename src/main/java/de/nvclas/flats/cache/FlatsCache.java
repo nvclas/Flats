@@ -39,16 +39,6 @@ public class FlatsCache {
 
     public FlatsCache(FlatsStorage flatsStorage) {
         this.flatsStorage = flatsStorage;
-        loadAll();
-    }
-
-    /**
-     * No longer loads all areas at startup.
-     * Spatial index will be populated on demand.
-     */
-    public void loadAll() {
-        flatCache.clear();
-        spatialIndex.clear();
     }
 
 

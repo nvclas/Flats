@@ -29,19 +29,34 @@ public class InfoSubCommand implements SubCommand {
             return;
         }
 
-        Area area = flatsCache.getAreaAtLocation(player.getLocation());
-        if (area != null) {
-            sendFlatInfo(player, area);
+        if (args.length == 1) {
+            Area area = flatsCache.getAreaAtLocation(player.getLocation());
+            if (area != null) {
+                sendFlatInfo(player, area);
+                return;
+            }
+            player.sendMessage(Flats.PREFIX + I18n.translate("error.not_in_flat"));
             return;
         }
-        player.sendMessage(Flats.PREFIX + I18n.translate("error.not_in_flat"));
+
+        Flat flat = flatsCache.getFlat(args[1]);
+        if (flat == null) {
+            player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_not_exist", args[1]));
+            return;
+        }
+        sendFlatInfo(player, flat);
+    }
+
+    private void sendFlatInfo(Player player, Flat flat) {
+        player.sendMessage(Flats.PREFIX + I18n.translate("info.flat", flat.getName()));
+        sendOwnerInfo(player, flat);
+        sendTrustedPlayersInfo(player, flat);
+        sendAreaInfo(player, flat);
     }
 
     private void sendFlatInfo(Player player, Area area) {
-        player.sendMessage(Flats.PREFIX + I18n.translate("info.flat", area.getFlatName()));
         Flat flat = flatsCache.getExistingFlat(area.getFlatName());
-        sendOwnerInfo(player, flat);
-        sendTrustedPlayersInfo(player, flat);
+        sendFlatInfo(player, flat);
         player.sendMessage(Flats.PREFIX + I18n.translate("info.area", area.getLocationString()));
     }
 
@@ -63,6 +78,18 @@ public class InfoSubCommand implements SubCommand {
             String messageKey = flat.getTrusted()
                     .getLast() == trustedPlayer ? "info.trusted_last" : "info.trusted_item";
             player.sendMessage(Flats.PREFIX + I18n.translate(messageKey, trustedPlayer.getName()));
+        }
+    }
+
+    private void sendAreaInfo(Player player, Flat flat) {
+        if (flat.getAreas().isEmpty()) {
+            return;
+        }
+        player.sendMessage(Flats.PREFIX + I18n.translate("info.areas_header"));
+        for (Area area : flat.getAreas()) {
+            String messageKey = flat.getAreas()
+                    .getLast() == area ? "info.areas_last" : "info.areas_item";
+            player.sendMessage(Flats.PREFIX + I18n.translate(messageKey, area.getLocationString()));
         }
     }
 }

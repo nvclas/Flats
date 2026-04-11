@@ -2,7 +2,6 @@ package de.nvclas.flats.storage;
 
 import de.nvclas.flats.Flats;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,11 +27,6 @@ class FlatsStorageTest {
     private ServerMock server;
     @MockBukkitInject
     private Flats plugin;
-
-    @BeforeEach
-    void setUp() {
-        // Plugin is automatically enabled and FlatsStorage initialized by MockBukkit
-    }
 
     @AfterEach
     void tearDown() {

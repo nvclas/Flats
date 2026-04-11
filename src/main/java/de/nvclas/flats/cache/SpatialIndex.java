@@ -25,7 +25,7 @@ public class SpatialIndex {
     /**
      * The size of each grid cell in blocks.
      */
-    private static final int GRID_SIZE = 16;
+    public static final int GRID_SIZE = 16;
     /**
      * A mapping of grid cell coordinates to the list of {@link FlatArea} objects that intersect with those cells.
      * If a key is present, the cell is considered "loaded". An empty list means no areas intersect the cell.
@@ -106,13 +106,6 @@ public class SpatialIndex {
         }
 
         gridMap.entrySet().removeIf(entry -> entry.getValue().isEmpty());
-    }
-
-    /**
-     * Removes all entries from the grid, effectively clearing the spatial index.
-     */
-    public void clear() {
-        gridMap.clear();
     }
 
     /**

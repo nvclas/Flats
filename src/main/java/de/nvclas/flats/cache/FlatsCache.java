@@ -142,11 +142,10 @@ public class FlatsCache {
         }
         if (!spatialIndex.isLoaded(location)) {
             SpatialIndex.GridKey key = spatialIndex.getGridKey(location);
-            // GRID_SIZE is 16, which is one chunk.
-            int minX = key.x() * 16;
-            int maxX = minX + 15;
-            int minZ = key.z() * 16;
-            int maxZ = minZ + 15;
+            int minX = key.x() * SpatialIndex.GRID_SIZE;
+            int maxX = minX + SpatialIndex.GRID_SIZE - 1;
+            int minZ = key.z() * SpatialIndex.GRID_SIZE;
+            int maxZ = minZ + SpatialIndex.GRID_SIZE - 1;
 
             List<Area> areas = flatsStorage.getAreasIntersecting(location.getWorld().getName(), minX, maxX, minZ, maxZ);
             spatialIndex.setAreas(key.x(), key.z(), areas);

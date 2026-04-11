@@ -56,7 +56,7 @@ class FlatsStorageTest {
             // Check if Flyway metadata table exists
             assertTableExists(stmt, "flyway_schema_history");
 
-            // Check if migration version 1 is successful
+            // Check if migration version 2.0.0 is successful
             try (ResultSet rs = stmt.executeQuery(
                     "SELECT success FROM flyway_schema_history WHERE version = '2.0.0'")) {
                 assertTrue(rs.next(), "Migration version 2.0.0 should be recorded in flyway_schema_history");

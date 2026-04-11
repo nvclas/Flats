@@ -48,7 +48,7 @@ public class FlatsStorage {
                 statement.execute("PRAGMA foreign_keys = ON;");
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not initialize database connection");
+            throw new IllegalStateException("Could not initialize database connection", e);
         }
     }
 

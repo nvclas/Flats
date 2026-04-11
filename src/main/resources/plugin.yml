@@ -6,7 +6,8 @@ authors: [ nvclas ]
 description: Creating flats with build permission
 
 libraries:
-  - org.flywaydb:flyway-core:10.0.0 # Flyway dependency for database migrations
+  - org.flywaydb:flyway-core:${flywayVersion} # Flyway dependency for database migrations
+  - org.xerial:sqlite-jdbc:${sqliteVersion}
 
 commands:
   flats:

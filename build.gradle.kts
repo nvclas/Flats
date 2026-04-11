@@ -60,7 +60,11 @@ tasks.test {
 }
 
 tasks.processResources {
-    val props = mapOf("version" to version)
+    val props = mapOf(
+        "version" to project.version,
+        "sqliteVersion" to libs.versions.sqlite.get(),
+        "flywayVersion" to libs.versions.flyway.get()
+    )
     inputs.properties(props)
     filteringCharset = "UTF-8"
     filesMatching("plugin.yml") {

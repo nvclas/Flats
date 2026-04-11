@@ -5,6 +5,9 @@ main: de.nvclas.flats.Flats
 authors: [ nvclas ]
 description: Creating flats with build permission
 
+libraries:
+  - org.flywaydb:flyway-core:10.0.0 # Flyway dependency for database migrations
+
 commands:
   flats:
     description: Plugin base command

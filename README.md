@@ -74,7 +74,7 @@ The plugin provides several commands to interact with the areas:
 - `/flats select` - Get the selection tool for defining the area of a flat.
 - `/flats add <name>` - Creates a new flat with the specified name.
 - `/flats remove <name>` - Deletes the flat with the given name.
-- `/flats list` - Lists all available flats and their owners.
+- `/flats list [page]` - Lists all available flats and their owners.
 - `/flats update` - Easily update the plugin to the latest version.
 - `/flats claim` - Claims the flat the player is currently in.
 - `/flats unclaim` - Unclaims the flat the player is currently in.

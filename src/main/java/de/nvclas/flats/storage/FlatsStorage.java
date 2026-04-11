@@ -29,7 +29,8 @@ import java.util.logging.Level;
  */
 public class FlatsStorage {
 
-    private static final String DATABASE_NAME = "flats.db";
+    public static final String DATABASE_NAME = "flats.db";
+    private static final String DATABASE_DIR = "database";
     private final Flats plugin;
     private Connection connection;
 
@@ -56,8 +57,11 @@ public class FlatsStorage {
     }
 
     private void migrate() {
-        Flyway flyway = Flyway.configure()
+        Flyway flyway = Flyway.configure(plugin.getClass().getClassLoader())
                 .dataSource(getJdbcUrl(), null, null)
+                .baselineOnMigrate(true)
+                .locations(DATABASE_DIR)
+                .mixed(true)
                 .load();
         flyway.migrate();
     }

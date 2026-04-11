@@ -42,14 +42,14 @@ class FlatsStorageTest {
     @Test
     @DisplayName("Verify that Flyway migrations are correctly applied")
     void testMigrationsApplied() throws SQLException {
-        File dbFile = new File(plugin.getDataFolder(), "flats.db");
+        File dbFile = new File(plugin.getDataFolder(), FlatsStorage.DATABASE_NAME);
         assertTrue(dbFile.exists(), "Database file should exist after migration");
 
         String url = "jdbc:sqlite:" + dbFile.getAbsolutePath();
         try (Connection conn = DriverManager.getConnection(url);
                 Statement stmt = conn.createStatement()) {
 
-            // Check if tables from V1__Initial_schema.sql exist
+            // Check if tables from initial migration exist
             assertTableExists(stmt, "flats");
             assertTableExists(stmt, "areas");
             assertTableExists(stmt, "trusted");
@@ -63,9 +63,10 @@ class FlatsStorageTest {
             assertTableExists(stmt, "flyway_schema_history");
 
             // Check if migration version 1 is successful
-            try (ResultSet rs = stmt.executeQuery("SELECT success FROM flyway_schema_history WHERE version = '1'")) {
-                assertTrue(rs.next(), "Migration version 1 should be recorded in flyway_schema_history");
-                assertTrue(rs.getBoolean("success"), "Migration version 1 should be successful");
+            try (ResultSet rs = stmt.executeQuery(
+                    "SELECT success FROM flyway_schema_history WHERE version = '2.0.0'")) {
+                assertTrue(rs.next(), "Migration version 2.0.0 should be recorded in flyway_schema_history");
+                assertTrue(rs.getBoolean("success"), "Migration version 2.0.0 should be successful");
             }
         }
     }

@@ -4,9 +4,7 @@ import de.nvclas.flats.Flats;
 import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 import org.jetbrains.annotations.NotNull;
@@ -134,7 +132,7 @@ public class FlatsStorage {
                 "INSERT INTO areas (flat_name, world, min_x, min_y, min_z, max_x, max_y, max_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
             for (Area area : flat.getAreas()) {
                 ps.setString(1, flat.getName());
-                ps.setString(2, area.getPos1().getWorld().getName());
+                ps.setString(2, area.getWorldName());
                 ps.setInt(3, area.getMinX());
                 ps.setInt(4, area.getMinY());
                 ps.setInt(5, area.getMinZ());
@@ -233,10 +231,7 @@ public class FlatsStorage {
             ps.setString(1, flatName);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Area area = mapResultSetToArea(rs, flatName);
-                    if (area != null) {
-                        areas.add(area);
-                    }
+                    areas.add(mapResultSetToArea(rs, flatName));
                 }
             }
         }
@@ -436,10 +431,7 @@ public class FlatsStorage {
             ps.setInt(5, maxZ);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Area area = mapResultSetToArea(rs, rs.getString("flat_name"));
-                    if (area != null) {
-                        areas.add(area);
-                    }
+                    areas.add(mapResultSetToArea(rs, rs.getString("flat_name")));
                 }
             }
         } catch (SQLException e) {
@@ -448,7 +440,7 @@ public class FlatsStorage {
         return areas;
     }
 
-    private @Nullable Area mapResultSetToArea(ResultSet rs, String flatName) throws SQLException {
+    private @NotNull Area mapResultSetToArea(ResultSet rs, String flatName) throws SQLException {
         String worldName = rs.getString("world");
         int minX = rs.getInt("min_x");
         int minY = rs.getInt("min_y");
@@ -457,13 +449,7 @@ public class FlatsStorage {
         int maxY = rs.getInt("max_y");
         int maxZ = rs.getInt("max_z");
 
-        World world = Bukkit.getWorld(worldName);
-        if (world != null) {
-            Location pos1 = new Location(world, minX, minY, minZ);
-            Location pos2 = new Location(world, maxX, maxY, maxZ);
-            return new Area(pos1, pos2, flatName);
-        }
-        return null;
+        return Area.fromRawData(worldName, minX, minY, minZ, maxX, maxY, maxZ, flatName);
     }
 
 }

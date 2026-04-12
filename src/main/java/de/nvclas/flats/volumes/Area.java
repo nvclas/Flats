@@ -2,6 +2,7 @@ package de.nvclas.flats.volumes;
 
 import de.nvclas.flats.util.LocationConverter;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -21,6 +22,7 @@ public class Area {
     private final Location pos1;
     private final Location pos2;
     private final String flatName;
+    private final String worldName;
     private final String locationString;
 
     private final int minX;
@@ -45,6 +47,7 @@ public class Area {
         this.pos1 = pos1;
         this.pos2 = pos2;
         this.flatName = flatName;
+        this.worldName = pos1.getWorld().getName();
         this.locationString = LocationConverter.getStringFromLocations(pos1, pos2);
 
         this.minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
@@ -53,6 +56,51 @@ public class Area {
         this.maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
         this.minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
         this.maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+    }
+
+    /**
+     * Constructs a new {@code Area} directly from raw coordinate data and a world name,
+     * without requiring the world to be currently loaded.
+     * <p>
+     * This is used when loading persisted area data from the database. The {@link Location}
+     * objects for {@code pos1} and {@code pos2} will have a {@code null} world reference if
+     * the specified world is not currently loaded; operations that need an active world
+     * (such as {@link #getAllOuterBlocks()}) will safely handle this case.
+     *
+     * @param worldName The name of the world this area belongs to. Must not be null.
+     * @param minX      The minimum X coordinate.
+     * @param minY      The minimum Y coordinate.
+     * @param minZ      The minimum Z coordinate.
+     * @param maxX      The maximum X coordinate.
+     * @param maxY      The maximum Y coordinate.
+     * @param maxZ      The maximum Z coordinate.
+     * @param flatName  The name of the flat this area belongs to. Must not be null.
+     * @return A new {@code Area} that holds the world name and coordinates in memory even
+     * when the world is not currently loaded.
+     */
+    public static Area fromRawData(@NotNull String worldName, int minX, int minY, int minZ, int maxX, int maxY,
+            int maxZ, @NotNull String flatName) {
+        World world = Bukkit.getWorld(worldName);
+        Location pos1 = new Location(world, minX, minY, minZ);
+        Location pos2 = new Location(world, maxX, maxY, maxZ);
+        return new Area(pos1, pos2, worldName, flatName,
+                worldName + ":" + minX + "," + minY + "," + minZ + ";" + maxX + "," + maxY + "," + maxZ,
+                minX, maxX, minY, maxY, minZ, maxZ);
+    }
+
+    private Area(Location pos1, Location pos2, String worldName, String flatName, String locationString,
+            int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
+        this.pos1 = pos1;
+        this.pos2 = pos2;
+        this.worldName = worldName;
+        this.flatName = flatName;
+        this.locationString = locationString;
+        this.minX = minX;
+        this.maxX = maxX;
+        this.minY = minY;
+        this.maxY = maxY;
+        this.minZ = minZ;
+        this.maxZ = maxZ;
     }
 
     /**

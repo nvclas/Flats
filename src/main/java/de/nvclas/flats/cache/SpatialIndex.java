@@ -153,7 +153,7 @@ public class SpatialIndex {
                             int maxZ) {
         public static FlatArea fromArea(Area area) {
             return new FlatArea(area.getFlatName(),
-                    area.getPos1().getWorld().getName(),
+                    area.getWorldName(),
                     area.getMinX(),
                     area.getMaxX(),
                     area.getMinY(),

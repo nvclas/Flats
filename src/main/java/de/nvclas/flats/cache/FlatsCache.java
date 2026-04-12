@@ -148,7 +148,7 @@ public class FlatsCache {
             int maxZ = minZ + SpatialIndex.GRID_SIZE - 1;
 
             List<Area> areas = flatsStorage.getAreasIntersecting(location.getWorld().getName(), minX, maxX, minZ, maxZ);
-            spatialIndex.setAreas(key.x(), key.z(), areas);
+            spatialIndex.setAreas(location.getWorld().getName(), key.x(), key.z(), areas);
         }
     }
 

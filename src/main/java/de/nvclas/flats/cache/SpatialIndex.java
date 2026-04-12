@@ -27,7 +27,7 @@ public class SpatialIndex {
      */
     public static final int GRID_SIZE = 16;
     /**
-     * A mapping of grid cell coordinates to the list of {@link FlatArea} objects that intersect with those cells.
+     * A mapping of (world, grid x, grid z) to the list of {@link FlatArea} objects that intersect with those cells.
      * If a key is present, the cell is considered "loaded". An empty list means no areas intersect the cell.
      * Uses LRU policy to keep memory usage bounded.
      */
@@ -45,6 +45,7 @@ public class SpatialIndex {
      */
     public void addArea(@NotNull Area area) {
         FlatArea flatArea = FlatArea.fromArea(area);
+        String worldName = area.getWorldName();
         int minGridX = Math.floorDiv(area.getMinX(), GRID_SIZE);
         int maxGridX = Math.floorDiv(area.getMaxX(), GRID_SIZE);
         int minGridZ = Math.floorDiv(area.getMinZ(), GRID_SIZE);
@@ -52,7 +53,7 @@ public class SpatialIndex {
 
         for (int gridX = minGridX; gridX <= maxGridX; gridX++) {
             for (int gridZ = minGridZ; gridZ <= maxGridZ; gridZ++) {
-                GridKey key = new GridKey(gridX, gridZ);
+                GridKey key = new GridKey(worldName, gridX, gridZ);
                 // Only add if the grid cell is already loaded, otherwise it will be loaded from DB when needed
                 if (gridMap.containsKey(key)) {
                     gridMap.get(key).add(flatArea);
@@ -62,14 +63,15 @@ public class SpatialIndex {
     }
 
     /**
-     * Sets the areas for a specific grid cell.
+     * Sets the areas for a specific grid cell in a specific world.
      *
-     * @param gridX The grid X coordinate.
-     * @param gridZ The grid Z coordinate.
-     * @param areas The list of areas in this cell.
+     * @param worldName The name of the world.
+     * @param gridX     The grid X coordinate.
+     * @param gridZ     The grid Z coordinate.
+     * @param areas     The list of areas in this cell.
      */
-    public void setAreas(int gridX, int gridZ, List<Area> areas) {
-        GridKey key = new GridKey(gridX, gridZ);
+    public void setAreas(@NotNull String worldName, int gridX, int gridZ, List<Area> areas) {
+        GridKey key = new GridKey(worldName, gridX, gridZ);
         gridMap.put(key, new ArrayList<>(areas.stream().map(FlatArea::fromArea).toList()));
     }
 
@@ -84,15 +86,16 @@ public class SpatialIndex {
     }
 
     /**
-     * Gets the grid key for the given location.
+     * Gets the grid key for the given location. The location's world must not be null.
      *
      * @param location The location.
-     * @return The grid key.
+     * @return The grid key, including the world name.
      */
     public GridKey getGridKey(@NotNull Location location) {
         int gridX = Math.floorDiv(location.getBlockX(), GRID_SIZE);
         int gridZ = Math.floorDiv(location.getBlockZ(), GRID_SIZE);
-        return new GridKey(gridX, gridZ);
+        String worldName = location.getWorld() != null ? location.getWorld().getName() : "";
+        return new GridKey(worldName, gridX, gridZ);
     }
 
     /**
@@ -115,6 +118,9 @@ public class SpatialIndex {
      * @return The name of the flat that contains the specified {@link Location}, or {@code null} if none is found.
      */
     public @Nullable String getFlatNameAtLocation(@NotNull Location location) {
+        if (location.getWorld() == null) {
+            return null;
+        }
         GridKey key = getGridKey(location);
         List<FlatArea> candidates = gridMap.getOrDefault(key, List.of());
 
@@ -133,6 +139,9 @@ public class SpatialIndex {
      * @return The {@link Area} that contains the specified {@link Location}, or {@code null} if none is found.
      */
     public @Nullable Area getAreaAtLocation(@NotNull Location location) {
+        if (location.getWorld() == null) {
+            return null;
+        }
         GridKey key = getGridKey(location);
         List<FlatArea> candidates = gridMap.getOrDefault(key, List.of());
 
@@ -187,9 +196,9 @@ public class SpatialIndex {
     }
 
     /**
-     * A key for the grid map, representing a grid cell's coordinates.
+     * A key for the grid map, representing a grid cell's coordinates within a specific world.
      */
-    public record GridKey(int x, int z) {
+    public record GridKey(String worldName, int x, int z) {
 
     }
 }

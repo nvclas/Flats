@@ -38,8 +38,12 @@ public class Area {
      * This constructor initializes an area defined by two corner points and associates it
      * with a specific flat. It also pre-calculates and caches the minimum and maximum
      * coordinate values for each dimension (X, Y, Z) to optimize boundary checks.
+     * <p>
+     * Both {@code pos1} and {@code pos2} must reference a loaded world; use
+     * {@link #fromRawData(String, int, int, int, int, int, int, String)} when the world
+     * may not be currently loaded.
      *
-     * @param pos1     The first corner position of the area. Must not be null.
+     * @param pos1     The first corner position of the area. Must not be null, and its world must not be null.
      * @param pos2     The second corner position of the area. Must not be null.
      * @param flatName The name of the flat this area belongs to. Must not be null.
      */
@@ -65,7 +69,8 @@ public class Area {
      * This is used when loading persisted area data from the database. The {@link Location}
      * objects for {@code pos1} and {@code pos2} will have a {@code null} world reference if
      * the specified world is not currently loaded; operations that need an active world
-     * (such as {@link #getAllOuterBlocks()}) will safely handle this case.
+     * (such as {@link #getAllOuterBlocks()}) already guard against a {@code null} world and
+     * will return empty/safe results until the world becomes available.
      *
      * @param worldName The name of the world this area belongs to. Must not be null.
      * @param minX      The minimum X coordinate.

@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.FlywayException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -63,7 +64,12 @@ public class FlatsStorage {
                 .locations(DATABASE_DIR)
                 .mixed(true)
                 .load();
-        flyway.migrate();
+        try {
+            flyway.migrate();
+        } catch (FlywayException e) {
+            plugin.getLogger().log(Level.SEVERE, e, () -> "Database migration failed");
+            Bukkit.getPluginManager().disablePlugin(plugin);
+        }
     }
 
     /**

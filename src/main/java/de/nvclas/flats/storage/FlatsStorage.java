@@ -202,10 +202,6 @@ public class FlatsStorage {
             }
 
             List<Area> areas = loadAreas(name);
-            if (areas == null) {
-                plugin.getLogger().warning(() -> "Skipping flat '" + name + "': one or more areas belong to a world that is not loaded");
-                return null;
-            }
             List<OfflinePlayer> trusted = loadTrustedPlayers(name);
 
             return new Flat(name, owner, areas, trusted);
@@ -230,7 +226,7 @@ public class FlatsStorage {
         return null;
     }
 
-    private @Nullable List<Area> loadAreas(@NotNull String flatName) throws SQLException {
+    private @NotNull List<Area> loadAreas(@NotNull String flatName) throws SQLException {
         List<Area> areas = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT id, world, min_x, min_y, min_z, max_x, max_y, max_z FROM areas WHERE flat_name = ?")) {
@@ -238,10 +234,9 @@ public class FlatsStorage {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Area area = mapResultSetToArea(rs, flatName);
-                    if (area == null) {
-                        return null;
+                    if (area != null) {
+                        areas.add(area);
                     }
-                    areas.add(area);
                 }
             }
         }

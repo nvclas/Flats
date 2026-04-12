@@ -24,7 +24,7 @@ public class ShowSubCommand implements SubCommand {
 
     private static final byte DEFAULT_SHOW_TIME = 10;
     private static final int MAX_UPDATES_PER_TICK = 100;
-    private static final double MAX_DISTANCE = 100.0;
+    private static final int MAX_DISTANCE = 100;
     private static final long SCHEDULER_DELAY = 0L;
     private static final long SCHEDULER_PERIOD = 1L;
 
@@ -54,10 +54,10 @@ public class ShowSubCommand implements SubCommand {
                     flatsPlugin);
         }
 
-        int minX = (int) (player.getLocation().getX() - MAX_DISTANCE);
-        int maxX = (int) (player.getLocation().getX() + MAX_DISTANCE);
-        int minZ = (int) (player.getLocation().getZ() - MAX_DISTANCE);
-        int maxZ = (int) (player.getLocation().getZ() + MAX_DISTANCE);
+        int minX = player.getLocation().getBlockX() - MAX_DISTANCE;
+        int maxX = player.getLocation().getBlockX() + MAX_DISTANCE;
+        int minZ = player.getLocation().getBlockZ() - MAX_DISTANCE;
+        int maxZ = player.getLocation().getBlockZ() + MAX_DISTANCE;
 
         List<Area> nearbyAreas = flatsCache.getAreasIntersecting(player.getWorld().getName(), minX, maxX, minZ, maxZ);
 
@@ -117,10 +117,10 @@ public class ShowSubCommand implements SubCommand {
     private @NotNull List<Block> getBlocksToChange(@NotNull Player player) {
         List<Block> blocksToChange = new ArrayList<>();
 
-        int minX = (int) (player.getLocation().getX() - MAX_DISTANCE);
-        int maxX = (int) (player.getLocation().getX() + MAX_DISTANCE);
-        int minZ = (int) (player.getLocation().getZ() - MAX_DISTANCE);
-        int maxZ = (int) (player.getLocation().getZ() + MAX_DISTANCE);
+        int minX = player.getLocation().getBlockX() - MAX_DISTANCE;
+        int maxX = player.getLocation().getBlockX() + MAX_DISTANCE;
+        int minZ = player.getLocation().getBlockZ() - MAX_DISTANCE;
+        int maxZ = player.getLocation().getBlockZ() + MAX_DISTANCE;
 
         flatsCache.getAreasIntersecting(player.getWorld().getName(), minX, maxX, minZ, maxZ)
                 .stream()

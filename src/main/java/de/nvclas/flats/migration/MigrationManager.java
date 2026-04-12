@@ -83,9 +83,15 @@ public class MigrationManager {
 
     private static @Nullable Flat loadFlat(String flatName, YamlConfiguration config, Flats plugin) {
         String ownerUuid = config.getString(Paths.getOwnerPath(flatName));
-        OfflinePlayer owner =
-                (ownerUuid != null && !ownerUuid.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(ownerUuid))
-                        : null;
+        OfflinePlayer owner = null;
+        if (ownerUuid != null && !ownerUuid.isEmpty()) {
+            try {
+                owner = Bukkit.getOfflinePlayer(UUID.fromString(ownerUuid));
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger()
+                        .log(Level.WARNING, () -> "Invalid owner UUID for flat " + flatName + ": " + ownerUuid);
+            }
+        }
 
         List<String> locationStrings = config.getStringList(Paths.getAreasPath(flatName));
         List<Area> areas = new ArrayList<>();
@@ -102,8 +108,14 @@ public class MigrationManager {
         }
 
         List<String> trustedUuids = config.getStringList(Paths.getTrustedPath(flatName));
-        List<OfflinePlayer> trusted = new ArrayList<>(
-                trustedUuids.stream().map(uuid -> Bukkit.getOfflinePlayer(UUID.fromString(uuid))).toList());
+        List<OfflinePlayer> trusted = new ArrayList<>();
+        for (String uuid : trustedUuids) {
+            try {
+                trusted.add(Bukkit.getOfflinePlayer(UUID.fromString(uuid)));
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().log(Level.WARNING, () -> "Invalid trusted UUID for flat " + flatName + ": " + uuid);
+            }
+        }
 
         return new Flat(flatName, owner, areas, trusted);
     }

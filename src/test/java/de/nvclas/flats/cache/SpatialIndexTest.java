@@ -12,6 +12,7 @@ import org.mockbukkit.mockbukkit.world.WorldMock;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -60,9 +61,8 @@ class SpatialIndexTest {
 
         // Query the same block coordinates in world A — must find the flat
         Location inWorldA = new Location(worldA, 5, 5, 5);
-        String nameInA = spatialIndex.getFlatNameAtLocation(inWorldA);
-        assertTrue("flat_a".equals(nameInA),
-                "getFlatNameAtLocation in world_a should return 'flat_a', got: " + nameInA);
+        assertEquals("flat_a", spatialIndex.getFlatNameAtLocation(inWorldA),
+                "getFlatNameAtLocation in world_a should return 'flat_a'");
 
         // Query the exact same block coordinates in world B — must NOT find flat_a
         Location inWorldB = new Location(worldB, 5, 5, 5);
@@ -82,9 +82,9 @@ class SpatialIndexTest {
         Location inWorldA = new Location(worldA, 5, 5, 5);
         Location inWorldB = new Location(worldB, 5, 5, 5);
 
-        assertTrue("flat_a".equals(spatialIndex.getFlatNameAtLocation(inWorldA)),
+        assertEquals("flat_a", spatialIndex.getFlatNameAtLocation(inWorldA),
                 "world_a should return flat_a");
-        assertTrue("flat_b".equals(spatialIndex.getFlatNameAtLocation(inWorldB)),
+        assertEquals("flat_b", spatialIndex.getFlatNameAtLocation(inWorldB),
                 "world_b should return flat_b");
     }
 }

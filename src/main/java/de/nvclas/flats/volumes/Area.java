@@ -102,23 +102,6 @@ public class Area {
                 bounds.toLocationString(worldName), bounds);
     }
 
-    public record Bounds(int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
-
-        public static Bounds fromLocations(@NotNull Location pos1, @NotNull Location pos2) {
-            return new Bounds(
-                    Math.min(pos1.getBlockX(), pos2.getBlockX()),
-                    Math.max(pos1.getBlockX(), pos2.getBlockX()),
-                    Math.min(pos1.getBlockY(), pos2.getBlockY()),
-                    Math.max(pos1.getBlockY(), pos2.getBlockY()),
-                    Math.min(pos1.getBlockZ(), pos2.getBlockZ()),
-                    Math.max(pos1.getBlockZ(), pos2.getBlockZ()));
-        }
-
-        private String toLocationString(String worldName) {
-            return worldName + ":" + minX + "," + minY + "," + minZ + ";" + maxX + "," + maxY + "," + maxZ;
-        }
-    }
-
     /**
      * Creates a new {@link Area} instance by parsing location data from a string representation.
      *
@@ -216,6 +199,23 @@ public class Area {
                     blocks.add(world.getBlockAt(maxX, y, z));
                 }
             }
+        }
+    }
+
+    public record Bounds(int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
+
+        public static Bounds fromLocations(@NotNull Location pos1, @NotNull Location pos2) {
+            return new Bounds(
+                    Math.min(pos1.getBlockX(), pos2.getBlockX()),
+                    Math.max(pos1.getBlockX(), pos2.getBlockX()),
+                    Math.min(pos1.getBlockY(), pos2.getBlockY()),
+                    Math.max(pos1.getBlockY(), pos2.getBlockY()),
+                    Math.min(pos1.getBlockZ(), pos2.getBlockZ()),
+                    Math.max(pos1.getBlockZ(), pos2.getBlockZ()));
+        }
+
+        private String toLocationString(String worldName) {
+            return worldName + ":" + minX + "," + minY + "," + minZ + ";" + maxX + "," + maxY + "," + maxZ;
         }
     }
 

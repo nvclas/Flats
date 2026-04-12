@@ -78,7 +78,9 @@ The plugin provides several commands to interact with the areas:
 - `/flats update` - Easily update the plugin to the latest version.
 - `/flats claim` - Claims the flat the player is currently in.
 - `/flats unclaim` - Unclaims the flat the player is currently in.
-- `/flats info` - Shows information about the flat the player is currently in.
+- `/flats info [flat]` - Shows information about the flat the player is currently in or a specific flat.
+- `/flats trust <player>` - Allows the specified player to build in the flat the player is currently in.
+- `/flats untrust <player>` - Removes the specified player's access to the flat the player is currently in.
 - `/flats show` - Show every flat my marking it with yellow glass.
 - And more
 

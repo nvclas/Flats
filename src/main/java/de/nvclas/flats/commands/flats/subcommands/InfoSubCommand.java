@@ -41,7 +41,7 @@ public class InfoSubCommand implements SubCommand {
 
         Flat flat = flatsCache.getFlat(args[1]);
         if (flat == null) {
-            player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_not_exist", args[1]));
+            player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_not_exist"));
             return;
         }
         sendFlatInfo(player, flat);

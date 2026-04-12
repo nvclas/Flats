@@ -395,8 +395,10 @@ public class FlatsStorage {
      */
     public List<String> getFilteredFlatNames(String prefix, int limit) {
         List<String> names = new ArrayList<>();
-        try (PreparedStatement ps = connection.prepareStatement("SELECT name FROM flats WHERE name LIKE ? LIMIT ?")) {
-            ps.setString(1, prefix + "%");
+        String escapedPrefix = escapeLikePattern(prefix);
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT name FROM flats WHERE name LIKE ? ESCAPE '\\' LIMIT ?")) {
+            ps.setString(1, escapedPrefix + "%");
             ps.setInt(2, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -407,6 +409,13 @@ public class FlatsStorage {
             plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get filtered flat names");
         }
         return names;
+    }
+
+    private @NotNull String escapeLikePattern(@NotNull String input) {
+        return input
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     /**
@@ -449,7 +458,7 @@ public class FlatsStorage {
         int maxY = rs.getInt("max_y");
         int maxZ = rs.getInt("max_z");
 
-        return Area.fromRawData(worldName, minX, minY, minZ, maxX, maxY, maxZ, flatName);
+        return Area.fromRawData(worldName, new Area.Bounds(minX, maxX, minY, maxY, minZ, maxZ), flatName);
     }
 
 }

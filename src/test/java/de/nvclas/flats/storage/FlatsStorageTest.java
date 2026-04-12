@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(MockBukkitExtension.class)
 @DisplayName("FlatsStorage Migration Tests")
@@ -36,6 +37,9 @@ class FlatsStorageTest {
     @AfterEach
     void tearDown() {
         MockBukkit.unmock();
+        if (plugin.getDataFolder().exists() && !plugin.getDataFolder().delete()) {
+            fail("Could not delete plugin data folder.");
+        }
     }
 
     @Test
@@ -45,7 +49,7 @@ class FlatsStorageTest {
         // Area.fromRawData() should create an Area that holds the world name and coordinates in memory,
         // with pos1/pos2 carrying a null world reference.
         String worldName = "unloaded_world";
-        Area area = Area.fromRawData(worldName, 0, 0, 0, 10, 20, 10, "test_flat");
+        Area area = Area.fromRawData(worldName, new Area.Bounds(0, 0, 0, 10, 20, 10), "test_flat");
 
         assertNull(area.getPos1().getWorld(), "World reference should be null for an unloaded world");
         assertEquals(worldName, area.getWorldName(), "World name should be preserved even without a loaded world");
@@ -61,7 +65,7 @@ class FlatsStorageTest {
         assertNotNull(loaded, "Flat should be loaded even when its world is not currently loaded");
         assertEquals(1, loaded.getAreas().size(), "All areas should be preserved when the world is not loaded");
 
-        Area loadedArea = loaded.getAreas().get(0);
+        Area loadedArea = loaded.getAreas().getFirst();
         assertEquals(worldName, loadedArea.getWorldName(), "World name should be preserved after load");
         assertEquals(0, loadedArea.getMinX(), "minX should be preserved");
         assertEquals(10, loadedArea.getMaxX(), "maxX should be preserved");

@@ -40,7 +40,7 @@ public class Area {
      * coordinate values for each dimension (X, Y, Z) to optimize boundary checks.
      * <p>
      * Both {@code pos1} and {@code pos2} must reference a loaded world; use
-     * {@link #fromRawData(String, int, int, int, int, int, int, String)} when the world
+     * {@link #fromRawData(String, Bounds, String)} when the world
      * may not be currently loaded.
      *
      * @param pos1     The first corner position of the area. Must not be null, and its world must not be null.
@@ -48,18 +48,34 @@ public class Area {
      * @param flatName The name of the flat this area belongs to. Must not be null.
      */
     public Area(Location pos1, Location pos2, String flatName) {
+        Bounds bounds = Bounds.fromLocations(pos1, pos2);
         this.pos1 = pos1;
         this.pos2 = pos2;
         this.flatName = flatName;
         this.worldName = pos1.getWorld().getName();
         this.locationString = LocationConverter.getStringFromLocations(pos1, pos2);
 
-        this.minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
-        this.maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
-        this.minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
-        this.maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
-        this.minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
-        this.maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+        this.minX = bounds.minX();
+        this.maxX = bounds.maxX();
+        this.minY = bounds.minY();
+        this.maxY = bounds.maxY();
+        this.minZ = bounds.minZ();
+        this.maxZ = bounds.maxZ();
+    }
+
+    private Area(Location pos1, Location pos2, String worldName, String flatName, String locationString,
+            Bounds bounds) {
+        this.pos1 = pos1;
+        this.pos2 = pos2;
+        this.worldName = worldName;
+        this.flatName = flatName;
+        this.locationString = locationString;
+        this.minX = bounds.minX();
+        this.maxX = bounds.maxX();
+        this.minY = bounds.minY();
+        this.maxY = bounds.maxY();
+        this.minZ = bounds.minZ();
+        this.maxZ = bounds.maxZ();
     }
 
     /**
@@ -73,39 +89,34 @@ public class Area {
      * will return empty/safe results until the world becomes available.
      *
      * @param worldName The name of the world this area belongs to. Must not be null.
-     * @param minX      The minimum X coordinate.
-     * @param minY      The minimum Y coordinate.
-     * @param minZ      The minimum Z coordinate.
-     * @param maxX      The maximum X coordinate.
-     * @param maxY      The maximum Y coordinate.
-     * @param maxZ      The maximum Z coordinate.
+     * @param bounds    The area's normalized minimum and maximum coordinates.
      * @param flatName  The name of the flat this area belongs to. Must not be null.
      * @return A new {@code Area} that holds the world name and coordinates in memory even
      * when the world is not currently loaded.
      */
-    public static Area fromRawData(@NotNull String worldName, int minX, int minY, int minZ, int maxX, int maxY,
-            int maxZ, @NotNull String flatName) {
+    public static Area fromRawData(@NotNull String worldName, @NotNull Bounds bounds, @NotNull String flatName) {
         World world = Bukkit.getWorld(worldName);
-        Location pos1 = new Location(world, minX, minY, minZ);
-        Location pos2 = new Location(world, maxX, maxY, maxZ);
+        Location pos1 = new Location(world, bounds.minX(), bounds.minY(), bounds.minZ());
+        Location pos2 = new Location(world, bounds.maxX(), bounds.maxY(), bounds.maxZ());
         return new Area(pos1, pos2, worldName, flatName,
-                worldName + ":" + minX + "," + minY + "," + minZ + ";" + maxX + "," + maxY + "," + maxZ,
-                minX, maxX, minY, maxY, minZ, maxZ);
+                bounds.toLocationString(worldName), bounds);
     }
 
-    private Area(Location pos1, Location pos2, String worldName, String flatName, String locationString,
-            int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
-        this.pos1 = pos1;
-        this.pos2 = pos2;
-        this.worldName = worldName;
-        this.flatName = flatName;
-        this.locationString = locationString;
-        this.minX = minX;
-        this.maxX = maxX;
-        this.minY = minY;
-        this.maxY = maxY;
-        this.minZ = minZ;
-        this.maxZ = maxZ;
+    public record Bounds(int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
+
+        public static Bounds fromLocations(@NotNull Location pos1, @NotNull Location pos2) {
+            return new Bounds(
+                    Math.min(pos1.getBlockX(), pos2.getBlockX()),
+                    Math.max(pos1.getBlockX(), pos2.getBlockX()),
+                    Math.min(pos1.getBlockY(), pos2.getBlockY()),
+                    Math.max(pos1.getBlockY(), pos2.getBlockY()),
+                    Math.min(pos1.getBlockZ(), pos2.getBlockZ()),
+                    Math.max(pos1.getBlockZ(), pos2.getBlockZ()));
+        }
+
+        private String toLocationString(String worldName) {
+            return worldName + ":" + minX + "," + minY + "," + minZ + ";" + maxX + "," + maxY + "," + maxZ;
+        }
     }
 
     /**

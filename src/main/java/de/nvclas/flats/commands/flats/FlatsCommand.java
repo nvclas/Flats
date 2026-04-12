@@ -154,6 +154,11 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return getFlatNameCompletions(input);
         }
 
+        if (FlatsSubCommand.INFO.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canInfoFlats(player,
+                settingsConfig)) {
+            return getFlatNameCompletions(input);
+        }
+
         if ((FlatsSubCommand.TRUST.getSubCommandName()
                 .equalsIgnoreCase(subCommand) || FlatsSubCommand.UNTRUST.getSubCommandName()
                 .equalsIgnoreCase(subCommand)) && Permissions.canTrustPlayers(player, settingsConfig)) {

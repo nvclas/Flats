@@ -86,7 +86,12 @@ public class SpatialIndex {
     }
 
     /**
-     * Gets the grid key for the given location. The location's world must not be null.
+     * Gets the grid key for the given location.
+     * <p>
+     * If the location's world is null, the key uses an empty string for the world name.
+     * Such a key will never match a loaded cell (since cells are only loaded via
+     * {@link #setAreas(String, int, int, java.util.List)} with a real world name),
+     * so null-world locations are always treated as not loaded.
      *
      * @param location The location.
      * @return The grid key, including the world name.

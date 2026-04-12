@@ -49,7 +49,7 @@ class FlatsStorageTest {
         // Area.fromRawData() should create an Area that holds the world name and coordinates in memory,
         // with pos1/pos2 carrying a null world reference.
         String worldName = "unloaded_world";
-        Area area = Area.fromRawData(worldName, new Area.Bounds(0, 0, 0, 10, 20, 10), "test_flat");
+        Area area = Area.fromRawData(worldName, new Area.Bounds(0, 10, 0, 20, 0, 10), "test_flat");
 
         assertNull(area.getPos1().getWorld(), "World reference should be null for an unloaded world");
         assertEquals(worldName, area.getWorldName(), "World name should be preserved even without a loaded world");

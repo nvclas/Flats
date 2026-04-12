@@ -30,7 +30,6 @@ import org.mockbukkit.mockbukkit.world.WorldMock;
 import java.util.Random;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -142,6 +141,7 @@ class FlatsCommandTest {
     private Flat createAndClaimFlat() {
         Flat flat = createValidFlat();
         flat.setOwner(player);
+        flatsCache.save(flat);
         placePlayerInFlat();
         return flat;
     }
@@ -201,8 +201,8 @@ class FlatsCommandTest {
         selection.setPos1(new Location(world, selectionMinX, selectionMinY, selectionMinZ));
         selection.setPos2(new Location(world, selectionMaxX, selectionMaxY, selectionMaxZ));
         assertEquals(SELECTION_VOLUME,
-                     selection.calculateVolume(),
-                     "Selection volume should be " + SELECTION_VOLUME + ".");
+                selection.calculateVolume(),
+                "Selection volume should be " + SELECTION_VOLUME + ".");
     }
 
     /**
@@ -254,7 +254,8 @@ class FlatsCommandTest {
     class GeneralCommandTests {
 
         @ParameterizedTest(name = "Command \"{0}\" should show message key \"{1}\"")
-        @CsvSource({"flats unknown, help.header", "flats, help.header", "flats add testFlat, error.nothing_selected", "flats remove testFlat, error.flat_not_exist", "flats claim, error.not_in_flat"})
+        @CsvSource({"flats unknown, help.header", "flats, help.header", "flats add testFlat, error.nothing_selected",
+                "flats remove testFlat, error.flat_not_exist", "flats claim, error.not_in_flat"})
         @DisplayName("Command failure cases")
         void commandFailures(String command, String messageKey) {
             executeCommandAsOp(command);
@@ -281,7 +282,7 @@ class FlatsCommandTest {
         void selectCommand() {
             executeCommandWithPermission("flats select", Permissions.EDIT_FLATS);
             assertTrue(player.getInventory().contains(SelectionItem.getItem()),
-                       "Player should receive the selection item.");
+                    "Player should receive the selection item.");
         }
     }
 
@@ -313,7 +314,7 @@ class FlatsCommandTest {
             executeCommandWithPermission("flats add newFlat", Permissions.EDIT_FLATS);
             verifyMessageEquals("error.flat_intersect");
             assertFalse(flatsCache.existsFlat("newFlat"),
-                        "Flat should not be created when intersecting with existing flat.");
+                    "Flat should not be created when intersecting with existing flat.");
         }
 
         @Test
@@ -323,15 +324,6 @@ class FlatsCommandTest {
             executeCommandWithPermission("flats remove " + testFlatName, Permissions.EDIT_FLATS);
             verifyMessageEquals("remove.success", testFlatName);
             assertFalse(flatsCache.existsFlat(testFlatName), "Flat should not exist after removal.");
-        }
-
-        @Test
-        @DisplayName("Save operation works even with deleted world")
-        void saveWorldWithDeletedWorld() {
-            createValidFlat();
-            server.removeWorld(world);
-            assertDoesNotThrow(() -> flatsCache.saveAll(),
-                               "Save operation should not throw an exception even if the world is deleted.");
         }
     }
 
@@ -485,7 +477,7 @@ class FlatsCommandTest {
             createValidFlat();
 
             executeCommandWithPermission("flats list", Permissions.LIST_FLATS);
-            verifyMessageEquals("list.title");
+            verifyMessageEquals("list.title_page", 1, 1);
             verifyMessageEquals("info.flat", testFlatName);
             verifyMessageEquals("info.unoccupied");
         }

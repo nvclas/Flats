@@ -9,6 +9,7 @@ import de.nvclas.flats.schedulers.CommandDelayScheduler;
 import de.nvclas.flats.util.CommandUtils;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
+import de.nvclas.flats.volumes.Area;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -23,7 +24,7 @@ public class ShowSubCommand implements SubCommand {
 
     private static final byte DEFAULT_SHOW_TIME = 10;
     private static final int MAX_UPDATES_PER_TICK = 100;
-    private static final double MAX_DISTANCE = 100.0;
+    private static final int MAX_DISTANCE = 100;
     private static final long SCHEDULER_DELAY = 0L;
     private static final long SCHEDULER_PERIOD = 1L;
 
@@ -50,14 +51,20 @@ public class ShowSubCommand implements SubCommand {
 
         if (!Permissions.canSkipCommandDelay(player, settingsConfig)) {
             new CommandDelayScheduler(FlatsSubCommand.SHOW.getFullCommandName(), DEFAULT_SHOW_TIME).start(player,
-                                                                                                          flatsPlugin);
+                    flatsPlugin);
         }
 
-        long flatsAmount = flatsCache.getAllFlats()
-                .stream()
-                .filter(flat -> flat.getAreas()
-                        .stream()
-                        .anyMatch(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE)))
+        int minX = player.getLocation().getBlockX() - MAX_DISTANCE;
+        int maxX = player.getLocation().getBlockX() + MAX_DISTANCE;
+        int minZ = player.getLocation().getBlockZ() - MAX_DISTANCE;
+        int maxZ = player.getLocation().getBlockZ() + MAX_DISTANCE;
+
+        List<Area> nearbyAreas = flatsCache.getAreasIntersecting(player.getWorld().getName(), minX, maxX, minZ, maxZ);
+
+        long flatsAmount = nearbyAreas.stream()
+                .filter(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE))
+                .map(Area::getFlatName)
+                .distinct()
                 .count();
 
         if (flatsAmount == 0) {
@@ -103,14 +110,19 @@ public class ShowSubCommand implements SubCommand {
     private void scheduleBlockRestore(@NotNull Player player, @NotNull List<Block> blocksToChange) {
         Bukkit.getScheduler()
                 .runTaskLater(flatsPlugin,
-                              () -> player.sendBlockChanges(blocksToChange.stream().map(Block::getState).toList()),
-                              20L * DEFAULT_SHOW_TIME);
+                        () -> player.sendBlockChanges(blocksToChange.stream().map(Block::getState).toList()),
+                        20L * DEFAULT_SHOW_TIME);
     }
 
     private @NotNull List<Block> getBlocksToChange(@NotNull Player player) {
         List<Block> blocksToChange = new ArrayList<>();
 
-        flatsCache.getAllAreas()
+        int minX = player.getLocation().getBlockX() - MAX_DISTANCE;
+        int maxX = player.getLocation().getBlockX() + MAX_DISTANCE;
+        int minZ = player.getLocation().getBlockZ() - MAX_DISTANCE;
+        int maxZ = player.getLocation().getBlockZ() + MAX_DISTANCE;
+
+        flatsCache.getAreasIntersecting(player.getWorld().getName(), minX, maxX, minZ, maxZ)
                 .stream()
                 .filter(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE))
                 .forEach(area -> blocksToChange.addAll(area.getAllOuterBlocks()));

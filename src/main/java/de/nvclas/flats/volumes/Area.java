@@ -2,7 +2,9 @@ package de.nvclas.flats.volumes;
 
 import de.nvclas.flats.util.LocationConverter;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,14 +22,15 @@ public class Area {
     private final Location pos1;
     private final Location pos2;
     private final String flatName;
+    private final String worldName;
     private final String locationString;
 
-    private final double minX;
-    private final double maxX;
-    private final double minY;
-    private final double maxY;
-    private final double minZ;
-    private final double maxZ;
+    private final int minX;
+    private final int maxX;
+    private final int minY;
+    private final int maxY;
+    private final int minZ;
+    private final int maxZ;
 
     /**
      * Constructs a new {@code Area} with the specified corner positions and flat name.
@@ -35,23 +38,68 @@ public class Area {
      * This constructor initializes an area defined by two corner points and associates it
      * with a specific flat. It also pre-calculates and caches the minimum and maximum
      * coordinate values for each dimension (X, Y, Z) to optimize boundary checks.
+     * <p>
+     * Both {@code pos1} and {@code pos2} must reference a loaded world; use
+     * {@link #fromRawData(String, Bounds, String)} when the world
+     * may not be currently loaded.
      *
-     * @param pos1     The first corner position of the area. Must not be null.
+     * @param pos1     The first corner position of the area. Must not be null, and its world must not be null.
      * @param pos2     The second corner position of the area. Must not be null.
      * @param flatName The name of the flat this area belongs to. Must not be null.
      */
     public Area(Location pos1, Location pos2, String flatName) {
+        Bounds bounds = Bounds.fromLocations(pos1, pos2);
         this.pos1 = pos1;
         this.pos2 = pos2;
         this.flatName = flatName;
+        this.worldName = pos1.getWorld().getName();
         this.locationString = LocationConverter.getStringFromLocations(pos1, pos2);
 
-        this.minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
-        this.maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
-        this.minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
-        this.maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
-        this.minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
-        this.maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+        this.minX = bounds.minX();
+        this.maxX = bounds.maxX();
+        this.minY = bounds.minY();
+        this.maxY = bounds.maxY();
+        this.minZ = bounds.minZ();
+        this.maxZ = bounds.maxZ();
+    }
+
+    private Area(Location pos1, Location pos2, String worldName, String flatName, String locationString,
+            Bounds bounds) {
+        this.pos1 = pos1;
+        this.pos2 = pos2;
+        this.worldName = worldName;
+        this.flatName = flatName;
+        this.locationString = locationString;
+        this.minX = bounds.minX();
+        this.maxX = bounds.maxX();
+        this.minY = bounds.minY();
+        this.maxY = bounds.maxY();
+        this.minZ = bounds.minZ();
+        this.maxZ = bounds.maxZ();
+    }
+
+    /**
+     * Constructs a new {@code Area} directly from raw coordinate data and a world name,
+     * without requiring the world to be currently loaded.
+     * <p>
+     * This is used when loading persisted area data from the database. The {@link Location}
+     * objects for {@code pos1} and {@code pos2} will have a {@code null} world reference if
+     * the specified world is not currently loaded; operations that need an active world
+     * (such as {@link #getAllOuterBlocks()}) already guard against a {@code null} world and
+     * will return empty/safe results until the world becomes available.
+     *
+     * @param worldName The name of the world this area belongs to. Must not be null.
+     * @param bounds    The area's normalized minimum and maximum coordinates.
+     * @param flatName  The name of the flat this area belongs to. Must not be null.
+     * @return A new {@code Area} that holds the world name and coordinates in memory even
+     * when the world is not currently loaded.
+     */
+    public static Area fromRawData(@NotNull String worldName, @NotNull Bounds bounds, @NotNull String flatName) {
+        World world = Bukkit.getWorld(worldName);
+        Location pos1 = new Location(world, bounds.minX(), bounds.minY(), bounds.minZ());
+        Location pos2 = new Location(world, bounds.maxX(), bounds.maxY(), bounds.maxZ());
+        return new Area(pos1, pos2, worldName, flatName,
+                bounds.toLocationString(worldName), bounds);
     }
 
     /**
@@ -80,22 +128,6 @@ public class Area {
     }
 
     /**
-     * Checks whether the specified {@link Location} is within the bounds defined
-     * by the two corners {@code pos1} and {@code pos2} of this {@link Area}.
-     * <p>
-     * The method performs a bounding box check across all dimensions (X, Y, Z).
-     * Uses cached boundary values for improved performance.
-     *
-     * @param location The {@link Location} to check. Must not be null.
-     * @return {@code true} if the {@code location} is within the bounds of the area;
-     * {@code false} otherwise.
-     */
-    public boolean isWithinBounds(@NotNull Location location) {
-        return location.getBlockX() >= minX && location.getBlockX() <= maxX && location.getBlockY() >= minY &&
-               location.getBlockY() <= maxY && location.getBlockZ() >= minZ && location.getBlockZ() <= maxZ;
-    }
-
-    /**
      * Checks whether the given {@link Location} is within a specified distance from
      * any of the two positions defining this {@link Area}.
      * <p>
@@ -108,35 +140,83 @@ public class Area {
      * from either {@code pos1} or {@code pos2}; {@code false} otherwise.
      */
     public boolean isWithinDistance(@NotNull Location location, double range) {
-        return (Math.abs(location.getX() - pos1.getX()) <= range && Math.abs(location.getY() - pos1.getY()) <= range &&
-                Math.abs(location.getZ() - pos1.getZ()) <= range) ||
-               (Math.abs(location.getX() - pos2.getX()) <= range && Math.abs(location.getY() - pos2.getY()) <= range &&
-                Math.abs(location.getZ() - pos2.getZ()) <= range);
+        return (Math.abs(location.getX() - pos1.getX()) <= range && Math.abs(location.getY() - pos1.getY()) <= range
+                && Math.abs(location.getZ() - pos1.getZ()) <= range) || (
+                Math.abs(location.getX() - pos2.getX()) <= range && Math.abs(location.getY() - pos2.getY()) <= range
+                        && Math.abs(location.getZ() - pos2.getZ()) <= range);
     }
 
     /**
-     * Retrieves a list of all blocks that form the outer boundary of the current area.
+     * Retrieves all outer boundary blocks of the area defined by this {@link Area} object.
      * <p>
-     * The method uses cached boundary values to efficiently determine the outer boundary,
-     * effectively including all blocks located on the edges of the rectangular cuboid defined by the area.
+     * The method calculates and includes blocks along the edges of the three-dimensional
+     * space defined by the corner points {@code pos1} and {@code pos2}.
      *
-     * @return A {@link List} of {@link Block} instances representing the outer boundary of the area.
-     * The returned list is never null but may be empty if no valid boundaries are defined.
+     * @return A non-null {@link List} of {@link Block} objects representing the outer boundary
+     * blocks of the defined area. The list will be empty if the world associated with
+     * {@code pos1} is {@code null}.
      */
     public @NotNull List<Block> getAllOuterBlocks() {
         List<Block> blocks = new ArrayList<>();
+        World world = pos1.getWorld();
+        if (world == null) {
+            return blocks;
+        }
 
-        for (int x = (int) minX; x <= (int) maxX; x++) {
-            for (int y = (int) minY; y <= (int) maxY; y++) {
-                for (int z = (int) minZ; z <= (int) maxZ; z++) {
-                    if (x == (int) minX || x == (int) maxX || y == (int) minY || y == (int) maxY || z == (int) minZ ||
-                        z == (int) maxZ) {
-                        blocks.add(pos1.getWorld().getBlockAt(x, y, z));
-                    }
+        addXYPlanes(blocks, world);
+        addXZPlanes(blocks, world);
+        addYZPlanes(blocks, world);
+        return blocks;
+    }
+
+    private void addXYPlanes(List<Block> blocks, World world) {
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                blocks.add(world.getBlockAt(x, y, minZ));
+                if (maxZ > minZ) {
+                    blocks.add(world.getBlockAt(x, y, maxZ));
                 }
             }
         }
-        return blocks;
+    }
+
+    private void addXZPlanes(List<Block> blocks, World world) {
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ + 1; z < maxZ; z++) {
+                blocks.add(world.getBlockAt(x, minY, z));
+                if (maxY > minY) {
+                    blocks.add(world.getBlockAt(x, maxY, z));
+                }
+            }
+        }
+    }
+
+    private void addYZPlanes(List<Block> blocks, World world) {
+        for (int y = minY + 1; y < maxY; y++) {
+            for (int z = minZ + 1; z < maxZ; z++) {
+                blocks.add(world.getBlockAt(minX, y, z));
+                if (maxX > minX) {
+                    blocks.add(world.getBlockAt(maxX, y, z));
+                }
+            }
+        }
+    }
+
+    public record Bounds(int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
+
+        public static Bounds fromLocations(@NotNull Location pos1, @NotNull Location pos2) {
+            return new Bounds(
+                    Math.min(pos1.getBlockX(), pos2.getBlockX()),
+                    Math.max(pos1.getBlockX(), pos2.getBlockX()),
+                    Math.min(pos1.getBlockY(), pos2.getBlockY()),
+                    Math.max(pos1.getBlockY(), pos2.getBlockY()),
+                    Math.min(pos1.getBlockZ(), pos2.getBlockZ()),
+                    Math.max(pos1.getBlockZ(), pos2.getBlockZ()));
+        }
+
+        private String toLocationString(String worldName) {
+            return worldName + ":" + minX + "," + minY + "," + minZ + ";" + maxX + "," + maxY + "," + maxZ;
+        }
     }
 
 }

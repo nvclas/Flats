@@ -18,9 +18,12 @@ public class StickInteractListener implements Listener {
     public void onStickInteraction(@NotNull PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (event.getItem() == null) return;
-        if (!event.getItem().isSimilar(SelectionItem.getItem())) return;
-        if (!Permissions.hasAdminPermission(player)) return;
+        if (event.getItem() == null)
+            return;
+        if (!event.getItem().isSimilar(SelectionItem.getItem()))
+            return;
+        if (!Permissions.hasAdminPermission(player))
+            return;
 
         event.setCancelled(true);
         Selection selection = Selection.getSelection(player);

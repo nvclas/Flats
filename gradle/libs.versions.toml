@@ -3,10 +3,12 @@ annotations = "26.0.+"
 lombok = "1.18.+"
 runPaper = "2.3.+"
 paperweight-userdev = "2.0.+"
-paper = "1.21.8-R0.1-SNAPSHOT"
-mockbukkit = "4.76.+"
+paper = "1.21.11-R0.1-SNAPSHOT"
+mockbukkit = "4.108.+"
 junit-jupiter = "5.13.+"
 junit-platform-launcher = "1.13.+"
+sqlite = "3.51.3.0" # Specific version for plugin.yml required
+flyway = "12.2.0" # Specific version for plugin.yml required
 
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
@@ -15,8 +17,10 @@ paper = { group = "io.papermc.paper", name = "paper-api", version.ref = "paper" 
 mockbukkit = { group = "org.mockbukkit.mockbukkit", name = "mockbukkit-v1.21", version.ref = "mockbukkit" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit-jupiter" }
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-platform-launcher" }
-
+sqlite = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite" }
+flyway-core = { group = "org.flywaydb", name = "flyway-core", version.ref = "flyway" }
 
 [plugins]
 runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
 paperweight-userdev = { id = "io.papermc.paperweight.userdev", version.ref = "paperweight-userdev" }
+flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }

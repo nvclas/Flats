@@ -30,7 +30,7 @@ public class RemoveSubCommand implements SubCommand {
             return;
         }
         String flatToRemove = args[1];
-        if (!flatsCache.getAllFlatNames().contains(flatToRemove)) {
+        if (!flatsCache.existsFlat(flatToRemove)) {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_not_exist"));
             return;
         }

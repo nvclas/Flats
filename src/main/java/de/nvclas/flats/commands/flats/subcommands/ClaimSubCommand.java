@@ -40,12 +40,13 @@ public class ClaimSubCommand implements SubCommand {
             return;
         }
         if (!Permissions.hasAdminPermission(player) &&
-            flatsCache.getOwnedFlatsCount(player) >= settingsConfig.getMaxClaimableFlats()) {
+                flatsCache.getOwnedFlatsCount(player) >= settingsConfig.getMaxClaimableFlats()) {
             player.sendMessage(Flats.PREFIX + I18n.translate("claim.max_claimable_flats_reached",
-                                                             settingsConfig.getMaxClaimableFlats()));
+                    settingsConfig.getMaxClaimableFlats()));
             return;
         }
         flat.setOwner(player);
+        flatsCache.save(flat);
         player.sendMessage(Flats.PREFIX + I18n.translate("claim.success"));
     }
 }

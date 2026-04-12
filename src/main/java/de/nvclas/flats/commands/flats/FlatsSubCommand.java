@@ -22,8 +22,8 @@ public enum FlatsSubCommand {
 
     private final String subCommandName;
 
-    FlatsSubCommand(String commandName) {
-        this.subCommandName = commandName;
+    FlatsSubCommand(String subCommandName) {
+        this.subCommandName = subCommandName;
     }
 
     /**

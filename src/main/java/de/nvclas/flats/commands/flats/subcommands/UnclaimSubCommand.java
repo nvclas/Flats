@@ -34,5 +34,6 @@ public class UnclaimSubCommand implements SubCommand {
         player.sendMessage(Flats.PREFIX + I18n.translate("unclaim.success"));
         flat.setOwner(null);
         flat.getTrusted().clear();
+        flatsCache.save(flat);
     }
 }

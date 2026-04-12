@@ -24,7 +24,7 @@ public class UpdateSubCommand implements SubCommand {
             return;
         }
         UpdateDownloader updateDownloader = new UpdateDownloader(flatsPlugin,
-                                                                 "https://api.github.com/repos/nvclas/Flats/releases/latest");
+                "https://api.github.com/repos/nvclas/Flats/releases/latest");
         UpdateStatus status = updateDownloader.downloadLatestRelease();
         switch (status) {
             case SUCCESS ->

@@ -3,7 +3,8 @@
 ![Latest Release](https://img.shields.io/github/v/release/nvclas/Flats)
 ![License](https://img.shields.io/github/license/nvclas/Flats)
 
-Flats (british for "Apartments") is a plugin that allows you to create 3-dimensional areas and let players claim them. It provides an
+Flats (British for "Apartments") is a plugin that allows you to create 3-dimensional areas and let players claim them.
+It provides an
 easy way to manage plots and ensure that players have their own designated areas to build and interact in.
 
 ## Features
@@ -24,19 +25,19 @@ easy way to manage plots and ensure that players have their own designated areas
 Once the plugin is installed, follow these steps to create and claim your first flat:
 
 1. **Select an area:**
-   - Use `/flats select` to get the selection tool.
-   - Mark two corners of a cubic area you want to define as a flat.
-   - One block at any bottom corner and one block at the opposite top corner.
+    - Use `/flats select` to get the selection tool.
+    - Mark two corners of a cubic area you want to define as a flat.
+    - One block at any bottom corner and one block at the opposite top corner.
 
 2. **Create a flat:**
-   - Run `/flats add <name>` to register the selected area as a flat.
+    - Run `/flats add <name>` to register the selected area as a flat.
 
 3. **Claim the flat:**
-   - Stand inside the area and use `/flats claim` to make it yours.
+    - Stand inside the area and use `/flats claim` to make it yours.
 
 4. **Manage access:**
-   - Use `/flats trust <player>` to allow other players to build in your flat.
-   - Use `/flats untrust <player>` to remove their access.
+    - Use `/flats trust <player>` to allow other players to build in your flat.
+    - Use `/flats untrust <player>` to remove their access.
 
 You're now ready to use Flats and manage your own space in the world!
 
@@ -73,11 +74,13 @@ The plugin provides several commands to interact with the areas:
 - `/flats select` - Get the selection tool for defining the area of a flat.
 - `/flats add <name>` - Creates a new flat with the specified name.
 - `/flats remove <name>` - Deletes the flat with the given name.
-- `/flats list` - Lists all available flats and their owners.
+- `/flats list [page]` - Lists all available flats and their owners.
 - `/flats update` - Easily update the plugin to the latest version.
 - `/flats claim` - Claims the flat the player is currently in.
 - `/flats unclaim` - Unclaims the flat the player is currently in.
-- `/flats info` - Shows information about the flat the player is currently in.
+- `/flats info [flat]` - Shows information about the flat the player is currently in or a specific flat.
+- `/flats trust <player>` - Allows the specified player to build in the flat the player is currently in.
+- `/flats untrust <player>` - Removes the specified player's access to the flat the player is currently in.
 - `/flats show` - Show every flat my marking it with yellow glass.
 - And more
 

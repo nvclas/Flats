@@ -16,7 +16,6 @@ public abstract class Config {
     private static final String CONFIG_CREATION_FAILURE = "Failed to create file %s: %s";
     private static final String CONFIG_SAVED_DEFAULT = "Saved default file of %s";
     private static final String CONFIG_DEFAULT_NOT_FOUND = "No default file found for %s";
-    private static final String CONFIG_SAVE_FAILURE = "Failed to save file %s: %s";
 
     protected final JavaPlugin plugin;
     protected final File file;
@@ -31,28 +30,6 @@ public abstract class Config {
         this.file = new File(plugin.getDataFolder(), fileName);
         saveDefaultConfig();
         initializeConfig();
-    }
-
-    /**
-     * Saves the current configuration file to disk and reloads it from the storage.
-     * <p>
-     * This method attempts to persist any changes made to the in-memory configuration
-     * data to the physical file associated with this configuration instance. If the
-     * save operation fails due to an {@link IOException}, an error is logged with the
-     * plugin's logger. After attempting to save, the configuration is reloaded from
-     * the file to synchronize the in-memory state with the on-disk data.
-     * <p>
-     * Note that this method should be called after modifying the configuration to
-     * ensure changes are saved and reflect in subsequent operations.
-     */
-    public void saveConfig() {
-        try {
-            configFile.save(file);
-        } catch (IOException e) {
-            plugin.getLogger()
-                    .log(Level.SEVERE, () -> String.format(CONFIG_SAVE_FAILURE, file.getName(), e.getMessage()));
-        }
-        configFile = YamlConfiguration.loadConfiguration(file);
     }
 
     /**

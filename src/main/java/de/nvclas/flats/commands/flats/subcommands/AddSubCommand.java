@@ -45,7 +45,7 @@ public class AddSubCommand implements SubCommand {
             player.sendMessage(Flats.PREFIX + I18n.translate("add.success", flatName));
             return;
         }
-        flatsCache.getExistingFlat(flatName).addArea(area);
+        flatsCache.addAreaToFlat(flatsCache.getExistingFlat(flatName), area);
         player.sendMessage(Flats.PREFIX + I18n.translate("add.area_added", flatName));
     }
 
@@ -63,12 +63,21 @@ public class AddSubCommand implements SubCommand {
     }
 
     private boolean doesSelectionIntersect(Player player, Selection selection) {
-        return flatsCache.getAllAreas().stream().filter(selection::intersects).findFirst().map(area -> {
-            player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_intersect"));
-            player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_intersect.details",
-                                                             area.getFlatName(),
-                                                             area.getLocationString()));
-            return true;
-        }).orElse(false);
+        int minX = Math.min(selection.getPos1().getBlockX(), selection.getPos2().getBlockX());
+        int maxX = Math.max(selection.getPos1().getBlockX(), selection.getPos2().getBlockX());
+        int minZ = Math.min(selection.getPos1().getBlockZ(), selection.getPos2().getBlockZ());
+        int maxZ = Math.max(selection.getPos1().getBlockZ(), selection.getPos2().getBlockZ());
+
+        for (Area area : flatsCache.getAreasIntersecting(selection.getPos1().getWorld().getName(), minX, maxX, minZ,
+                maxZ)) {
+            if (selection.intersects(area)) {
+                player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_intersect"));
+                player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_intersect.details",
+                        area.getFlatName(),
+                        area.getLocationString()));
+                return true;
+            }
+        }
+        return false;
     }
 }

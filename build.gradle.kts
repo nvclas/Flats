@@ -4,10 +4,11 @@ plugins {
     java
     alias(libs.plugins.runPaper)
     alias(libs.plugins.paperweight.userdev)
+    alias(libs.plugins.flyway)
 }
 
 group = "de.nvclas"
-version = "1.0.1"
+version = "2.0.0"
 
 repositories {
     mavenCentral()
@@ -20,12 +21,14 @@ repositories {
 dependencies {
     paperweight.paperDevBundle(libs.versions.paper)
     implementation(libs.annotations)
+    implementation(libs.flyway.core)
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
 
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.paper)
     testImplementation(libs.mockbukkit)
+    testImplementation(libs.sqlite)
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
     testRuntimeOnly(libs.junit.platform.launcher)
@@ -57,7 +60,11 @@ tasks.test {
 }
 
 tasks.processResources {
-    val props = mapOf("version" to version)
+    val props = mapOf(
+        "version" to project.version,
+        "sqliteVersion" to libs.versions.sqlite.get(),
+        "flywayVersion" to libs.versions.flyway.get()
+    )
     inputs.properties(props)
     filteringCharset = "UTF-8"
     filesMatching("plugin.yml") {

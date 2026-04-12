@@ -22,7 +22,8 @@ public class LocationConverter {
      * {@code worldName:x1,y1,z1;x2,y2,z2}.
      * @throws IllegalArgumentException If the first location's world reference is null.
      */
-    public static @NotNull String getStringFromLocations(@NotNull Location pos1, @NotNull Location pos2) throws IllegalArgumentException {
+    public static @NotNull String getStringFromLocations(@NotNull Location pos1, @NotNull Location pos2)
+            throws IllegalArgumentException {
         if (pos1.getWorld() == null) {
             throw new IllegalArgumentException("First position has no world reference");
         }
@@ -51,15 +52,16 @@ public class LocationConverter {
         return new Location[]{pos1, pos2};
     }
 
-    private static Location createLocation(String worldName, String x, String y, String z) throws IllegalArgumentException {
+    private static Location createLocation(String worldName, String x, String y, String z)
+            throws IllegalArgumentException {
         if (Bukkit.getWorld(worldName) == null) {
             throw new IllegalArgumentException("World '" + worldName + "' does not exist");
         }
         try {
             return new Location(Bukkit.getWorld(worldName),
-                                Integer.parseInt(x),
-                                Integer.parseInt(y),
-                                Integer.parseInt(z));
+                    Integer.parseInt(x),
+                    Integer.parseInt(y),
+                    Integer.parseInt(z));
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid coordinates in location string");
         }

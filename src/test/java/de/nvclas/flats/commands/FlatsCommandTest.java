@@ -7,6 +7,7 @@ import de.nvclas.flats.items.SelectionItem;
 import de.nvclas.flats.testutil.TestUtils;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
+import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
 import de.nvclas.flats.volumes.Selection;
 import org.bukkit.Location;
@@ -500,6 +501,19 @@ class FlatsCommandTest {
             executeCommandWithPermission("flats show", Permissions.SHOW_FLATS);
             verifyMessageEquals("show.none");
             // Visual assertion isn't applicable in tests but confirm no errors occur.
+        }
+
+        @Test
+        @DisplayName("Show command includes large flats when the player is inside but far from both corners")
+        void showCommandLargeFlatContainingPlayer() {
+            Flat flat = new Flat("largeFlat",
+                    new Area(new Location(world, 0, 0, 0), new Location(world, 300, 10, 10), "largeFlat"));
+            flatsCache.save(flat);
+
+            player.setLocation(new Location(world, 150, 5, 5));
+
+            executeCommandWithPermission("flats show", Permissions.SHOW_FLATS);
+            verifyMessageEquals("show.success.singular", 10);
         }
     }
 }

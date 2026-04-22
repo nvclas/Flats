@@ -6,6 +6,7 @@ import de.nvclas.flats.updater.UpdateDownloader;
 import de.nvclas.flats.updater.UpdateStatus;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +26,12 @@ public class UpdateSubCommand implements SubCommand {
         }
         UpdateDownloader updateDownloader = new UpdateDownloader(flatsPlugin,
                 "https://api.github.com/repos/nvclas/Flats/releases/latest");
-        UpdateStatus status = updateDownloader.downloadLatestRelease();
+        updateDownloader.downloadLatestReleaseAsync().thenAccept(status ->
+                Bukkit.getScheduler().runTask(flatsPlugin, () -> sendStatusMessage(player, updateDownloader, status)));
+    }
+
+    private void sendStatusMessage(@NotNull Player player, @NotNull UpdateDownloader updateDownloader,
+            @NotNull UpdateStatus status) {
         switch (status) {
             case SUCCESS ->
                     player.sendMessage(Flats.PREFIX + I18n.translate("update.success", updateDownloader.getFileName()));

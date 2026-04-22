@@ -12,7 +12,6 @@ import de.nvclas.flats.listeners.protection.BlockExplodeListener;
 import de.nvclas.flats.listeners.protection.BlockPlaceListener;
 import de.nvclas.flats.listeners.protection.EntityChangeBlockListener;
 import de.nvclas.flats.listeners.protection.EntityDamageByEntityListener;
-import de.nvclas.flats.listeners.protection.EntityDamageListener;
 import de.nvclas.flats.listeners.protection.EntityExplodeListener;
 import de.nvclas.flats.listeners.protection.HangingBreakByEntityListener;
 import de.nvclas.flats.listeners.protection.PlayerInteractListener;
@@ -83,11 +82,10 @@ public class Flats extends JavaPlugin {
         Objects.requireNonNull(getCommand("flats")).setTabCompleter(new FlatsCommand(this));
 
         //Listeners
-        getServer().getPluginManager().registerEvents(new StickInteractListener(), this);
+        getServer().getPluginManager().registerEvents(new StickInteractListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerChangedWorldListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerMoveListener(this), this);
         getServer().getPluginManager().registerEvents(new FlatEnteredOrLeftListener(this), this);
-        getServer().getPluginManager().registerEvents(new EntityDamageListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(this), this);
         getServer().getPluginManager().registerEvents(new BlockBreakListener(this), this);
         getServer().getPluginManager().registerEvents(new BlockPlaceListener(this), this);

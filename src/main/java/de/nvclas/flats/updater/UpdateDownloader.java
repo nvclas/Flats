@@ -7,9 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.io.BufferedInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -19,6 +18,7 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.logging.Level;
@@ -29,12 +29,16 @@ import java.util.logging.Level;
  * to the appropriate directory, and plugin cleanup.
  */
 public class UpdateDownloader {
+
+    private static final String UPDATE_PROCESS_ERROR = "An error occurred during the update process";
+    private static final long UNKNOWN_CONTENT_LENGTH = -1L;
     private static final Gson GSON = new Gson();
-    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+    private static final HttpClient DEFAULT_HTTP_CLIENT = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.ALWAYS)
             .build();
 
     private final JavaPlugin plugin;
+    private final HttpClient httpClient;
     @Getter
     @Setter
     private String apiUrl;
@@ -44,79 +48,120 @@ public class UpdateDownloader {
     private String latestVersion;
 
     public UpdateDownloader(JavaPlugin plugin, String apiUrl) {
+        this(plugin, apiUrl, DEFAULT_HTTP_CLIENT);
+    }
+
+    UpdateDownloader(JavaPlugin plugin, String apiUrl, HttpClient httpClient) {
         this.plugin = plugin;
         this.apiUrl = apiUrl;
+        this.httpClient = httpClient;
     }
 
     /**
      * Downloads the latest release of the plugin and moves the downloaded file to the plugins directory.
-     * The method fetches the latest release URL asynchronously, compares versions to check if an update is needed,
-     * downloads the file if a newer version is available, and performs necessary file operations to place
-     * the plugin in the appropriate location.
-     * Handles errors during the process and reports success, failure, or the absence of a release.
      *
-     * @return an {@link UpdateStatus} indicating the result of the operation:
-     * {@code SUCCESS} if the update was downloaded and moved successfully,
-     * {@code NOT_FOUND} if no suitable release was found,
-     * {@code ALREADY_UP_TO_DATE} if the current version is already the latest,
-     * or {@code FAILED} if any error occurred during the download or file operations.
+     * @return the resulting {@link UpdateStatus}.
      */
     public UpdateStatus downloadLatestRelease() {
         try {
             return downloadLatestReleaseAsync().join();
+        } catch (CompletionException e) {
+            Throwable cause = e.getCause() instanceof Exception exception ? exception : e;
+            logException(UPDATE_PROCESS_ERROR, cause);
+            return UpdateStatus.FAILED;
         } catch (Exception e) {
-            logException("An error occurred during the update process", e);
+            logException(UPDATE_PROCESS_ERROR, e);
             return UpdateStatus.FAILED;
         }
     }
 
     public CompletableFuture<UpdateStatus> downloadLatestReleaseAsync() {
-        return executeUpdateProcess();
+        return fetchLatestReleaseAsync()
+                .thenCompose(this::processRelease)
+                .exceptionally(e -> {
+                    Throwable cause = e instanceof CompletionException && e.getCause() != null ? e.getCause() : e;
+                    logException(UPDATE_PROCESS_ERROR, cause);
+                    return UpdateStatus.FAILED;
+                });
     }
 
-    /**
-     * Executes the update process by fetching the latest release URL, checking if an update is needed,
-     * downloading the file, and moving it to the plugins directory.
-     *
-     * @return A CompletableFuture containing the UpdateStatus
-     */
-    private CompletableFuture<UpdateStatus> executeUpdateProcess() {
-        return fetchLatestReleaseUrlAsync().thenCompose(this::processDownloadUrl).exceptionally(e -> {
-            plugin.getLogger()
-                    .log(Level.SEVERE, e, () -> "An error occurred during the update process: " + e.getMessage());
-            return UpdateStatus.FAILED;
+    private CompletableFuture<ReleaseInfo> fetchLatestReleaseAsync() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                HttpResponse<String> response = httpClient.send(createGitHubApiRequest(apiUrl),
+                        HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() == 404) {
+                    return ReleaseInfo.notFound();
+                }
+                if (response.statusCode() != 200) {
+                    throw new IOException("Failed to fetch latest release: HTTP " + response.statusCode());
+                }
+                return parseReleaseInfo(response.body());
+            } catch (IOException e) {
+                throw new CompletionException(e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new CompletionException(e);
+            }
         });
     }
 
-    /**
-     * Processes the download URL by checking if it exists, comparing versions,
-     * and downloading the file if needed.
-     *
-     * @param downloadUrl The URL to download the file from
-     * @return A CompletableFuture containing the UpdateStatus
-     */
-    private CompletableFuture<UpdateStatus> processDownloadUrl(String downloadUrl) {
-        if (downloadUrl.isEmpty()) {
+    private CompletableFuture<UpdateStatus> processRelease(@NotNull ReleaseInfo releaseInfo) {
+        if (!releaseInfo.exists()) {
             return CompletableFuture.completedFuture(UpdateStatus.NOT_FOUND);
         }
 
+        latestVersion = releaseInfo.version();
+        fileName = releaseInfo.fileName();
+
         String currentVersion = plugin.getPluginMeta().getVersion();
-        if (isCurrentVersionUpToDate(currentVersion, latestVersion)) {
+        if (Objects.equals(currentVersion, latestVersion)) {
             logVersionStatus(currentVersion, latestVersion, true);
             return CompletableFuture.completedFuture(UpdateStatus.ALREADY_UP_TO_DATE);
         }
 
         logVersionStatus(currentVersion, latestVersion, false);
-        return downloadAndMoveFile(downloadUrl);
+        return downloadJarAsync(releaseInfo.downloadUrl())
+                .thenApply(this::moveJarToPlugins);
     }
 
-    /**
-     * Logs the version status, indicating whether the current version is up to date.
-     *
-     * @param currentVersion The current version of the plugin
-     * @param latestVersion  The latest version available
-     * @param isUpToDate     Whether the current version is up to date
-     */
+    private @NotNull ReleaseInfo parseReleaseInfo(String responseBody) throws IOException {
+        JsonObject jsonResponse = GSON.fromJson(responseBody, JsonObject.class);
+        if (jsonResponse == null) {
+            throw new IOException("GitHub API returned an invalid JSON body");
+        }
+
+        String version = extractLatestVersion(jsonResponse);
+        JsonArray assets = jsonResponse.getAsJsonArray("assets");
+        if (version == null || assets == null) {
+            return ReleaseInfo.notFound();
+        }
+
+        for (int i = 0; i < assets.size(); i++) {
+            JsonObject asset = assets.get(i).getAsJsonObject();
+            String name = asset.get("name").getAsString();
+            if (name.endsWith(".jar")) {
+                String downloadUrl = asset.get("browser_download_url").getAsString();
+                plugin.getLogger().log(Level.INFO, () -> "Fetched latest release URL: " + downloadUrl);
+                return new ReleaseInfo(version, name, downloadUrl);
+            }
+        }
+
+        plugin.getLogger().log(Level.WARNING, () -> "No JAR asset found in the latest release.");
+        return ReleaseInfo.notFound();
+    }
+
+    private @Nullable String extractLatestVersion(JsonObject jsonResponse) {
+        if (!jsonResponse.has("tag_name")) {
+            return null;
+        }
+
+        String tagName = jsonResponse.get("tag_name").getAsString();
+        String version = tagName.startsWith("v") ? tagName.substring(1) : tagName;
+        plugin.getLogger().log(Level.INFO, () -> "Latest version: " + version);
+        return version;
+    }
+
     private void logVersionStatus(String currentVersion, String latestVersion, boolean isUpToDate) {
         if (isUpToDate) {
             plugin.getLogger().log(Level.INFO, () -> "Current version " + currentVersion + " is already up to date");
@@ -126,64 +171,32 @@ public class UpdateDownloader {
         }
     }
 
-    /**
-     * Downloads the file from the given URL and moves it to the plugins directory.
-     *
-     * @param downloadUrl The URL to download the file from
-     * @return A CompletableFuture containing the UpdateStatus
-     */
-    private CompletableFuture<UpdateStatus> downloadAndMoveFile(String downloadUrl) {
-        return downloadFileAsync(downloadUrl).thenApply(
-                v -> moveJarToPlugins() ? UpdateStatus.SUCCESS : UpdateStatus.FAILED);
-    }
-
-    /**
-     * Compares the current version with the latest version to determine if an update is needed.
-     *
-     * @param currentVersion The current version of the plugin
-     * @param latestVersion  The latest version available
-     * @return true if the current version is up to date, false otherwise
-     */
-    private boolean isCurrentVersionUpToDate(String currentVersion, String latestVersion) {
-        if (currentVersion == null || latestVersion == null) {
-            return false;
-        }
-        return currentVersion.equals(latestVersion);
-    }
-
-    /**
-     * Fetches the latest release URL asynchronously from the GitHub API.
-     *
-     * @return A CompletableFuture containing the download URL for the latest release JAR file,
-     * or an empty string if no suitable release was found or an error occurred.
-     */
-    private @NotNull CompletableFuture<String> fetchLatestReleaseUrlAsync() {
+    private CompletableFuture<Path> downloadJarAsync(String downloadUrl) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                HttpRequest request = createGitHubApiRequest(apiUrl);
-                HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<InputStream> response = httpClient.send(createDownloadRequest(downloadUrl),
+                        HttpResponse.BodyHandlers.ofInputStream());
+                if (response.statusCode() != 200) {
+                    throw new IOException("Failed to download file: HTTP " + response.statusCode());
+                }
 
-                if (response.statusCode() == 200) {
-                    return extractDownloadUrlFromResponse(response.body());
-                } else {
-                    logHttpError("Failed to fetch latest release", response.statusCode());
-                }
-            } catch (IOException | InterruptedException e) {
-                logException("Error fetching latest release URL", e);
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                }
+                String resolvedFileName = extractFileName(response, downloadUrl);
+                Path tempFile = createTempDownloadFile(resolvedFileName);
+                long expectedLength = response.headers()
+                        .firstValueAsLong("Content-Length")
+                        .orElse(UNKNOWN_CONTENT_LENGTH);
+                saveDownloadedFile(response.body(), tempFile, expectedLength);
+                fileName = resolvedFileName;
+                return tempFile;
+            } catch (IOException e) {
+                throw new CompletionException(e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new CompletionException(e);
             }
-            return "";
         });
     }
 
-    /**
-     * Creates an HTTP request for GitHub API with appropriate headers.
-     *
-     * @param url The GitHub API URL to request
-     * @return The configured HttpRequest
-     */
     private HttpRequest createGitHubApiRequest(String url) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -192,132 +205,15 @@ public class UpdateDownloader {
                 .build();
     }
 
-    /**
-     * Extracts the download URL from the GitHub API response.
-     *
-     * @param responseBody The JSON response body from the GitHub API
-     * @return The download URL for the JAR file, or an empty string if none was found
-     */
-    private String extractDownloadUrlFromResponse(String responseBody) {
-        JsonObject jsonResponse = GSON.fromJson(responseBody, JsonObject.class);
-
-        // Extract version from tag name
-        extractLatestVersion(jsonResponse);
-
-        // Find JAR asset and extract download URL
-        return findJarDownloadUrl(jsonResponse);
-    }
-
-    /**
-     * Extracts the latest version from the GitHub release JSON response.
-     *
-     * @param jsonResponse The parsed JSON response from GitHub API
-     */
-    private void extractLatestVersion(JsonObject jsonResponse) {
-        if (jsonResponse.has("tag_name")) {
-            String tagName = jsonResponse.get("tag_name").getAsString();
-            // Remove 'v' prefix if present
-            latestVersion = tagName.startsWith("v") ? tagName.substring(1) : tagName;
-            plugin.getLogger().log(Level.INFO, () -> "Latest version: " + latestVersion);
-        }
-    }
-
-    /**
-     * Finds the JAR download URL from the GitHub release assets.
-     *
-     * @param jsonResponse The parsed JSON response from GitHub API
-     * @return The download URL for the JAR file, or an empty string if none was found
-     */
-    private String findJarDownloadUrl(JsonObject jsonResponse) {
-        JsonArray assets = jsonResponse.getAsJsonArray("assets");
-
-        for (int i = 0; i < assets.size(); i++) {
-            JsonObject asset = assets.get(i).getAsJsonObject();
-            String name = asset.get("name").getAsString();
-            if (name.endsWith(".jar")) {
-                String downloadUrl = asset.get("browser_download_url").getAsString();
-                plugin.getLogger().log(Level.INFO, () -> "Fetched latest release URL: " + downloadUrl);
-                return downloadUrl;
-            }
-        }
-
-        plugin.getLogger().log(Level.WARNING, () -> "No JAR asset found in the latest release.");
-        return "";
-    }
-
-    /**
-     * Logs an HTTP error with the given message and status code.
-     *
-     * @param message    The error message
-     * @param statusCode The HTTP status code
-     */
-    private void logHttpError(String message, int statusCode) {
-        plugin.getLogger().log(Level.SEVERE, () -> message + ": HTTP " + statusCode);
-    }
-
-    /**
-     * Logs an exception with the given message.
-     *
-     * @param message The error message
-     * @param e       The exception that occurred
-     */
-    private void logException(String message, Exception e) {
-        plugin.getLogger().log(Level.SEVERE, e, () -> message + ": " + e.getMessage());
-    }
-
-    /**
-     * Downloads a file asynchronously from the given URL.
-     *
-     * @param downloadUrl The URL to download the file from
-     * @return A CompletableFuture that completes when the download is finished
-     */
-    private CompletableFuture<Void> downloadFileAsync(String downloadUrl) {
-        return CompletableFuture.runAsync(() -> {
-            try {
-                HttpRequest request = createDownloadRequest(downloadUrl);
-                HttpResponse<InputStream> response = HTTP_CLIENT.send(request,
-                        HttpResponse.BodyHandlers.ofInputStream());
-
-                if (response.statusCode() != 200) {
-                    logHttpError("Failed to download file", response.statusCode());
-                    return;
-                }
-
-                fileName = extractFileName(response, downloadUrl);
-                saveDownloadedFile(response.body(), fileName);
-
-            } catch (IOException | InterruptedException e) {
-                logException("Error downloading file", e);
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                }
-                throw new CompletionException(e);
-            }
-        });
-    }
-
-    /**
-     * Creates an HTTP request for downloading a file.
-     *
-     * @param url The URL to download from
-     * @return The configured HttpRequest
-     */
     private HttpRequest createDownloadRequest(String url) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Accept", "application/vnd.github+json")
+                .header("Accept", "application/octet-stream")
                 .header("User-Agent", "Java-HttpClient")
                 .GET()
                 .build();
     }
 
-    /**
-     * Extracts the filename from the HTTP response headers or from the URL.
-     *
-     * @param response The HTTP response
-     * @param url      The download URL (used as fallback)
-     * @return The extracted filename
-     */
     private String extractFileName(HttpResponse<InputStream> response, String url) {
         return response.headers()
                 .firstValue("Content-Disposition")
@@ -328,72 +224,77 @@ public class UpdateDownloader {
                 });
     }
 
-    /**
-     * Saves the downloaded file to disk.
-     *
-     * @param inputStream The input stream containing the file data
-     * @param fileName    The name to save the file as
-     */
-    private void saveDownloadedFile(InputStream inputStream, String fileName) {
-        try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-                FileOutputStream fileOutputStream = new FileOutputStream(fileName)) {
-            byte[] dataBuffer = new byte[1024];
-            int bytesRead;
-            long totalBytesRead = 0;
+    private @NotNull Path createTempDownloadFile(String resolvedFileName) throws IOException {
+        Path tempDir = plugin.getDataFolder().toPath().resolve("updates");
+        Files.createDirectories(tempDir);
+        String sanitizedName = resolvedFileName.replaceAll("[^a-zA-Z0-9._-]", "_");
+        return Files.createTempFile(tempDir, "download-", "-" + sanitizedName);
+    }
 
-            while ((bytesRead = bufferedInputStream.read(dataBuffer, 0, dataBuffer.length)) != -1) {
-                fileOutputStream.write(dataBuffer, 0, bytesRead);
-                totalBytesRead += bytesRead;
-            }
-
-            verifyDownloadComplete(fileName, totalBytesRead);
+    private void saveDownloadedFile(InputStream inputStream, Path targetFile, long expectedLength)
+            throws IOException {
+        long bytesCopied;
+        try (InputStream stream = inputStream) {
+            bytesCopied = Files.copy(stream, targetFile, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            logException("Error saving downloaded file", e);
+            Files.deleteIfExists(targetFile);
+            throw e;
         }
+
+        if (bytesCopied <= 0) {
+            Files.deleteIfExists(targetFile);
+            throw new IOException("Downloaded file is empty");
+        }
+        if (expectedLength != UNKNOWN_CONTENT_LENGTH && expectedLength != bytesCopied) {
+            Files.deleteIfExists(targetFile);
+            throw new IOException("Downloaded file is incomplete. Expected " + expectedLength
+                    + " bytes but got " + bytesCopied + " bytes");
+        }
+
+        plugin.getLogger().log(Level.INFO, () -> "Download completed: " + targetFile.getFileName());
     }
 
-    /**
-     * Verifies that the download completed successfully by checking the file size.
-     *
-     * @param fileName       The name of the downloaded file
-     * @param totalBytesRead The total number of bytes read during download
-     */
-    private void verifyDownloadComplete(String fileName, long totalBytesRead) {
-        long fileSize = Path.of(fileName).toFile().length();
-
-        if (fileSize != totalBytesRead) {
-            plugin.getLogger()
-                    .log(Level.SEVERE, () -> "Downloaded file is incomplete. Expected: " + totalBytesRead +
-                            " bytes, actual file size: " + fileSize + " bytes.");
-        } else {
-            plugin.getLogger().log(Level.INFO, () -> "Download completed: " + fileName);
-        }
-    }
-
-
-    /**
-     * Moves the downloaded JAR file to the plugins directory.
-     *
-     * @return true if the file was successfully moved, false otherwise
-     */
-    private boolean moveJarToPlugins() {
-        Path sourcePath = Path.of(fileName);
+    private UpdateStatus moveJarToPlugins(Path tempFile) {
         Path pluginsPath = plugin.getDataFolder().toPath().getParent();
-        if (pluginsPath == null) {
-            plugin.getLogger().log(Level.SEVERE, () -> "Could not resolve plugins directory");
-            return false;
+        if (pluginsPath == null || fileName == null || fileName.isBlank()) {
+            plugin.getLogger().log(Level.SEVERE, "Could not resolve plugins directory or target file name");
+            deleteQuietly(tempFile);
+            return UpdateStatus.FAILED;
         }
-        Path targetPath = pluginsPath.resolve(fileName);
 
+        Path targetPath = pluginsPath.resolve(fileName);
         try {
             Files.createDirectories(pluginsPath);
-            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(tempFile, targetPath, StandardCopyOption.REPLACE_EXISTING);
             plugin.getLogger().log(Level.INFO, () -> "Moved file to plugins directory: " + targetPath);
-            return true;
+            return UpdateStatus.SUCCESS;
         } catch (IOException e) {
-            plugin.getLogger()
-                    .log(Level.SEVERE, e, () -> "Failed to move file to plugins directory: " + e.getMessage());
-            return false;
+            logException("Failed to move file to plugins directory", e);
+            deleteQuietly(tempFile);
+            return UpdateStatus.FAILED;
+        }
+    }
+
+    private void deleteQuietly(Path path) {
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            logException("Failed to delete temporary update file", e);
+        }
+    }
+
+    private void logException(String message, Throwable e) {
+        plugin.getLogger().log(Level.SEVERE, e, () -> message + ": " + e.getMessage());
+    }
+
+    private record ReleaseInfo(String version, String fileName, String downloadUrl) {
+
+        private boolean exists() {
+            return version != null && fileName != null && downloadUrl != null;
+        }
+
+        private static ReleaseInfo notFound() {
+            return new ReleaseInfo(null, null, null);
         }
     }
 }

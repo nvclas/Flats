@@ -285,12 +285,12 @@ public class UpdateDownloader {
 
     private record ReleaseInfo(String version, String fileName, String downloadUrl) {
 
-        private boolean exists() {
-            return version != null && fileName != null && downloadUrl != null;
-        }
-
         private static ReleaseInfo notFound() {
             return new ReleaseInfo(null, null, null);
+        }
+
+        private boolean exists() {
+            return version != null && fileName != null && downloadUrl != null;
         }
     }
 }

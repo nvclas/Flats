@@ -23,9 +23,7 @@ public class PlayerMoveListener implements Listener {
 
     @EventHandler
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
-        if (event.getFrom().getBlockX() == event.getTo().getBlockX()
-                && event.getFrom().getBlockY() == event.getTo().getBlockY()
-                && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
+        if (!event.hasChangedBlock()) {
             return;
         }
 

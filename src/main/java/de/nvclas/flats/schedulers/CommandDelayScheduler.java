@@ -6,9 +6,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * The {@code CommandDelayScheduler} class manages delayed execution of commands for specific players.
@@ -19,14 +20,14 @@ import java.util.UUID;
 @Getter
 public class CommandDelayScheduler {
 
-    private static final Map<CommandDelayScheduler, UUID> delays = new HashMap<>();
+    private static final Map<CommandDelayScheduler, UUID> delays = new ConcurrentHashMap<>();
     private final String command;
-    private long delay;
+    private final AtomicLong delay;
     private BukkitTask task;
 
     public CommandDelayScheduler(String command, long delay) {
         this.command = command;
-        this.delay = delay;
+        this.delay = new AtomicLong(delay);
     }
 
     /**
@@ -43,7 +44,7 @@ public class CommandDelayScheduler {
         return delays.entrySet()
                 .stream()
                 .filter(entry -> entry.getValue().equals(playerId) && entry.getKey().getCommand().equals(command))
-                .map(entry -> entry.getKey().getDelay())
+                .map(entry -> entry.getKey().getDelay().get())
                 .findFirst()
                 .orElse(0L);
     }
@@ -73,9 +74,9 @@ public class CommandDelayScheduler {
         task = new BukkitRunnable() {
             @Override
             public void run() {
-                delay--;
+                long remainingDelay = delay.decrementAndGet();
                 delays.put(CommandDelayScheduler.this, player.getUniqueId());
-                if (delay <= 0) {
+                if (remainingDelay <= 0) {
                     delays.remove(CommandDelayScheduler.this);
                     cancel();
                 }

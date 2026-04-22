@@ -48,13 +48,9 @@ public class UpdateDownloader {
     private String latestVersion;
 
     public UpdateDownloader(JavaPlugin plugin, String apiUrl) {
-        this(plugin, apiUrl, DEFAULT_HTTP_CLIENT);
-    }
-
-    UpdateDownloader(JavaPlugin plugin, String apiUrl, HttpClient httpClient) {
         this.plugin = plugin;
         this.apiUrl = apiUrl;
-        this.httpClient = httpClient;
+        this.httpClient = DEFAULT_HTTP_CLIENT;
     }
 
     /**

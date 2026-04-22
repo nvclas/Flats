@@ -128,32 +128,13 @@ public class Area {
     }
 
     /**
-     * Checks whether the given {@link Location} is within a specified distance from
-     * any of the two positions defining this {@link Area}.
-     * <p>
-     * This method evaluates whether the provided {@code location} falls within the
-     * given {@code range} from either {@code pos1} or {@code pos2} in three-dimensional space.
-     *
-     * @param location The {@link Location} to be checked. Must not be null.
-     * @param range    The distance threshold to check against.
-     * @return {@code true} if the {@code location} is within the specified {@code range}
-     * from either {@code pos1} or {@code pos2}; {@code false} otherwise.
-     */
-    public boolean isWithinDistance(@NotNull Location location, double range) {
-        return (Math.abs(location.getX() - pos1.getX()) <= range && Math.abs(location.getY() - pos1.getY()) <= range
-                && Math.abs(location.getZ() - pos1.getZ()) <= range) || (
-                Math.abs(location.getX() - pos2.getX()) <= range && Math.abs(location.getY() - pos2.getY()) <= range
-                        && Math.abs(location.getZ() - pos2.getZ()) <= range);
-    }
-
-    /**
      * Checks whether a location lies inside this area or within the given horizontal range of it.
      *
      * @param location The location to check.
      * @param range    The maximum horizontal distance from the area's bounds.
      * @return {@code true} if the location is inside the area or close enough on the X/Z plane.
      */
-    public boolean intersectsHorizontalRange(@NotNull Location location, double range) {
+    public boolean isWithinDistance(@NotNull Location location, double range) {
         if (location.getWorld() == null || !location.getWorld().getName().equals(worldName)) {
             return false;
         }

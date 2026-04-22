@@ -69,11 +69,11 @@ class AreaTest {
     }
 
     @Test
-    void intersectsHorizontalRange() {
+    void isWithinDistance() {
         Area area = new Area(new Location(world, 0, 0, 0), new Location(world, 300, 10, 10), "test_flat");
 
-        assertTrue(area.intersectsHorizontalRange(new Location(world, 150, 5, 5), 100));
-        assertTrue(area.intersectsHorizontalRange(new Location(world, 350, 5, 5), 50));
-        assertFalse(area.intersectsHorizontalRange(new Location(world, 401, 5, 5), 100));
+        assertTrue(area.isWithinDistance(new Location(world, 150, 5, 5), 100));
+        assertTrue(area.isWithinDistance(new Location(world, 350, 5, 5), 50));
+        assertFalse(area.isWithinDistance(new Location(world, 401, 5, 5), 100));
     }
 }

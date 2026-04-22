@@ -62,7 +62,7 @@ public class ShowSubCommand implements SubCommand {
         List<Area> nearbyAreas = flatsCache.getAreasIntersecting(player.getWorld().getName(), minX, maxX, minZ, maxZ);
 
         long flatsAmount = nearbyAreas.stream()
-                .filter(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE))
+                .filter(area -> area.intersectsHorizontalRange(player.getLocation(), MAX_DISTANCE))
                 .map(Area::getFlatName)
                 .distinct()
                 .count();
@@ -124,7 +124,7 @@ public class ShowSubCommand implements SubCommand {
 
         flatsCache.getAreasIntersecting(player.getWorld().getName(), minX, maxX, minZ, maxZ)
                 .stream()
-                .filter(area -> area.isWithinDistance(player.getLocation(), MAX_DISTANCE))
+                .filter(area -> area.intersectsHorizontalRange(player.getLocation(), MAX_DISTANCE))
                 .forEach(area -> blocksToChange.addAll(area.getAllOuterBlocks()));
 
         return blocksToChange;

@@ -77,6 +77,7 @@ public class CommandDelayScheduler {
                 delays.put(CommandDelayScheduler.this, player.getUniqueId());
                 if (delay <= 0) {
                     delays.remove(CommandDelayScheduler.this);
+                    cancel();
                 }
             }
         }.runTaskTimerAsynchronously(plugin, 0, 20);

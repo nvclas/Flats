@@ -1,6 +1,7 @@
 package de.nvclas.flats.listeners;
 
 import de.nvclas.flats.Flats;
+import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.items.SelectionItem;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
@@ -14,6 +15,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class StickInteractListener implements Listener {
 
+    private final SettingsConfig settingsConfig;
+
+    public StickInteractListener(Flats flatsPlugin) {
+        this.settingsConfig = flatsPlugin.getSettingsConfig();
+    }
+
     @EventHandler
     public void onStickInteraction(@NotNull PlayerInteractEvent event) {
         Player player = event.getPlayer();
@@ -22,7 +29,7 @@ public class StickInteractListener implements Listener {
             return;
         if (!event.getItem().isSimilar(SelectionItem.getItem()))
             return;
-        if (!Permissions.hasAdminPermission(player))
+        if (!Permissions.canEditFlats(player, settingsConfig))
             return;
 
         event.setCancelled(true);

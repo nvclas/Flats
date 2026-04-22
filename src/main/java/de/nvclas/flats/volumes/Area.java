@@ -147,6 +147,26 @@ public class Area {
     }
 
     /**
+     * Checks whether a location lies inside this area or within the given horizontal range of it.
+     *
+     * @param location The location to check.
+     * @param range    The maximum horizontal distance from the area's bounds.
+     * @return {@code true} if the location is inside the area or close enough on the X/Z plane.
+     */
+    public boolean intersectsHorizontalRange(@NotNull Location location, double range) {
+        if (location.getWorld() == null || !location.getWorld().getName().equals(worldName)) {
+            return false;
+        }
+
+        double clampedX = Math.clamp(location.getX(), minX, maxX);
+        double clampedZ = Math.clamp(location.getZ(), minZ, maxZ);
+        double deltaX = location.getX() - clampedX;
+        double deltaZ = location.getZ() - clampedZ;
+
+        return (deltaX * deltaX) + (deltaZ * deltaZ) <= range * range;
+    }
+
+    /**
      * Retrieves all outer boundary blocks of the area defined by this {@link Area} object.
      * <p>
      * The method calculates and includes blocks along the edges of the three-dimensional

@@ -12,6 +12,7 @@ import org.mockbukkit.mockbukkit.world.WorldMock;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AreaTest {
@@ -65,5 +66,14 @@ class AreaTest {
         // Inner blocks = (1,1,1) -> 1 block
         // Boundary blocks = 27 - 1 = 26
         assertEquals(26, outerBlocks.size());
+    }
+
+    @Test
+    void intersectsHorizontalRange() {
+        Area area = new Area(new Location(world, 0, 0, 0), new Location(world, 300, 10, 10), "test_flat");
+
+        assertTrue(area.intersectsHorizontalRange(new Location(world, 150, 5, 5), 100));
+        assertTrue(area.intersectsHorizontalRange(new Location(world, 350, 5, 5), 50));
+        assertFalse(area.intersectsHorizontalRange(new Location(world, 401, 5, 5), 100));
     }
 }

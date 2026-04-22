@@ -9,7 +9,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.logging.Level;
 
 /**
@@ -29,8 +29,6 @@ import java.util.logging.Level;
  * to the appropriate directory, and plugin cleanup.
  */
 public class UpdateDownloader {
-
-    private static final String PLUGINS_DIR = "plugins";
     private static final Gson GSON = new Gson();
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.ALWAYS)
@@ -65,11 +63,15 @@ public class UpdateDownloader {
      */
     public UpdateStatus downloadLatestRelease() {
         try {
-            return executeUpdateProcess().join();
+            return downloadLatestReleaseAsync().join();
         } catch (Exception e) {
             logException("An error occurred during the update process", e);
             return UpdateStatus.FAILED;
         }
+    }
+
+    public CompletableFuture<UpdateStatus> downloadLatestReleaseAsync() {
+        return executeUpdateProcess();
     }
 
     /**
@@ -168,7 +170,9 @@ public class UpdateDownloader {
                 }
             } catch (IOException | InterruptedException e) {
                 logException("Error fetching latest release URL", e);
-                Thread.currentThread().interrupt();
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
             }
             return "";
         });
@@ -284,7 +288,10 @@ public class UpdateDownloader {
 
             } catch (IOException | InterruptedException e) {
                 logException("Error downloading file", e);
-                Thread.currentThread().interrupt();
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+                throw new CompletionException(e);
             }
         });
     }
@@ -352,8 +359,7 @@ public class UpdateDownloader {
      * @param totalBytesRead The total number of bytes read during download
      */
     private void verifyDownloadComplete(String fileName, long totalBytesRead) {
-        File downloadedFile = new File(fileName);
-        long fileSize = downloadedFile.length();
+        long fileSize = Path.of(fileName).toFile().length();
 
         if (fileSize != totalBytesRead) {
             plugin.getLogger()
@@ -372,9 +378,15 @@ public class UpdateDownloader {
      */
     private boolean moveJarToPlugins() {
         Path sourcePath = Path.of(fileName);
-        Path targetPath = Path.of(PLUGINS_DIR, fileName);
+        Path pluginsPath = plugin.getDataFolder().toPath().getParent();
+        if (pluginsPath == null) {
+            plugin.getLogger().log(Level.SEVERE, () -> "Could not resolve plugins directory");
+            return false;
+        }
+        Path targetPath = pluginsPath.resolve(fileName);
 
         try {
+            Files.createDirectories(pluginsPath);
             Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
             plugin.getLogger().log(Level.INFO, () -> "Moved file to plugins directory: " + targetPath);
             return true;

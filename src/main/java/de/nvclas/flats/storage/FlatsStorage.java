@@ -43,7 +43,7 @@ public class FlatsStorage {
     private void initConnection() {
         File dataFolder = plugin.getDataFolder();
         if (!dataFolder.exists() && !dataFolder.mkdir()) {
-            plugin.getLogger().log(Level.CONFIG, () -> "Failed to create plugin data folder.");
+            throw new IllegalStateException("Failed to create plugin data folder: " + dataFolder.getAbsolutePath());
         }
 
         try {

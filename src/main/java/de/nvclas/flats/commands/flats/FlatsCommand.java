@@ -15,7 +15,8 @@ import de.nvclas.flats.commands.flats.subcommands.UpdateSubCommand;
 import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
-import org.bukkit.Bukkit;
+import de.nvclas.flats.volumes.Flat;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -26,7 +27,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 
 public class FlatsCommand implements CommandExecutor, TabCompleter {
@@ -55,12 +58,12 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (args.length == 0 || !subCommands.containsKey(args[0].toLowerCase())) {
+        if (args.length == 0 || !subCommands.containsKey(args[0].toLowerCase(Locale.ROOT))) {
             sendHelpMessages(player);
             return true;
         }
 
-        subCommands.get(args[0].toLowerCase()).execute(player, args);
+        subCommands.get(args[0].toLowerCase(Locale.ROOT)).execute(player, args);
         return true;
     }
 
@@ -141,7 +144,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     }
 
     private List<String> getSubCommandCompletions(Player player, String input) {
-        String lowerInput = input.toLowerCase();
+        String lowerInput = input.toLowerCase(Locale.ROOT);
         return subCommands.keySet()
                 .stream()
                 .filter(cmd -> cmd.startsWith(lowerInput) && hasPermissionForCommand(player, cmd))
@@ -159,10 +162,14 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             return getFlatNameCompletions(input);
         }
 
-        if ((FlatsSubCommand.TRUST.getSubCommandName()
-                .equalsIgnoreCase(subCommand) || FlatsSubCommand.UNTRUST.getSubCommandName()
-                .equalsIgnoreCase(subCommand)) && Permissions.canTrustPlayers(player, settingsConfig)) {
-            return getOnlinePlayerCompletions();
+        if (FlatsSubCommand.TRUST.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canTrustPlayers(
+                player, settingsConfig)) {
+            return getOnlinePlayerCompletions(input);
+        }
+
+        if (FlatsSubCommand.UNTRUST.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canTrustPlayers(
+                player, settingsConfig)) {
+            return getTrustedPlayerCompletions(player, input);
         }
 
         return List.of();
@@ -172,12 +179,31 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         return flatsPlugin.getFlatsCache().getFilteredFlatNames(input, 50);
     }
 
-    private List<String> getOnlinePlayerCompletions() {
-        return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+    private List<String> getOnlinePlayerCompletions(String input) {
+        String lowerInput = input.toLowerCase(Locale.ROOT);
+        return flatsPlugin.getServer().getOnlinePlayers()
+                .stream()
+                .map(Player::getName)
+                .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(lowerInput))
+                .toList();
+    }
+
+    private List<String> getTrustedPlayerCompletions(Player player, String input) {
+        Flat flat = flatsPlugin.getFlatsCache().getFlatByLocation(player.getLocation());
+        if (flat == null) {
+            return List.of();
+        }
+
+        String lowerInput = input.toLowerCase(Locale.ROOT);
+        return flat.getTrusted().stream()
+                .map(OfflinePlayer::getName)
+                .filter(Objects::nonNull)
+                .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(lowerInput))
+                .toList();
     }
 
     private boolean hasPermissionForCommand(Player player, String command) {
-        return switch (command.toLowerCase()) {
+        return switch (command.toLowerCase(Locale.ROOT)) {
             case "select", "add", "remove" -> Permissions.canEditFlats(player, settingsConfig);
             case "list" -> Permissions.canListFlats(player, settingsConfig);
             case "info" -> Permissions.canInfoFlats(player, settingsConfig);
@@ -188,7 +214,6 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
             default -> false;
         };
     }
-
 
     private void registerSubCommands() {
         subCommands.put(FlatsSubCommand.SELECT.getSubCommandName(), new SelectSubCommand(flatsPlugin));
@@ -203,5 +228,4 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         subCommands.put(FlatsSubCommand.TRUST.getSubCommandName(), new TrustSubCommand(flatsPlugin));
         subCommands.put(FlatsSubCommand.UNTRUST.getSubCommandName(), new UntrustSubCommand(flatsPlugin));
     }
-
 }

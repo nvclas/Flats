@@ -4,8 +4,8 @@
 ![License](https://img.shields.io/github/license/nvclas/Flats)
 
 Flats (British for "Apartments") is a plugin that allows you to create 3-dimensional areas and let players claim them.
-It provides an
-easy way to manage plots and ensure that players have their own designated areas to build and interact in.
+It provides an easy way to manage plots and ensure that players have their own designated areas to build and interact
+in.
 
 ## Features
 
@@ -49,8 +49,8 @@ flats and their attributes whereas `settings.yml` contains general settings like
 
 ## Supported Languages
 
-You can change the active language by editing the language code inside the `settings.yml`.
-Currently, the plugin supports the following languages:
+You can change the active language by editing the language code inside the `settings.yml`. Currently, the plugin
+supports the following languages:
 
 - `en_us` - English (USA)
 - `es_es` - Español (España)

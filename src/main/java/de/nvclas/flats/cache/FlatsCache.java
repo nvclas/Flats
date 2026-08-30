@@ -108,7 +108,16 @@ public class FlatsCache {
      * @return The {@link Flat} associated with the specified name, or {@code null} if no such flat exists.
      */
     public @Nullable Flat getFlat(@NotNull String name) {
-        return flatCache.get(name, flatsStorage::loadFlat);
+        Flat flat = flatCache.getIfPresent(name);
+        if (flat != null) {
+            return flat;
+        }
+
+        flat = flatsStorage.loadFlat(name);
+        if (flat != null) {
+            flatCache.put(name, flat);
+        }
+        return flat;
     }
 
     /**

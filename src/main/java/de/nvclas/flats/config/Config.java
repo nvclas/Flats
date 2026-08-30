@@ -61,7 +61,7 @@ public abstract class Config {
     private void createParentDirectory() {
         File dataFolder = plugin.getDataFolder();
         if (!dataFolder.exists() && !dataFolder.mkdir()) {
-            plugin.getLogger().log(Level.CONFIG, () -> "Failed to create plugin data folder.");
+            throw new IllegalStateException("Failed to create plugin data folder: " + dataFolder.getAbsolutePath());
         }
     }
 
@@ -70,7 +70,7 @@ public abstract class Config {
             try {
                 plugin.saveResource(file.getName(), false);
                 plugin.getLogger().log(Level.CONFIG, () -> String.format(CONFIG_SAVED_DEFAULT, file.getName()));
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException _) {
                 plugin.getLogger().log(Level.CONFIG, () -> String.format(CONFIG_DEFAULT_NOT_FOUND, file.getName()));
             }
         }

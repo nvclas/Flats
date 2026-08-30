@@ -56,17 +56,17 @@ class UpdateDownloaderTest {
         httpServer = HttpServer.create(new InetSocketAddress(0), 0);
         httpServer.createContext("/releases/latest", exchange -> respondJson(exchange, """
                 {
-                  "tag_name": "v2.1.0",
+                  "tag_name": "v9.9.9",
                   "assets": [
                     {
-                      "name": "Flats-2.1.0.jar",
-                      "browser_download_url": "%s/downloads/Flats-2.1.0.jar"
+                      "name": "Flats-9.9.9.jar",
+                      "browser_download_url": "%s/downloads/Flats-9.9.9.jar"
                     }
                   ]
                 }
                 """.formatted(baseUrl())));
-        httpServer.createContext("/downloads/Flats-2.1.0.jar", exchange -> {
-            exchange.getResponseHeaders().add("Content-Disposition", "attachment; filename=\"Flats-2.1.0.jar\"");
+        httpServer.createContext("/downloads/Flats-9.9.9.jar", exchange -> {
+            exchange.getResponseHeaders().add("Content-Disposition", "attachment; filename=\"Flats-9.9.9.jar\"");
             exchange.sendResponseHeaders(200, jarBytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(jarBytes);
@@ -78,7 +78,7 @@ class UpdateDownloaderTest {
 
         UpdateStatus status = downloader.downloadLatestRelease();
 
-        movedJar = plugin.getDataFolder().toPath().getParent().resolve("Flats-2.1.0.jar");
+        movedJar = plugin.getDataFolder().toPath().getParent().resolve("Flats-9.9.9.jar");
         assertEquals(UpdateStatus.SUCCESS, status);
         assertTrue(Files.exists(movedJar), "Downloaded jar should be moved to the plugins directory");
         assertEquals(jarBytes.length, Files.size(movedJar));
@@ -134,16 +134,16 @@ class UpdateDownloaderTest {
         httpServer = HttpServer.create(new InetSocketAddress(0), 0);
         httpServer.createContext("/releases/latest", exchange -> respondJson(exchange, """
                 {
-                  "tag_name": "v2.1.0",
+                  "tag_name": "v9.9.9",
                   "assets": [
                     {
-                      "name": "Flats-2.1.0.jar",
-                      "browser_download_url": "%s/downloads/Flats-2.1.0.jar"
+                      "name": "Flats-9.9.9.jar",
+                      "browser_download_url": "%s/downloads/Flats-9.9.9.jar"
                     }
                   ]
                 }
                 """.formatted(baseUrl())));
-        httpServer.createContext("/downloads/Flats-2.1.0.jar", exchange -> {
+        httpServer.createContext("/downloads/Flats-9.9.9.jar", exchange -> {
             exchange.sendResponseHeaders(500, -1);
             exchange.close();
         });
@@ -153,7 +153,7 @@ class UpdateDownloaderTest {
 
         UpdateStatus status = downloader.downloadLatestRelease();
 
-        movedJar = plugin.getDataFolder().toPath().getParent().resolve("Flats-2.1.0.jar");
+        movedJar = plugin.getDataFolder().toPath().getParent().resolve("Flats-9.9.9.jar");
         assertEquals(UpdateStatus.FAILED, status);
         assertFalse(Files.exists(movedJar), "No target jar should be moved on failed download");
     }
@@ -181,12 +181,12 @@ class UpdateDownloaderTest {
                         .forEach(current -> {
                             try {
                                 Files.deleteIfExists(current);
-                            } catch (IOException e) {
+                            } catch (IOException _) {
                                 fail("Could not delete test path: " + current);
                             }
                         });
             }
-        } catch (IOException e) {
+        } catch (IOException _) {
             fail("Could not walk test path: " + path);
         }
     }

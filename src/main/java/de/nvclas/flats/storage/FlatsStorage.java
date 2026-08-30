@@ -10,6 +10,7 @@ import org.flywaydb.core.api.FlywayException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -40,11 +41,17 @@ public class FlatsStorage {
     }
 
     private void initConnection() {
+        File dataFolder = plugin.getDataFolder();
+        if (!dataFolder.exists() && !dataFolder.mkdir()) {
+            throw new IllegalStateException("Failed to create plugin data folder: " + dataFolder.getAbsolutePath());
+        }
+
         try {
             String url = getJdbcUrl();
             connection = DriverManager.getConnection(url);
             try (Statement statement = connection.createStatement()) {
                 statement.execute("PRAGMA foreign_keys = ON;");
+                statement.execute("PRAGMA busy_timeout = 3000;");
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Could not initialize database connection", e);
@@ -52,7 +59,7 @@ public class FlatsStorage {
     }
 
     private @NotNull String getJdbcUrl() {
-        return "jdbc:sqlite:" + plugin.getDataFolder().getAbsolutePath() + "/" + DATABASE_NAME;
+        return "jdbc:sqlite:" + new File(plugin.getDataFolder(), DATABASE_NAME).getAbsolutePath();
     }
 
     private void migrate() {
@@ -161,7 +168,7 @@ public class FlatsStorage {
         }
     }
 
-    private void rollbackTransaction(SQLException originalException) {
+    private void rollbackTransaction(@NotNull SQLException originalException) {
         try {
             if (connection != null) {
                 connection.rollback();
@@ -194,30 +201,31 @@ public class FlatsStorage {
      */
     public @Nullable Flat loadFlat(@NotNull String name) {
         try {
-            OfflinePlayer owner = loadOwner(name);
-            if (owner == null && !existsFlat(name)) {
+            FlatMetadata metadata = loadMetadata(name);
+            if (metadata == null) {
                 return null;
             }
 
             List<Area> areas = loadAreas(name);
             List<OfflinePlayer> trusted = loadTrustedPlayers(name);
 
-            return new Flat(name, owner, areas, trusted);
+            return new Flat(name, metadata.owner(), areas, trusted);
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, e, () -> "Could not load flat " + name);
             return null;
         }
     }
 
-    private @Nullable OfflinePlayer loadOwner(@NotNull String flatName) throws SQLException {
+    private @Nullable FlatMetadata loadMetadata(@NotNull String flatName) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement("SELECT owner_uuid FROM flats WHERE name = ?")) {
             ps.setString(1, flatName);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     String uuidStr = rs.getString("owner_uuid");
-                    if (uuidStr != null && !uuidStr.isEmpty()) {
-                        return Bukkit.getOfflinePlayer(UUID.fromString(uuidStr));
-                    }
+                    OfflinePlayer owner = (uuidStr != null && !uuidStr.isEmpty())
+                            ? Bukkit.getOfflinePlayer(UUID.fromString(uuidStr))
+                            : null;
+                    return new FlatMetadata(true, owner);
                 }
             }
         }
@@ -246,7 +254,7 @@ public class FlatsStorage {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String uuidStr = rs.getString("player_uuid");
-                    if (uuidStr != null) {
+                    if (uuidStr != null && !uuidStr.isEmpty()) {
                         trusted.add(Bukkit.getOfflinePlayer(UUID.fromString(uuidStr)));
                     }
                 }
@@ -270,7 +278,6 @@ public class FlatsStorage {
             plugin.getLogger().log(Level.SEVERE, e, () -> "Could not delete flat " + name);
         }
     }
-
 
     /**
      * Retrieves the number of flats owned by the specified player.
@@ -303,8 +310,8 @@ public class FlatsStorage {
      * @return {@code true} if the database is empty or an error occurs; {@code false} otherwise.
      */
     public boolean isEmpty() {
-        try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(
-                "SELECT COUNT(*) FROM flats")) {
+        try (Statement statement = connection.createStatement();
+                ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM flats")) {
             if (rs.next()) {
                 return rs.getInt(1) == 0;
             }
@@ -346,8 +353,8 @@ public class FlatsStorage {
      * @return The total number of flats, or {@code 0} if an error occurs.
      */
     public int getTotalFlatsCount() {
-        try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(
-                "SELECT COUNT(*) FROM flats")) {
+        try (Statement statement = connection.createStatement();
+                ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM flats")) {
             if (rs.next()) {
                 return rs.getInt(1);
             }
@@ -366,7 +373,7 @@ public class FlatsStorage {
      * @param limit  The maximum number of flat names to retrieve.
      * @return A list of flat names, or an empty list if no results are found.
      */
-    public List<String> getPaginatedFlatNames(int offset, int limit) {
+    public @NotNull List<String> getPaginatedFlatNames(int offset, int limit) {
         List<String> names = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT name FROM flats ORDER BY name LIMIT ? OFFSET ?")) {
@@ -393,11 +400,11 @@ public class FlatsStorage {
      * @param limit  The maximum number of flat names to return. Must be a positive integer.
      * @return A list of flat names matching the specified prefix. Returns an empty list if no matching names are found.
      */
-    public List<String> getFilteredFlatNames(String prefix, int limit) {
+    public @NotNull List<String> getFilteredFlatNames(@NotNull String prefix, int limit) {
         List<String> names = new ArrayList<>();
         String escapedPrefix = escapeLikePattern(prefix);
         try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT name FROM flats WHERE name LIKE ? ESCAPE '\\' LIMIT ?")) {
+                "SELECT name FROM flats WHERE name LIKE ? ESCAPE '\\' ORDER BY name LIMIT ?")) {
             ps.setString(1, escapedPrefix + "%");
             ps.setInt(2, limit);
             try (ResultSet rs = ps.executeQuery()) {
@@ -428,7 +435,7 @@ public class FlatsStorage {
      * @param maxZ      the maximum z-coordinate of the boundary.
      * @return a list of {@link Area} objects representing the intersecting areas. If no areas intersect, an empty list is returned.
      */
-    public List<Area> getAreasIntersecting(String worldName, int minX, int maxX, int minZ, int maxZ) {
+    public @NotNull List<Area> getAreasIntersecting(@NotNull String worldName, int minX, int maxX, int minZ, int maxZ) {
         List<Area> areas = new ArrayList<>();
         String sql = "SELECT flat_name, world, min_x, min_y, min_z, max_x, max_y, max_z FROM areas " +
                 "WHERE world = ? AND NOT (max_x < ? OR min_x > ? OR max_z < ? OR min_z > ?)";
@@ -449,7 +456,7 @@ public class FlatsStorage {
         return areas;
     }
 
-    private @NotNull Area mapResultSetToArea(ResultSet rs, String flatName) throws SQLException {
+    private @NotNull Area mapResultSetToArea(@NotNull ResultSet rs, @NotNull String flatName) throws SQLException {
         String worldName = rs.getString("world");
         int minX = rs.getInt("min_x");
         int minY = rs.getInt("min_y");
@@ -461,4 +468,6 @@ public class FlatsStorage {
         return Area.fromRawData(worldName, new Area.Bounds(minX, maxX, minY, maxY, minZ, maxZ), flatName);
     }
 
+    private record FlatMetadata(boolean exists, @Nullable OfflinePlayer owner) {
+    }
 }

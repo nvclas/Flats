@@ -69,7 +69,7 @@ public class MigrationManager {
         File backupFile = new File(plugin.getDataFolder(), "flats.yml.bak");
         try {
             Files.deleteIfExists(backupFile.toPath());
-        } catch (IOException _) {
+        } catch (IOException e) {
             plugin.getLogger()
                     .log(Level.WARNING, () -> "Could not delete existing backup file. Please remove it manually.");
         }
@@ -87,7 +87,7 @@ public class MigrationManager {
         if (ownerUuid != null && !ownerUuid.isEmpty()) {
             try {
                 owner = Bukkit.getOfflinePlayer(UUID.fromString(ownerUuid));
-            } catch (IllegalArgumentException _) {
+            } catch (IllegalArgumentException e) {
                 plugin.getLogger()
                         .log(Level.WARNING, () -> "Invalid owner UUID for flat " + flatName + ": " + ownerUuid);
             }
@@ -98,7 +98,7 @@ public class MigrationManager {
         for (String locStr : locationStrings) {
             try {
                 areas.add(Area.fromString(locStr, flatName));
-            } catch (IllegalArgumentException _) {
+            } catch (IllegalArgumentException e) {
                 plugin.getLogger().log(Level.WARNING, () -> "Invalid area string for flat " + flatName + ": " + locStr);
             }
         }
@@ -112,7 +112,7 @@ public class MigrationManager {
         for (String uuid : trustedUuids) {
             try {
                 trusted.add(Bukkit.getOfflinePlayer(UUID.fromString(uuid)));
-            } catch (IllegalArgumentException _) {
+            } catch (IllegalArgumentException e) {
                 plugin.getLogger().log(Level.WARNING, () -> "Invalid trusted UUID for flat " + flatName + ": " + uuid);
             }
         }

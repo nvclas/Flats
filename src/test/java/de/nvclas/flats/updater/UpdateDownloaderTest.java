@@ -181,12 +181,12 @@ class UpdateDownloaderTest {
                         .forEach(current -> {
                             try {
                                 Files.deleteIfExists(current);
-                            } catch (IOException _) {
+                            } catch (IOException e) {
                                 fail("Could not delete test path: " + current);
                             }
                         });
             }
-        } catch (IOException _) {
+        } catch (IOException e) {
             fail("Could not walk test path: " + path);
         }
     }

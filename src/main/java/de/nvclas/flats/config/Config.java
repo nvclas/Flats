@@ -70,7 +70,7 @@ public abstract class Config {
             try {
                 plugin.saveResource(file.getName(), false);
                 plugin.getLogger().log(Level.CONFIG, () -> String.format(CONFIG_SAVED_DEFAULT, file.getName()));
-            } catch (IllegalArgumentException _) {
+            } catch (IllegalArgumentException e) {
                 plugin.getLogger().log(Level.CONFIG, () -> String.format(CONFIG_DEFAULT_NOT_FOUND, file.getName()));
             }
         }

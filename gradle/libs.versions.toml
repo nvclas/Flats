@@ -3,7 +3,7 @@ annotations = "26.1.+"
 lombok = "9.5.+"
 runPaper = "3.1.+"
 paperweight-userdev = "2.0.+"
-paper = "26.2.build.+"
+paper = "1.21.11-R0.1-SNAPSHOT"
 mockbukkit = "4.116.+"
 junit-jupiter = "5.13.+"
 junit-platform-launcher = "1.13.+"
@@ -14,7 +14,7 @@ caffeine = "3.2.4" # Specific version for plugin.yml required
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
 paper = { group = "io.papermc.paper", name = "paper-api", version.ref = "paper" }
-mockbukkit = { group = "org.mockbukkit.mockbukkit", name = "mockbukkit-v26.2", version.ref = "mockbukkit" }
+mockbukkit = { group = "org.mockbukkit.mockbukkit", name = "mockbukkit-v1.21", version.ref = "mockbukkit" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit-jupiter" }
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-platform-launcher" }
 sqlite = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite" }

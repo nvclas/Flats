@@ -78,9 +78,9 @@ class UpdateDownloaderTest {
 
         UpdateStatus status = downloader.downloadLatestRelease();
 
-        movedJar = plugin.getDataFolder().toPath().getParent().resolve("Flats-9.9.9.jar");
+        movedJar = plugin.getServer().getUpdateFolderFile().toPath().resolve("Flats-9.9.9.jar");
         assertEquals(UpdateStatus.SUCCESS, status);
-        assertTrue(Files.exists(movedJar), "Downloaded jar should be moved to the plugins directory");
+        assertTrue(Files.exists(movedJar), "Downloaded jar should be moved to the update directory");
         assertEquals(jarBytes.length, Files.size(movedJar));
     }
 
@@ -153,7 +153,7 @@ class UpdateDownloaderTest {
 
         UpdateStatus status = downloader.downloadLatestRelease();
 
-        movedJar = plugin.getDataFolder().toPath().getParent().resolve("Flats-9.9.9.jar");
+        movedJar = plugin.getServer().getUpdateFolderFile().toPath().resolve("Flats-9.9.9.jar");
         assertEquals(UpdateStatus.FAILED, status);
         assertFalse(Files.exists(movedJar), "No target jar should be moved on failed download");
     }

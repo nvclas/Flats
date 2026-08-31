@@ -31,17 +31,17 @@ public class FlatsStorage {
 
     public static final String DATABASE_NAME = "flats.db";
     private static final String DATABASE_DIR = "database";
-    private final Flats plugin;
+    private final Flats flatsPlugin;
     private Connection connection;
 
-    public FlatsStorage(Flats plugin) {
-        this.plugin = plugin;
+    public FlatsStorage(Flats flatsPlugin) {
+        this.flatsPlugin = flatsPlugin;
         initConnection();
         migrate();
     }
 
     private void initConnection() {
-        File dataFolder = plugin.getDataFolder();
+        File dataFolder = flatsPlugin.getDataFolder();
         if (!dataFolder.exists() && !dataFolder.mkdir()) {
             throw new IllegalStateException("Failed to create plugin data folder: " + dataFolder.getAbsolutePath());
         }
@@ -59,11 +59,11 @@ public class FlatsStorage {
     }
 
     private @NotNull String getJdbcUrl() {
-        return "jdbc:sqlite:" + new File(plugin.getDataFolder(), DATABASE_NAME).getAbsolutePath();
+        return "jdbc:sqlite:" + new File(flatsPlugin.getDataFolder(), DATABASE_NAME).getAbsolutePath();
     }
 
     private void migrate() {
-        Flyway flyway = Flyway.configure(plugin.getClass().getClassLoader())
+        Flyway flyway = Flyway.configure(flatsPlugin.getClass().getClassLoader())
                 .dataSource(getJdbcUrl(), null, null)
                 .baselineOnMigrate(true)
                 .locations(DATABASE_DIR)
@@ -72,8 +72,8 @@ public class FlatsStorage {
         try {
             flyway.migrate();
         } catch (FlywayException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Database migration failed");
-            Bukkit.getPluginManager().disablePlugin(plugin);
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Database migration failed");
+            Bukkit.getPluginManager().disablePlugin(flatsPlugin);
         }
     }
 
@@ -89,7 +89,7 @@ public class FlatsStorage {
                 connection.close();
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not close database connection");
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not close database connection");
         }
     }
 
@@ -114,7 +114,7 @@ public class FlatsStorage {
             connection.commit();
         } catch (SQLException e) {
             rollbackTransaction(e);
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not save flat " + flat.getName());
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not save flat " + flat.getName());
         } finally {
             resetAutoCommit();
         }
@@ -174,7 +174,7 @@ public class FlatsStorage {
                 connection.rollback();
             }
         } catch (SQLException e) {
-            plugin.getLogger()
+            flatsPlugin.getLogger()
                     .log(Level.SEVERE, e,
                             () -> "Could not rollback transaction after error: " + originalException.getMessage());
         }
@@ -186,7 +186,7 @@ public class FlatsStorage {
                 connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not set auto-commit to true");
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not set auto-commit to true");
         }
     }
 
@@ -211,7 +211,7 @@ public class FlatsStorage {
 
             return new Flat(name, metadata.owner(), areas, trusted);
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not load flat " + name);
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not load flat " + name);
             return null;
         }
     }
@@ -275,7 +275,7 @@ public class FlatsStorage {
             ps.setString(1, name);
             ps.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not delete flat " + name);
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not delete flat " + name);
         }
     }
 
@@ -296,7 +296,8 @@ public class FlatsStorage {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get owned flats count for " + player.getName());
+            flatsPlugin.getLogger()
+                    .log(Level.SEVERE, e, () -> "Could not get owned flats count for " + player.getName());
         }
         return 0;
     }
@@ -316,7 +317,7 @@ public class FlatsStorage {
                 return rs.getInt(1) == 0;
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not check if database is empty");
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not check if database is empty");
         }
         return true;
     }
@@ -337,7 +338,7 @@ public class FlatsStorage {
                 return rs.next();
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not check if flat exists: " + name);
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not check if flat exists: " + name);
         }
         return false;
     }
@@ -359,7 +360,7 @@ public class FlatsStorage {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get total flats count");
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not get total flats count");
         }
         return 0;
     }
@@ -385,7 +386,7 @@ public class FlatsStorage {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get paginated flat names");
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not get paginated flat names");
         }
         return names;
     }
@@ -413,7 +414,7 @@ public class FlatsStorage {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get filtered flat names");
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not get filtered flat names");
         }
         return names;
     }
@@ -451,7 +452,7 @@ public class FlatsStorage {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get areas intersecting " + worldName);
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not get areas intersecting " + worldName);
         }
         return areas;
     }

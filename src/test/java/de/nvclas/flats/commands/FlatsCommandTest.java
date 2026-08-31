@@ -282,7 +282,7 @@ class FlatsCommandTest {
         @DisplayName("Player with permission receives selection item")
         void selectCommand() {
             executeCommandWithPermission("flats select", Permissions.EDIT_FLATS);
-            assertTrue(player.getInventory().contains(SelectionItem.getItem()),
+            assertTrue(player.getInventory().contains(SelectionItem.getItem(plugin)),
                     "Player should receive the selection item.");
         }
     }

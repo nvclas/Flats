@@ -15,9 +15,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class StickInteractListener implements Listener {
 
+    private final Flats flatsPlugin;
     private final SettingsConfig settingsConfig;
 
     public StickInteractListener(Flats flatsPlugin) {
+        this.flatsPlugin = flatsPlugin;
         this.settingsConfig = flatsPlugin.getSettingsConfig();
     }
 
@@ -27,7 +29,7 @@ public class StickInteractListener implements Listener {
 
         if (event.getItem() == null)
             return;
-        if (!event.getItem().isSimilar(SelectionItem.getItem()))
+        if (!event.getItem().isSimilar(SelectionItem.getItem(flatsPlugin)))
             return;
         if (!Permissions.canEditFlats(player, settingsConfig))
             return;

@@ -1,6 +1,7 @@
 package de.nvclas.flats.commands.flats;
 
 import de.nvclas.flats.Flats;
+import de.nvclas.flats.cache.FlatsCache;
 import de.nvclas.flats.commands.flats.subcommands.AddSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.ClaimSubCommand;
 import de.nvclas.flats.commands.flats.subcommands.InfoSubCommand;
@@ -36,12 +37,14 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private final Flats flatsPlugin;
     private final SettingsConfig settingsConfig;
+    private final FlatsCache flatsCache;
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
 
     public FlatsCommand(Flats flatsPlugin) {
         this.flatsPlugin = flatsPlugin;
         this.settingsConfig = flatsPlugin.getSettingsConfig();
+        this.flatsCache = flatsPlugin.getFlatsCache();
         registerSubCommands();
     }
 
@@ -176,7 +179,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     }
 
     private List<String> getFlatNameCompletions(String input) {
-        return flatsPlugin.getFlatsCache().getFilteredFlatNames(input, 50);
+        return flatsCache.getFilteredFlatNames(input, 50);
     }
 
     private List<String> getOnlinePlayerCompletions(String input) {
@@ -189,7 +192,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     }
 
     private List<String> getTrustedPlayerCompletions(Player player, String input) {
-        Flat flat = flatsPlugin.getFlatsCache().getFlatByLocation(player.getLocation());
+        Flat flat = flatsCache.getFlatByLocation(player.getLocation());
         if (flat == null) {
             return List.of();
         }

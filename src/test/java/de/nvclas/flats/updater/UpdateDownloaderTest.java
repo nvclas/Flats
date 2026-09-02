@@ -29,6 +29,27 @@ import static org.junit.jupiter.api.Assertions.fail;
 @DisplayName("UpdateDownloader Tests")
 class UpdateDownloaderTest {
 
+    private static final String MOCK_VERSION = "99.99";
+
+    private static final String RELEASE_WITHOUT_JAR_ASSET_JSON = """
+            {
+              "tag_name": "v2.1.0",
+              "assets": []
+            }
+            """;
+
+    private static final String RELEASE_VERSION_JSON_TEMPLATE = """
+            {
+              "tag_name": "v%s",
+              "assets": [
+                {
+                  "name": "Flats-%s.jar",
+                  "browser_download_url": "%s/downloads/Flats-%s.jar"
+                }
+              ]
+            }
+            """;
+
     @MockBukkitInject
     private ServerMock server;
     @MockBukkitInject
@@ -54,19 +75,11 @@ class UpdateDownloaderTest {
     void downloadLatestReleaseSuccess() throws Exception {
         byte[] jarBytes = "fake-jar".getBytes(StandardCharsets.UTF_8);
         httpServer = HttpServer.create(new InetSocketAddress(0), 0);
-        httpServer.createContext("/releases/latest", exchange -> respondJson(exchange, """
-                {
-                  "tag_name": "v9.9.9",
-                  "assets": [
-                    {
-                      "name": "Flats-9.9.9.jar",
-                      "browser_download_url": "%s/downloads/Flats-9.9.9.jar"
-                    }
-                  ]
-                }
-                """.formatted(baseUrl())));
-        httpServer.createContext("/downloads/Flats-9.9.9.jar", exchange -> {
-            exchange.getResponseHeaders().add("Content-Disposition", "attachment; filename=\"Flats-9.9.9.jar\"");
+        httpServer.createContext("/releases/latest", exchange -> respondJson(exchange,
+                RELEASE_VERSION_JSON_TEMPLATE.formatted(MOCK_VERSION, MOCK_VERSION, baseUrl(), MOCK_VERSION)));
+        httpServer.createContext("/downloads/Flats-" + MOCK_VERSION + ".jar", exchange -> {
+            exchange.getResponseHeaders()
+                    .add("Content-Disposition", "attachment; filename=\"Flats-" + MOCK_VERSION + ".jar\"");
             exchange.sendResponseHeaders(200, jarBytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(jarBytes);
@@ -78,7 +91,7 @@ class UpdateDownloaderTest {
 
         UpdateStatus status = downloader.downloadLatestRelease();
 
-        movedJar = plugin.getServer().getUpdateFolderFile().toPath().resolve("Flats-9.9.9.jar");
+        movedJar = plugin.getServer().getUpdateFolderFile().toPath().resolve("Flats-" + MOCK_VERSION + ".jar");
         assertEquals(UpdateStatus.SUCCESS, status);
         assertTrue(Files.exists(movedJar), "Downloaded jar should be moved to the update directory");
         assertEquals(jarBytes.length, Files.size(movedJar));
@@ -88,12 +101,7 @@ class UpdateDownloaderTest {
     @DisplayName("Returns not found when the release has no jar asset")
     void releaseWithoutJarAssetReturnsNotFound() throws Exception {
         httpServer = HttpServer.create(new InetSocketAddress(0), 0);
-        httpServer.createContext("/releases/latest", exchange -> respondJson(exchange, """
-                {
-                  "tag_name": "v2.1.0",
-                  "assets": []
-                }
-                """));
+        httpServer.createContext("/releases/latest", exchange -> respondJson(exchange, RELEASE_WITHOUT_JAR_ASSET_JSON));
         httpServer.start();
 
         UpdateDownloader downloader = new UpdateDownloader(plugin, baseUrl() + "/releases/latest");
@@ -108,17 +116,8 @@ class UpdateDownloaderTest {
     void alreadyUpToDate() throws Exception {
         String currentVersion = plugin.getPluginMeta().getVersion();
         httpServer = HttpServer.create(new InetSocketAddress(0), 0);
-        httpServer.createContext("/releases/latest", exchange -> respondJson(exchange, """
-                {
-                  "tag_name": "v%s",
-                  "assets": [
-                    {
-                      "name": "Flats-%s.jar",
-                      "browser_download_url": "%s/downloads/Flats-%s.jar"
-                    }
-                  ]
-                }
-                """.formatted(currentVersion, currentVersion, baseUrl(), currentVersion)));
+        httpServer.createContext("/releases/latest", exchange -> respondJson(exchange,
+                RELEASE_VERSION_JSON_TEMPLATE.formatted(currentVersion, currentVersion, baseUrl(), currentVersion)));
         httpServer.start();
 
         UpdateDownloader downloader = new UpdateDownloader(plugin, baseUrl() + "/releases/latest");
@@ -132,18 +131,9 @@ class UpdateDownloaderTest {
     @DisplayName("Returns failed when the jar download endpoint errors")
     void failedJarDownloadReturnsFailed() throws Exception {
         httpServer = HttpServer.create(new InetSocketAddress(0), 0);
-        httpServer.createContext("/releases/latest", exchange -> respondJson(exchange, """
-                {
-                  "tag_name": "v9.9.9",
-                  "assets": [
-                    {
-                      "name": "Flats-9.9.9.jar",
-                      "browser_download_url": "%s/downloads/Flats-9.9.9.jar"
-                    }
-                  ]
-                }
-                """.formatted(baseUrl())));
-        httpServer.createContext("/downloads/Flats-9.9.9.jar", exchange -> {
+        httpServer.createContext("/releases/latest", exchange -> respondJson(exchange,
+                RELEASE_VERSION_JSON_TEMPLATE.formatted(MOCK_VERSION, MOCK_VERSION, baseUrl(), MOCK_VERSION)));
+        httpServer.createContext("/downloads/Flats-" + MOCK_VERSION + ".jar", exchange -> {
             exchange.sendResponseHeaders(500, -1);
             exchange.close();
         });
@@ -153,7 +143,7 @@ class UpdateDownloaderTest {
 
         UpdateStatus status = downloader.downloadLatestRelease();
 
-        movedJar = plugin.getServer().getUpdateFolderFile().toPath().resolve("Flats-9.9.9.jar");
+        movedJar = plugin.getServer().getUpdateFolderFile().toPath().resolve("Flats-" + MOCK_VERSION + ".jar");
         assertEquals(UpdateStatus.FAILED, status);
         assertFalse(Files.exists(movedJar), "No target jar should be moved on failed download");
     }
@@ -177,14 +167,13 @@ class UpdateDownloaderTest {
                 return;
             }
             try (Stream<Path> paths = Files.walk(path)) {
-                paths.sorted((a, b) -> b.getNameCount() - a.getNameCount())
-                        .forEach(current -> {
-                            try {
-                                Files.deleteIfExists(current);
-                            } catch (IOException e) {
-                                fail("Could not delete test path: " + current);
-                            }
-                        });
+                paths.sorted((a, b) -> Integer.compare(b.getNameCount(), a.getNameCount())).forEach(current -> {
+                    try {
+                        Files.deleteIfExists(current);
+                    } catch (IOException e) {
+                        fail("Could not delete test path: " + current);
+                    }
+                });
             }
         } catch (IOException e) {
             fail("Could not walk test path: " + path);

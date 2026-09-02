@@ -44,8 +44,7 @@ public class SettingsConfig extends Config {
      *
      * @return the current language setting as a non-null {@code String}.
      */
-    @NotNull
-    public String getLanguage() {
+    public @NotNull String getLanguage() {
         return getConfigFile().getString(Paths.LANGUAGE, DEFAULT_LANGUAGE);
     }
 
@@ -101,8 +100,7 @@ public class SettingsConfig extends Config {
      *
      * @return the inside gamemode setting as a non-null {@code String}.
      */
-    @NotNull
-    public GameMode getInsideGamemode() {
+    public @NotNull GameMode getInsideGamemode() {
         return getGameMode(Paths.INSIDE_GAMEMODE, DEFAULT_INSIDE_GAMEMODE);
     }
 
@@ -113,13 +111,11 @@ public class SettingsConfig extends Config {
      *
      * @return the outside gamemode setting as a non-null {@code String}.
      */
-    @NotNull
-    public GameMode getOutsideGamemode() {
+    public @NotNull GameMode getOutsideGamemode() {
         return getGameMode(Paths.OUTSIDE_GAMEMODE, DEFAULT_OUTSIDE_GAMEMODE);
     }
 
-    @NotNull
-    private GameMode getGameMode(@NotNull String path, @NotNull GameMode defaultGameMode) {
+    private @NotNull GameMode getGameMode(@NotNull String path, @NotNull GameMode defaultGameMode) {
         String configuredGameMode = getConfigFile().getString(path);
 
         if (configuredGameMode == null) {

@@ -74,7 +74,7 @@ public class Flats extends JavaPlugin {
         //Migration
         MigrationManager.migrate(this, flatsStorage);
 
-        //Managers
+        //Cache
         flatsCache = new FlatsCache(flatsStorage);
 
         //Commands

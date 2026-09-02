@@ -66,7 +66,7 @@ public class Permissions {
      * @return {@code true} if the player has the required permission to edit flats; {@code false} otherwise.
      */
     public static boolean canEditFlats(@NotNull Player player, @NotNull SettingsConfig settingsConfig) {
-        if (settingsConfig.getAdvancedPermissions()) {
+        if (settingsConfig.isAdvancedPermissionsEnabled()) {
             return player.hasPermission(EDIT_FLATS);
         } else {
             return player.hasPermission(ADMIN);
@@ -83,7 +83,7 @@ public class Permissions {
      * @return {@code true} if the player is allowed to claim flats, {@code false} otherwise.
      */
     public static boolean canClaimFlats(@NotNull Player player, @NotNull SettingsConfig settingsConfig) {
-        if (settingsConfig.getAdvancedPermissions()) {
+        if (settingsConfig.isAdvancedPermissionsEnabled()) {
             return player.hasPermission(CLAIM_FLATS);
         } else {
             return true;
@@ -101,7 +101,7 @@ public class Permissions {
      * @return {@code true} if the player can view flats; {@code false} otherwise.
      */
     public static boolean canShowFlats(@NotNull Player player, @NotNull SettingsConfig settingsConfig) {
-        if (settingsConfig.getAdvancedPermissions()) {
+        if (settingsConfig.isAdvancedPermissionsEnabled()) {
             return player.hasPermission(SHOW_FLATS);
         } else {
             return true;
@@ -118,7 +118,7 @@ public class Permissions {
      * @return {@code true} if the player has the required permission to list flats; {@code false} otherwise.
      */
     public static boolean canListFlats(@NotNull Player player, @NotNull SettingsConfig settingsConfig) {
-        if (settingsConfig.getAdvancedPermissions()) {
+        if (settingsConfig.isAdvancedPermissionsEnabled()) {
             return player.hasPermission(LIST_FLATS);
         } else {
             return player.hasPermission(ADMIN);
@@ -137,7 +137,7 @@ public class Permissions {
      * @return {@code true} if the player is allowed to view flat information; {@code false} otherwise.
      */
     public static boolean canInfoFlats(@NotNull Player player, @NotNull SettingsConfig settingsConfig) {
-        if (settingsConfig.getAdvancedPermissions()) {
+        if (settingsConfig.isAdvancedPermissionsEnabled()) {
             return player.hasPermission(INFO_FLATS);
         } else {
             return true;
@@ -154,7 +154,7 @@ public class Permissions {
      * @return {@code true} if the player can be trusted; {@code false} otherwise.
      */
     public static boolean canTrustPlayers(@NotNull Player player, @NotNull SettingsConfig settingsConfig) {
-        if (settingsConfig.getAdvancedPermissions()) {
+        if (settingsConfig.isAdvancedPermissionsEnabled()) {
             return player.hasPermission(TRUST_PLAYERS);
         } else {
             return true;
@@ -172,7 +172,7 @@ public class Permissions {
      * @return {@code true} if the player can skip the command delay, {@code false} otherwise.
      */
     public static boolean canSkipCommandDelay(@NotNull Player player, @NotNull SettingsConfig settingsConfig) {
-        if (settingsConfig.getAdvancedPermissions()) {
+        if (settingsConfig.isAdvancedPermissionsEnabled()) {
             return player.hasPermission(SKIP_COMMAND_DELAY);
         } else {
             return player.hasPermission(ADMIN);

@@ -5,7 +5,6 @@ import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.events.FlatEnteredOrLeftEvent;
 import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Flat;
-import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -31,9 +30,9 @@ public class FlatEnteredOrLeftListener implements Listener {
         Flat flat = event.getFlat();
 
         if (event.hasEntered() && (flat.isOwner(player) || flat.isTrusted(player))) {
-            player.setGameMode(GameMode.valueOf(settings.getInsideGamemode().toUpperCase()));
+            player.setGameMode(settings.getInsideGamemode());
         } else {
-            player.setGameMode(GameMode.valueOf(settings.getOutsideGamemode().toUpperCase()));
+            player.setGameMode(settings.getOutsideGamemode());
         }
     }
 }

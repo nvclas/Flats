@@ -17,7 +17,7 @@ public class BlockPlaceListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        Flat flat = flatsCache.getFlatByLocation(event.getBlock().getLocation());
+        Flat flat = flatsCache.getFlatAtLocation(event.getBlock().getLocation());
         EventCancelChecker.cancelEventIfPlayerNotTrustedOrOwner(event, flat, event.getPlayer());
     }
 

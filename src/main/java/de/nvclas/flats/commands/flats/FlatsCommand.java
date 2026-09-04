@@ -179,7 +179,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     }
 
     private List<String> getFlatNameCompletions(String input) {
-        return flatsCache.getFilteredFlatNames(input, 50);
+        return flatsCache.getFilteredFlatNames(input, 10);
     }
 
     private List<String> getOnlinePlayerCompletions(String input) {
@@ -192,7 +192,7 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
     }
 
     private List<String> getTrustedPlayerCompletions(Player player, String input) {
-        Flat flat = flatsCache.getFlatByLocation(player.getLocation());
+        Flat flat = flatsCache.getFlatAtLocation(player.getLocation());
         if (flat == null) {
             return List.of();
         }

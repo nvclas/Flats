@@ -1,5 +1,7 @@
 package de.nvclas.flats.cache;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.Bukkit;
@@ -8,10 +10,10 @@ import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Represents a spatial index that organizes and queries {@link Flat} objects based on their
@@ -27,16 +29,13 @@ public class SpatialIndex {
      */
     public static final int GRID_SIZE = 16;
     /**
-     * A mapping of (world, grid x, grid z) to the list of {@link FlatArea} objects that intersect with those cells.
+     * A cache of (world, grid x, grid z) to the list of {@link FlatArea} objects that intersect with those cells.
      * If a key is present, the cell is considered "loaded". An empty list means no areas intersect the cell.
-     * Uses LRU policy to keep memory usage bounded.
      */
-    private final Map<GridKey, List<FlatArea>> gridMap = new LinkedHashMap<>(1024, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<GridKey, List<FlatArea>> eldest) {
-            return size() > 2000;
-        }
-    };
+    private final Cache<GridKey, List<FlatArea>> gridCache = Caffeine.newBuilder()
+            .maximumSize(50_000)
+            .expireAfterAccess(Duration.ofMinutes(30))
+            .build();
 
     /**
      * Adds an {@link Area} to the spatial index.
@@ -54,10 +53,11 @@ public class SpatialIndex {
         for (int gridX = minGridX; gridX <= maxGridX; gridX++) {
             for (int gridZ = minGridZ; gridZ <= maxGridZ; gridZ++) {
                 GridKey key = new GridKey(worldName, gridX, gridZ);
-                // Only add if the grid cell is already loaded, otherwise it will be loaded from DB when needed
-                if (gridMap.containsKey(key)) {
-                    gridMap.get(key).add(flatArea);
-                }
+                gridCache.asMap().computeIfPresent(key, (k, loadedAreas) -> {
+                    List<FlatArea> updated = new ArrayList<>(loadedAreas);
+                    updated.add(flatArea);
+                    return Collections.unmodifiableList(updated);
+                });
             }
         }
     }
@@ -70,9 +70,25 @@ public class SpatialIndex {
      * @param gridZ     The grid Z coordinate.
      * @param areas     The list of areas in this cell.
      */
-    public void setAreas(@NotNull String worldName, int gridX, int gridZ, List<Area> areas) {
-        GridKey key = new GridKey(worldName, gridX, gridZ);
-        gridMap.put(key, new ArrayList<>(areas.stream().map(FlatArea::fromArea).toList()));
+    public void setAreas(@NotNull String worldName, int gridX, int gridZ, @NotNull List<Area> areas) {
+        List<FlatArea> flatAreas = new ArrayList<>(areas.size());
+        for (Area area : areas) {
+            flatAreas.add(FlatArea.fromArea(area));
+        }
+
+        gridCache.put(new GridKey(worldName, gridX, gridZ), flatAreas);
+    }
+
+    /**
+     * Checks if a grid cell identified by the given {@link GridKey} is currently loaded.
+     * <p>
+     * A grid cell is considered loaded if it has an associated cached entry in the spatial index.
+     *
+     * @param key The {@link GridKey} identifying the grid cell. Must not be {@code null}.
+     * @return {@code true} if the grid cell is loaded, {@code false} otherwise.
+     */
+    public boolean isLoaded(@NotNull GridKey key) {
+        return gridCache.getIfPresent(key) != null;
     }
 
     /**
@@ -82,7 +98,7 @@ public class SpatialIndex {
      * @return True if the cell containing the location is loaded.
      */
     public boolean isLoaded(@NotNull Location location) {
-        return gridMap.containsKey(getGridKey(location));
+        return isLoaded(getGridKey(location));
     }
 
     /**
@@ -109,11 +125,11 @@ public class SpatialIndex {
      * @param flatName The name of the flat to be removed. Must not be null.
      */
     public void removeFlat(@NotNull String flatName) {
-        for (List<FlatArea> areas : gridMap.values()) {
-            areas.removeIf(area -> area.flatName().equals(flatName));
+        for (GridKey key : gridCache.asMap().keySet()) {
+            gridCache.asMap().computeIfPresent(key, (k, loadedAreas) -> loadedAreas.stream()
+                    .filter(area -> !area.flatName().equals(flatName))
+                    .toList());
         }
-
-        gridMap.entrySet().removeIf(entry -> entry.getValue().isEmpty());
     }
 
     /**
@@ -123,18 +139,8 @@ public class SpatialIndex {
      * @return The name of the flat that contains the specified {@link Location}, or {@code null} if none is found.
      */
     public @Nullable String getFlatNameAtLocation(@NotNull Location location) {
-        if (location.getWorld() == null) {
-            return null;
-        }
-        GridKey key = getGridKey(location);
-        List<FlatArea> candidates = gridMap.getOrDefault(key, List.of());
-
-        for (FlatArea area : candidates) {
-            if (area.isWithinBounds(location)) {
-                return area.flatName();
-            }
-        }
-        return null;
+        FlatArea flatArea = getFlatAreaAtLocation(location);
+        return flatArea != null ? flatArea.flatName() : null;
     }
 
     /**
@@ -144,20 +150,33 @@ public class SpatialIndex {
      * @return The {@link Area} that contains the specified {@link Location}, or {@code null} if none is found.
      */
     public @Nullable Area getAreaAtLocation(@NotNull Location location) {
-        if (location.getWorld() == null) {
-            return null;
-        }
-        GridKey key = getGridKey(location);
-        List<FlatArea> candidates = gridMap.getOrDefault(key, List.of());
-
-        for (FlatArea area : candidates) {
-            if (area.isWithinBounds(location)) {
-                return area.toArea();
-            }
-        }
-        return null;
+        FlatArea flatArea = getFlatAreaAtLocation(location);
+        return flatArea != null ? flatArea.toArea() : null;
     }
 
+    private @Nullable FlatArea getFlatAreaAtLocation(@NotNull Location location) {
+        World world = location.getWorld();
+        if (world == null) {
+            return null;
+        }
+
+        List<FlatArea> candidates = gridCache.getIfPresent(getGridKey(location));
+        if (candidates == null || candidates.isEmpty()) {
+            return null;
+        }
+
+        int x = location.getBlockX();
+        int y = location.getBlockY();
+        int z = location.getBlockZ();
+
+        for (FlatArea area : candidates) {
+            if (area.isWithinBounds(x, y, z)) {
+                return area;
+            }
+        }
+
+        return null;
+    }
 
     /**
      * Represents a simplified, lightweight version of an {@link Area} for use within the spatial index.
@@ -166,25 +185,11 @@ public class SpatialIndex {
     private record FlatArea(String flatName, String worldName, int minX, int maxX, int minY, int maxY, int minZ,
                             int maxZ) {
         public static FlatArea fromArea(Area area) {
-            return new FlatArea(area.getFlatName(),
-                    area.getWorldName(),
-                    area.getMinX(),
-                    area.getMaxX(),
-                    area.getMinY(),
-                    area.getMaxY(),
-                    area.getMinZ(),
-                    area.getMaxZ());
+            return new FlatArea(area.getFlatName(), area.getWorldName(), area.getMinX(), area.getMaxX(), area.getMinY(),
+                    area.getMaxY(), area.getMinZ(), area.getMaxZ());
         }
 
-        public boolean isWithinBounds(@NotNull Location location) {
-            if (location.getWorld() == null || !location.getWorld().getName().equals(worldName)) {
-                return false;
-            }
-
-            int x = location.getBlockX();
-            int y = location.getBlockY();
-            int z = location.getBlockZ();
-
+        public boolean isWithinBounds(int x, int y, int z) {
             return x >= minX && x <= maxX
                     && y >= minY && y <= maxY
                     && z >= minZ && z <= maxZ;
@@ -192,16 +197,15 @@ public class SpatialIndex {
 
         public @Nullable Area toArea() {
             World world = Bukkit.getWorld(worldName);
-            if (world == null)
+            if (world == null) {
                 return null;
-            return new Area(new Location(world, minX, minY, minZ),
-                    new Location(world, maxX, maxY, maxZ),
-                    flatName);
+            }
+            return new Area(new Location(world, minX, minY, minZ), new Location(world, maxX, maxY, maxZ), flatName);
         }
     }
 
     /**
-     * A key for the grid map, representing a grid cell's coordinates within a specific world.
+     * A key for the grid cache, representing a grid cell's coordinates within a specific world.
      */
     public record GridKey(String worldName, int x, int z) {
 

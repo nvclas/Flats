@@ -72,7 +72,7 @@ public class Flats extends JavaPlugin {
         flatsStorage = new FlatsStorage(this);
 
         //Migration
-        MigrationManager.migrate(this, flatsStorage);
+        MigrationManager.migrateYamlToDatabase(this, flatsStorage);
 
         //Cache
         flatsCache = new FlatsCache(flatsStorage);
@@ -114,9 +114,10 @@ public class Flats extends JavaPlugin {
         CommandDelayScheduler.stopAll();
 
         //Close storage
-        if (flatsStorage != null) {
-            flatsStorage.close();
-        }
+        flatsStorage.close();
+
+        // Shutdown cache executor service
+        flatsCache.shutdown();
 
         getLogger().log(Level.INFO, () -> "Schedulers stopped and storage closed");
     }

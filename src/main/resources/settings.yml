@@ -25,7 +25,7 @@ maxClaimableFlats: 3
 # Set this to true if you prefer to use fine-grained permissions using a permission management plugin
 useAdvancedPermissions: false
 
-# Automatic gamemode change on flat entering or leaving
+# Automatic gamemode change on flat entering or leaving (performance heavy)
 enableAutoGamemode: false # true if enabled, false if disabled
 insideFlatGamemode: creative # Possible values: survival, creative, adventure, spectator
 outsideFlatGamemode: adventure # Possible values: survival, creative, adventure, spectator

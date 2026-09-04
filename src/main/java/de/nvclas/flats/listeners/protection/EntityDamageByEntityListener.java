@@ -17,7 +17,7 @@ public class EntityDamageByEntityListener implements Listener {
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        Flat flat = flatsCache.getFlatByLocation(event.getEntity().getLocation());
+        Flat flat = flatsCache.getFlatAtLocation(event.getEntity().getLocation());
         EventCancelChecker.cancelEventIfPlayerNotTrustedOrOwner(event, flat, event.getDamager());
     }
 

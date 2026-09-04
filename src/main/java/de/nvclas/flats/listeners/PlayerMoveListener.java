@@ -23,13 +23,13 @@ public class PlayerMoveListener implements Listener {
 
     @EventHandler
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
-        if (!event.hasChangedBlock()) {
+        if (!event.hasChangedBlock() || !flatsPlugin.getSettingsConfig().isAutoGamemodeEnabled()) {
             return;
         }
 
         Player player = event.getPlayer();
         Flat currentFlat = playerFlats.get(player);
-        Flat newFlat = flatsPlugin.getFlatsCache().getFlatByLocation(event.getTo());
+        Flat newFlat = flatsPlugin.getFlatsCache().getFlatAtLocation(event.getTo());
 
         if (!Objects.equals(currentFlat, newFlat)) {
             if (currentFlat != null) {

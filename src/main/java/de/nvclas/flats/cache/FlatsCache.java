@@ -7,12 +7,19 @@ import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Manages a cache of flats and provides methods to interact with them.
@@ -37,6 +44,29 @@ public class FlatsCache {
             .expireAfterAccess(Duration.ofMinutes(30))
             .build();
 
+    /**
+     * Executor service dedicated to handling database-related tasks in a single-threaded context.
+     * <p>
+     * Uses a daemon thread named {@code Flats-DB-Worker} to ensure that database operations
+     * are executed sequentially, preventing concurrency issues and maintaining thread safety.
+     * <p>
+     * This executor is intended for internal use within the {@link FlatsCache} class to handle
+     * asynchronous operations such as prefetching and database querying.
+     * <p>
+     * Thread management and cleanup are automatically handled upon JVM shutdown due to the
+     * daemon thread configuration.
+     *
+     * @see ExecutorService
+     * @see Executors#newSingleThreadExecutor(java.util.concurrent.ThreadFactory)
+     */
+    private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor(r -> {
+        Thread thread = new Thread(r, "Flats-DB-Worker");
+        thread.setDaemon(true);
+        return thread;
+    });
+
+    private final Set<SpatialIndex.GridKey> loadingCells = ConcurrentHashMap.newKeySet();
+
     private final FlatsStorage flatsStorage;
     private final SpatialIndex spatialIndex = new SpatialIndex();
 
@@ -44,6 +74,55 @@ public class FlatsCache {
         this.flatsStorage = flatsStorage;
     }
 
+    /**
+     * Initiates asynchronous loading of the specified grid cell, fetching intersecting areas and updating the spatial index.
+     * <p>
+     * If the cell is already loaded or is in the process of being loaded, the method returns immediately without additional action.
+     *
+     * @param worldName The name of the world to which the grid cell belongs. Must not be {@code null}.
+     * @param gridX     The X-coordinate of the grid cell.
+     * @param gridZ     The Z-coordinate of the grid cell.
+     */
+    public void prefetchGridCell(@NotNull String worldName, int gridX, int gridZ) {
+        SpatialIndex.GridKey key = new SpatialIndex.GridKey(worldName, gridX, gridZ);
+        if (spatialIndex.isLoaded(key) || !loadingCells.add(key)) {
+            return;
+        }
+
+        int minX = gridX * SpatialIndex.GRID_SIZE;
+        int maxX = minX + SpatialIndex.GRID_SIZE - 1;
+        int minZ = gridZ * SpatialIndex.GRID_SIZE;
+        int maxZ = minZ + SpatialIndex.GRID_SIZE - 1;
+
+        CompletableFuture.supplyAsync(() -> flatsStorage.getAreasIntersecting(worldName, minX, maxX, minZ, maxZ),
+                dbExecutor).whenComplete((areas, throwable) -> {
+            loadingCells.remove(key);
+            if (throwable == null) {
+                spatialIndex.setAreas(worldName, gridX, gridZ, areas);
+            }
+        });
+    }
+
+    /**
+     * Initiates an orderly shutdown of the underlying executor service used by this component.
+     * <p>
+     * Ongoing tasks will be allowed to complete within a specified timeout period. If tasks
+     * do not terminate within the timeout, a forced shutdown will be attempted.
+     * <p>
+     * This method ensures proper resource cleanup and should be called to terminate the service
+     * when it is no longer needed.
+     */
+    public void shutdown() {
+        dbExecutor.shutdown();
+        try {
+            if (!dbExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                dbExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            dbExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
 
     /**
      * Retrieves a paginated list of flat names from the storage.
@@ -80,7 +159,7 @@ public class FlatsCache {
      * @param limit  The maximum number of flat names to include in the result. Should be a positive integer.
      * @return A {@link List} of flat names that match the provided prefix. An empty list is returned if no matches are found.
      */
-    public @NotNull List<String> getFilteredFlatNames(String prefix, int limit) {
+    public @NotNull List<String> getFilteredFlatNames(@NotNull String prefix, int limit) {
         return flatsStorage.getFilteredFlatNames(prefix, limit);
     }
 
@@ -94,7 +173,7 @@ public class FlatsCache {
      * @param maxZ      the maximum Z-coordinate of the boundary.
      * @return a list of {@link Area} objects that intersect with the specified boundary; an empty list if no intersection is found.
      */
-    public List<Area> getAreasIntersecting(String worldName, int minX, int maxX, int minZ, int maxZ) {
+    public @NotNull List<Area> getAreasIntersecting(@NotNull String worldName, int minX, int maxX, int minZ, int maxZ) {
         return flatsStorage.getAreasIntersecting(worldName, minX, maxX, minZ, maxZ);
     }
 
@@ -143,7 +222,7 @@ public class FlatsCache {
      * @param location The {@link Location} to search for a flat. Must not be null.
      * @return The {@link Flat} located at the given {@link Location}, or {@code null} if none exists.
      */
-    public @Nullable Flat getFlatByLocation(@NotNull Location location) {
+    public @Nullable Flat getFlatAtLocation(@NotNull Location location) {
         ensureLoaded(location);
         String name = spatialIndex.getFlatNameAtLocation(location);
         return name != null ? getFlat(name) : null;
@@ -163,24 +242,19 @@ public class FlatsCache {
     }
 
     /**
-     * Ensures that the spatial grid cell containing the provided location is loaded with the associated areas.
-     * If the cell is not yet loaded, areas intersecting the cell are retrieved and set in the spatial index.
+     * Ensures that the spatial grid cell associated with the given location is loaded.
+     * If the grid cell is not loaded, it is prefetched.
      *
-     * @param location The location for which the spatial grid cell should be loaded. Must not be null.
+     * @param location the {@link Location} whose associated grid cell is to be checked and loaded if necessary. Must not be {@code null}.
      */
     private void ensureLoaded(@NotNull Location location) {
-        if (location.getWorld() == null) {
+        World world = location.getWorld();
+        if (world == null) {
             return;
         }
-        if (!spatialIndex.isLoaded(location)) {
-            SpatialIndex.GridKey key = spatialIndex.getGridKey(location);
-            int minX = key.x() * SpatialIndex.GRID_SIZE;
-            int maxX = minX + SpatialIndex.GRID_SIZE - 1;
-            int minZ = key.z() * SpatialIndex.GRID_SIZE;
-            int maxZ = minZ + SpatialIndex.GRID_SIZE - 1;
-
-            List<Area> areas = flatsStorage.getAreasIntersecting(location.getWorld().getName(), minX, maxX, minZ, maxZ);
-            spatialIndex.setAreas(location.getWorld().getName(), key.x(), key.z(), areas);
+        SpatialIndex.GridKey key = spatialIndex.getGridKey(location);
+        if (!spatialIndex.isLoaded(key)) {
+            prefetchGridCell(world.getName(), key.x(), key.z());
         }
     }
 

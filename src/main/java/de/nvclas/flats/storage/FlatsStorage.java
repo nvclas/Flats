@@ -3,7 +3,6 @@ package de.nvclas.flats.storage;
 import de.nvclas.flats.Flats;
 import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.flywaydb.core.Flyway;
@@ -453,7 +452,6 @@ public class FlatsStorage {
                   AND min_x <= ?
                   AND max_z >= ?
                   AND min_z <= ?""";
-        Bukkit.broadcast(Component.text("DB CALL MADE"));
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, worldName);
             ps.setInt(2, minX);

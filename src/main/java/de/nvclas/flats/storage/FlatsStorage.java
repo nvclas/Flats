@@ -213,10 +213,10 @@ public class FlatsStorage {
                 return null;
             }
 
-            List<Area> areas = loadAreas(name);
-            List<OfflinePlayer> trusted = loadTrustedPlayers(name);
+            List<Area> areas = loadAreas(metadata.name());
+            List<OfflinePlayer> trusted = loadTrustedPlayers(metadata.name());
 
-            return new Flat(name, metadata.owner(), areas, trusted);
+            return new Flat(metadata.name(), metadata.owner(), areas, trusted);
         } catch (SQLException e) {
             flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not load flat " + name);
             return null;
@@ -224,15 +224,17 @@ public class FlatsStorage {
     }
 
     private @Nullable FlatMetadata loadMetadata(@NotNull String flatName) throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement("SELECT owner_uuid FROM flats WHERE name = ?")) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT name, owner_uuid FROM flats WHERE name = ? COLLATE NOCASE")) {
             ps.setString(1, flatName);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
+                    String name = rs.getString("name");
                     String uuidStr = rs.getString("owner_uuid");
                     OfflinePlayer owner = (uuidStr != null && !uuidStr.isEmpty())
                             ? Bukkit.getOfflinePlayer(UUID.fromString(uuidStr))
                             : null;
-                    return new FlatMetadata(true, owner);
+                    return new FlatMetadata(name, owner);
                 }
             }
         }
@@ -278,7 +280,7 @@ public class FlatsStorage {
      * @param name the name of the flat to delete; must not be {@code null}.
      */
     public synchronized void deleteFlat(@NotNull String name) {
-        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM flats WHERE name = ?")) {
+        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM flats WHERE name = ? COLLATE NOCASE")) {
             ps.setString(1, name);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -318,15 +320,7 @@ public class FlatsStorage {
      * @return {@code true} if the database is empty or an error occurs; {@code false} otherwise.
      */
     public synchronized boolean isEmpty() {
-        try (Statement statement = connection.createStatement();
-                ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM flats")) {
-            if (rs.next()) {
-                return rs.getInt(1) == 0;
-            }
-        } catch (SQLException e) {
-            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not check if database is empty");
-        }
-        return true;
+        return getTotalFlatsCount() == 0;
     }
 
     /**
@@ -339,7 +333,7 @@ public class FlatsStorage {
      * @return {@code true} if a flat with the given name exists, {@code false} otherwise.
      */
     public synchronized boolean existsFlat(@NotNull String name) {
-        try (PreparedStatement ps = connection.prepareStatement("SELECT 1 FROM flats WHERE name = ?")) {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT 1 FROM flats WHERE name = ? COLLATE NOCASE")) {
             ps.setString(1, name);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
@@ -481,6 +475,6 @@ public class FlatsStorage {
         return Area.fromRawData(worldName, new Area.Bounds(minX, maxX, minY, maxY, minZ, maxZ), flatName);
     }
 
-    private record FlatMetadata(boolean exists, @Nullable OfflinePlayer owner) {
+    private record FlatMetadata(@NotNull String name, @Nullable OfflinePlayer owner) {
     }
 }

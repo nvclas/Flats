@@ -27,12 +27,10 @@ public class StickInteractListener implements Listener {
     public void onStickInteraction(@NotNull PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (event.getItem() == null)
+        if (event.getItem() == null || !event.getItem().isSimilar(SelectionItem.getItem(flatsPlugin))
+                || !Permissions.canEditFlats(player, settingsConfig)) {
             return;
-        if (!event.getItem().isSimilar(SelectionItem.getItem(flatsPlugin)))
-            return;
-        if (!Permissions.canEditFlats(player, settingsConfig))
-            return;
+        }
 
         event.setCancelled(true);
         Selection selection = Selection.getSelection(player);

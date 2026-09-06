@@ -184,7 +184,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
 
     private List<String> getOnlinePlayerCompletions(String input) {
         String lowerInput = input.toLowerCase(Locale.ROOT);
-        return flatsPlugin.getServer().getOnlinePlayers()
+        return flatsPlugin.getServer()
+                .getOnlinePlayers()
                 .stream()
                 .map(Player::getName)
                 .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(lowerInput))
@@ -198,7 +199,8 @@ public class FlatsCommand implements CommandExecutor, TabCompleter {
         }
 
         String lowerInput = input.toLowerCase(Locale.ROOT);
-        return flat.getTrusted().stream()
+        return flat.getTrusted()
+                .stream()
                 .map(OfflinePlayer::getName)
                 .filter(Objects::nonNull)
                 .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(lowerInput))

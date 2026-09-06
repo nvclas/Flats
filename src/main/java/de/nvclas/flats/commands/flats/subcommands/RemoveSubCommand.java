@@ -6,6 +6,7 @@ import de.nvclas.flats.commands.flats.SubCommand;
 import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
+import de.nvclas.flats.volumes.Flat;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,12 +30,12 @@ public class RemoveSubCommand implements SubCommand {
             player.sendMessage(Flats.PREFIX + I18n.translate("remove.usage"));
             return;
         }
-        String flatToRemove = args[1];
-        if (!flatsCache.existsFlat(flatToRemove)) {
+        Flat flatToRemove = flatsCache.getFlat(args[1]);
+        if (flatToRemove == null) {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_not_exist"));
             return;
         }
-        flatsCache.delete(flatToRemove);
-        player.sendMessage(Flats.PREFIX + I18n.translate("remove.success", flatToRemove));
+        flatsCache.delete(flatToRemove.getName());
+        player.sendMessage(Flats.PREFIX + I18n.translate("remove.success", flatToRemove.getName()));
     }
 }

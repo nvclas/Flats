@@ -29,10 +29,12 @@ public class FlatEnteredOrLeftListener implements Listener {
 
         Flat flat = event.getFlat();
 
-        if (event.hasEntered() && (flat.isOwner(player) || flat.isTrusted(player))) {
-            player.setGameMode(settings.getInsideGamemode());
-        } else {
-            player.setGameMode(settings.getOutsideGamemode());
+        if (event.hasEntered()) {
+            if (flat.isOwner(player) || flat.isTrusted(player)) {
+                player.setGameMode(settings.getInsideGamemode());
+            }
+            return;
         }
+        player.setGameMode(settings.getOutsideGamemode());
     }
 }

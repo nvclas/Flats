@@ -35,7 +35,7 @@ public class RemoveSubCommand implements SubCommand {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.flat_not_exist"));
             return;
         }
-        flatsCache.delete(flatToRemove.getName());
+        flatsCache.delete(flatToRemove);
         player.sendMessage(Flats.PREFIX + I18n.translate("remove.success", flatToRemove.getName()));
     }
 }

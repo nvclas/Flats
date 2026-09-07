@@ -1,8 +1,5 @@
 DROP INDEX IF EXISTS idx_flats_owner_uuid;
-CREATE INDEX idx_flats_owner_uuid ON flats (owner_uuid)
-    WHERE owner_uuid IS NOT NULL;
-
-CREATE INDEX IF NOT EXISTS idx_flats_name_nocase ON flats (name COLLATE NOCASE);
+CREATE INDEX idx_flats_owner_uuid ON flats (owner_uuid) WHERE owner_uuid IS NOT NULL;
 
 DROP INDEX IF EXISTS idx_areas_spatial;
 CREATE INDEX idx_areas_spatial

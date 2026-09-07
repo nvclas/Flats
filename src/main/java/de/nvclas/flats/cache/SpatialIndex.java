@@ -76,7 +76,7 @@ public class SpatialIndex {
             flatAreas.add(FlatArea.fromArea(area));
         }
 
-        gridCache.put(new GridKey(worldName, gridX, gridZ), flatAreas);
+        gridCache.put(new GridKey(worldName, gridX, gridZ), List.copyOf(flatAreas));
     }
 
     /**

@@ -13,9 +13,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,7 +41,7 @@ public class FlatsCache {
      * <p>
      * Used to optimize retrieval of frequently accessed flats and reduce direct access to storage.
      */
-    private final Cache<String, Flat> flatCache = Caffeine.newBuilder()
+    private final Cache<String, Flat> cache = Caffeine.newBuilder()
             .maximumSize(1_000)
             .expireAfterAccess(Duration.ofMinutes(30))
             .build();
@@ -65,7 +67,7 @@ public class FlatsCache {
         return thread;
     });
 
-    private final Set<SpatialIndex.GridKey> loadingCells = ConcurrentHashMap.newKeySet();
+    private final ConcurrentHashMap<SpatialIndex.GridKey, CompletableFuture<Void>> loadingFutures = new ConcurrentHashMap<>();
 
     private final FlatsStorage flatsStorage;
     private final SpatialIndex spatialIndex = new SpatialIndex();
@@ -77,30 +79,70 @@ public class FlatsCache {
     /**
      * Initiates asynchronous loading of the specified grid cell, fetching intersecting areas and updating the spatial index.
      * <p>
-     * If the cell is already loaded or is in the process of being loaded, the method returns immediately without additional action.
+     * If the cell is already loaded, returns a completed future. If the cell is currently being loaded, returns the existing future.
      *
      * @param worldName The name of the world to which the grid cell belongs. Must not be {@code null}.
      * @param gridX     The X-coordinate of the grid cell.
      * @param gridZ     The Z-coordinate of the grid cell.
+     * @return A {@link CompletableFuture} tracking the asynchronous load operation.
      */
-    public void prefetchGridCell(@NotNull String worldName, int gridX, int gridZ) {
+    public CompletableFuture<Void> prefetchGridCell(@NotNull String worldName, int gridX, int gridZ) {
         SpatialIndex.GridKey key = new SpatialIndex.GridKey(worldName, gridX, gridZ);
-        if (spatialIndex.isLoaded(key) || !loadingCells.add(key)) {
-            return;
+        if (spatialIndex.isLoaded(key)) {
+            return CompletableFuture.completedFuture(null);
         }
 
-        int minX = gridX * SpatialIndex.GRID_SIZE;
-        int maxX = minX + SpatialIndex.GRID_SIZE - 1;
-        int minZ = gridZ * SpatialIndex.GRID_SIZE;
-        int maxZ = minZ + SpatialIndex.GRID_SIZE - 1;
+        return loadingFutures.computeIfAbsent(key, k -> {
+            int minX = gridX * SpatialIndex.GRID_SIZE;
+            int maxX = minX + SpatialIndex.GRID_SIZE - 1;
+            int minZ = gridZ * SpatialIndex.GRID_SIZE;
+            int maxZ = minZ + SpatialIndex.GRID_SIZE - 1;
 
-        CompletableFuture.supplyAsync(() -> flatsStorage.getAreasIntersecting(worldName, minX, maxX, minZ, maxZ),
-                dbExecutor).whenComplete((areas, throwable) -> {
-            loadingCells.remove(key);
-            if (throwable == null) {
-                spatialIndex.setAreas(worldName, gridX, gridZ, areas);
-            }
+            return CompletableFuture.supplyAsync(
+                            () -> flatsStorage.getAreasIntersecting(worldName, minX, maxX, minZ, maxZ),
+                            dbExecutor
+                    )
+                    .thenAccept(areas -> spatialIndex.setAreas(worldName, gridX, gridZ, areas))
+                    .whenComplete((res, ex) -> loadingFutures.remove(key));
         });
+    }
+
+    /**
+     * Asynchronously prefetches the grid cell containing the specified location.
+     *
+     * @param location The location whose grid cell should be prefetched.
+     * @return A {@link CompletableFuture} tracking the asynchronous load operation.
+     */
+    public CompletableFuture<Void> prefetchLocation(@NotNull Location location) {
+        World world = location.getWorld();
+        if (world == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+        SpatialIndex.GridKey key = spatialIndex.getGridKey(location);
+        return prefetchGridCell(world.getName(), key.x(), key.z());
+    }
+
+    /**
+     * Asynchronously prefetches the grid cell containing the specified location as well as all surrounding
+     * grid cells within the specified radius.
+     *
+     * @param location The center location.
+     * @param radius   The radius in grid cells (e.g. 1 for a 3x3 grid).
+     */
+    public void prefetchSurroundingGridCells(@NotNull Location location, int radius) {
+        World world = location.getWorld();
+        if (world == null) {
+            return;
+        }
+        int centerGridX = Math.floorDiv(location.getBlockX(), SpatialIndex.GRID_SIZE);
+        int centerGridZ = Math.floorDiv(location.getBlockZ(), SpatialIndex.GRID_SIZE);
+        String worldName = world.getName();
+
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                prefetchGridCell(worldName, centerGridX + dx, centerGridZ + dz);
+            }
+        }
     }
 
     /**
@@ -187,14 +229,15 @@ public class FlatsCache {
      * @return The {@link Flat} associated with the specified name, or {@code null} if no such flat exists.
      */
     public @Nullable Flat getFlat(@NotNull String name) {
-        Flat flat = flatCache.getIfPresent(name);
+        String normalizedName = normalizeName(name);
+        Flat flat = cache.getIfPresent(normalizedName);
         if (flat != null) {
             return flat;
         }
 
         flat = flatsStorage.loadFlat(name);
         if (flat != null) {
-            flatCache.put(name, flat);
+            cache.put(normalizedName, flat);
         }
         return flat;
     }
@@ -243,7 +286,7 @@ public class FlatsCache {
 
     /**
      * Ensures that the spatial grid cell associated with the given location is loaded.
-     * If the grid cell is not loaded, it is prefetched.
+     * If the grid cell is not loaded, it is prefetched and waited upon until loading completes.
      *
      * @param location the {@link Location} whose associated grid cell is to be checked and loaded if necessary. Must not be {@code null}.
      */
@@ -253,9 +296,19 @@ public class FlatsCache {
             return;
         }
         SpatialIndex.GridKey key = spatialIndex.getGridKey(location);
-        if (!spatialIndex.isLoaded(key)) {
-            prefetchGridCell(world.getName(), key.x(), key.z());
+        if (spatialIndex.isLoaded(key)) {
+            return;
         }
+        CompletableFuture<Void> future = prefetchGridCell(world.getName(), key.x(), key.z());
+        try {
+            future.join();
+        } catch (CancellationException | CompletionException ignored) {
+            // ignored
+        }
+    }
+
+    private @NotNull String normalizeName(@NotNull String name) {
+        return name.toLowerCase(Locale.ROOT);
     }
 
     /**
@@ -286,26 +339,19 @@ public class FlatsCache {
         }
         Flat newFlat = new Flat(name, area);
         flatsStorage.saveFlat(newFlat);
-        flatCache.put(name, newFlat);
+        cache.put(normalizeName(name), newFlat);
         spatialIndex.addArea(area);
     }
 
     /**
-     * Deletes a flat with the specified name.
-     * <p>
-     * This method removes the flat from persistent storage, invalidates its cache entry, and
-     * updates the spatial index to reflect the deletion.
+     * Deletes the specified flat from storage and updates associated components.
      *
-     * @param name the name of the flat to delete; must not be {@code null}.
-     * @throws IllegalStateException if no flat exists with the given name.
+     * @param flat the flat to be deleted; must not be {@code null}.
      */
-    public void delete(@NotNull String name) throws IllegalStateException {
-        if (!existsFlat(name)) {
-            throw new IllegalStateException("No flat exists with the given name: " + name);
-        }
-        flatsStorage.deleteFlat(name);
-        flatCache.invalidate(name);
-        spatialIndex.removeFlat(name);
+    public void delete(@NotNull Flat flat) throws IllegalStateException {
+        flatsStorage.deleteFlat(flat.getName());
+        cache.invalidate(normalizeName(flat.getName()));
+        spatialIndex.removeFlat(flat.getName());
     }
 
     /**
@@ -318,7 +364,7 @@ public class FlatsCache {
      * @return {@code true} if a flat with the given name exists, {@code false} otherwise.
      */
     public boolean existsFlat(@NotNull String name) {
-        if (flatCache.getIfPresent(name) != null) {
+        if (cache.getIfPresent(normalizeName(name)) != null) {
             return true;
         }
         return flatsStorage.existsFlat(name);
@@ -334,7 +380,7 @@ public class FlatsCache {
      */
     public void save(@NotNull Flat flat) {
         flatsStorage.saveFlat(flat);
-        flatCache.put(flat.getName(), flat);
+        cache.put(normalizeName(flat.getName()), flat);
     }
 
     /**

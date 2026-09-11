@@ -113,11 +113,11 @@ public class Flats extends JavaPlugin {
         //Stop schedulers
         CommandDelayScheduler.stopAll();
 
-        //Close storage
-        flatsStorage.close();
-
         // Shutdown cache executor service
         flatsCache.shutdown();
+
+        //Close storage
+        flatsStorage.close();
 
         getLogger().log(Level.INFO, () -> "Schedulers stopped and storage closed");
     }

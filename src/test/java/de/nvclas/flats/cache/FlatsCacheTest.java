@@ -89,7 +89,6 @@ class FlatsCacheTest {
         Location to = new Location(world, 20, 64, 20);
         new PlayerSimulation(player).simulatePlayerMove(to);
 
-        // Verify that the flat at destination can be retrieved seamlessly
         Flat atTo = flatsCache.getFlatAtLocation(to);
         assertNull(atTo);
     }

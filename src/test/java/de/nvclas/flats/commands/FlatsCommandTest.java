@@ -51,13 +51,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 @DisplayName("Flats Command Tests")
 class FlatsCommandTest {
 
-    // Constants
     private static final int SELECTION_VOLUME = 1000;
     private static final int FLAT_SIZE = 10;
     private static final int MAX_Y_COORD = 100;
     private static final int FAR_AWAY_COORD = 1000;
 
-    // Test fixtures
     @MockBukkitInject
     private ServerMock server;
     @MockBukkitInject

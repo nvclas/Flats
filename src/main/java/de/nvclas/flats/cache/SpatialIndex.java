@@ -27,13 +27,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SpatialIndex {
 
-    private static final int MAX_CACHED_GRIDS = 50_000;
-    private static final Duration CACHE_EXPIRATION = Duration.ofMinutes(30);
-
     /**
      * The size of each grid cell in blocks.
      */
     public static final int GRID_SIZE = 16;
+    private static final int MAX_CACHED_GRIDS = 50_000;
+    private static final Duration CACHE_EXPIRATION = Duration.ofMinutes(30);
     /**
      * A cache of (world, grid x, grid z) to the list of {@link FlatArea} objects that intersect with those cells.
      * If a key is present, the cell is considered "loaded". An empty list means no areas intersect the cell.

@@ -95,7 +95,7 @@ public class FlatsCache {
             return CompletableFuture.completedFuture(null);
         }
 
-        return loadingFutures.computeIfAbsent(key, k -> {
+        CompletableFuture<Void> future = loadingFutures.computeIfAbsent(key, k -> {
             int minX = gridX * SpatialIndex.GRID_SIZE;
             int maxX = minX + SpatialIndex.GRID_SIZE - 1;
             int minZ = gridZ * SpatialIndex.GRID_SIZE;
@@ -103,9 +103,11 @@ public class FlatsCache {
 
             return CompletableFuture.supplyAsync(
                             () -> flatsStorage.getAreasIntersecting(worldName, minX, maxX, minZ, maxZ), dbExecutor)
-                    .thenAccept(areas -> spatialIndex.setAreas(worldName, gridX, gridZ, areas))
-                    .whenComplete((res, ex) -> loadingFutures.remove(key));
+                    .thenAccept(areas -> spatialIndex.setAreas(worldName, gridX, gridZ, areas));
         });
+
+        future.whenComplete((res, ex) -> loadingFutures.remove(key, future));
+        return future;
     }
 
     /**

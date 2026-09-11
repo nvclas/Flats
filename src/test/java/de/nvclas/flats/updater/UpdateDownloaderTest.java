@@ -89,7 +89,7 @@ class UpdateDownloaderTest {
 
         UpdateDownloader downloader = new UpdateDownloader(plugin, baseUrl() + "/releases/latest");
 
-        UpdateStatus status = downloader.downloadLatestRelease();
+        UpdateStatus status = downloader.downloadLatestReleaseAsync().join();
 
         movedJar = plugin.getServer().getUpdateFolderFile().toPath().resolve("Flats-" + MOCK_VERSION + ".jar");
         assertEquals(UpdateStatus.SUCCESS, status);
@@ -106,7 +106,7 @@ class UpdateDownloaderTest {
 
         UpdateDownloader downloader = new UpdateDownloader(plugin, baseUrl() + "/releases/latest");
 
-        UpdateStatus status = downloader.downloadLatestRelease();
+        UpdateStatus status = downloader.downloadLatestReleaseAsync().join();
 
         assertEquals(UpdateStatus.NOT_FOUND, status);
     }
@@ -122,7 +122,7 @@ class UpdateDownloaderTest {
 
         UpdateDownloader downloader = new UpdateDownloader(plugin, baseUrl() + "/releases/latest");
 
-        UpdateStatus status = downloader.downloadLatestRelease();
+        UpdateStatus status = downloader.downloadLatestReleaseAsync().join();
 
         assertEquals(UpdateStatus.ALREADY_UP_TO_DATE, status);
     }
@@ -141,7 +141,7 @@ class UpdateDownloaderTest {
 
         UpdateDownloader downloader = new UpdateDownloader(plugin, baseUrl() + "/releases/latest");
 
-        UpdateStatus status = downloader.downloadLatestRelease();
+        UpdateStatus status = downloader.downloadLatestReleaseAsync().join();
 
         movedJar = plugin.getServer().getUpdateFolderFile().toPath().resolve("Flats-" + MOCK_VERSION + ".jar");
         assertEquals(UpdateStatus.FAILED, status);

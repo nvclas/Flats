@@ -1,9 +1,12 @@
 package de.nvclas.flats.cache;
 
 import de.nvclas.flats.Flats;
+import de.nvclas.flats.events.FlatEnteredOrLeftEvent;
 import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.Location;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +21,7 @@ import org.mockbukkit.mockbukkit.simulate.entity.PlayerSimulation;
 import org.mockbukkit.mockbukkit.world.WorldMock;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -91,6 +95,29 @@ class FlatsCacheTest {
 
         Flat atTo = flatsCache.getFlatAtLocation(to);
         assertNull(atTo);
+    }
+
+    @Test
+    @DisplayName("Player movement reloads an expired flat entry before firing the enter event")
+    void testPlayerMoveReloadsFlatWhenOnlySpatialCellIsLoaded() {
+        Area area = new Area(new Location(world, 100, 10, 100), new Location(world, 110, 20, 110), "movement_flat");
+        plugin.getFlatsStorage().saveFlat(new Flat("movement_flat", area));
+
+        flatsCache.prefetchLocation(new Location(world, 105, 15, 105)).join();
+
+        AtomicInteger enterEvents = new AtomicInteger();
+        server.getPluginManager().registerEvents(new Listener() {
+            @EventHandler
+            public void onFlatEnteredOrLeft(FlatEnteredOrLeftEvent event) {
+                if (event.hasEntered()) {
+                    enterEvents.incrementAndGet();
+                }
+            }
+        }, plugin);
+
+        new PlayerSimulation(player).simulatePlayerMove(new Location(world, 105, 15, 105));
+
+        assertEquals(1, enterEvents.get(), "Entering must reload the flat and fire an event.");
     }
 
     @Test

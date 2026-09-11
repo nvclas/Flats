@@ -274,11 +274,6 @@ public class FlatsCache {
         return name != null ? getFlat(name) : null;
     }
 
-    public @Nullable Flat getCachedFlatAtLocation(@NotNull Location location) {
-        String name = spatialIndex.getFlatNameAtLocation(location);
-        return name != null ? cache.getIfPresent(normalizeName(name)) : null;
-    }
-
     /**
      * Retrieves the {@link Area} at the specified {@link Location}, if any exists.
      * <p>

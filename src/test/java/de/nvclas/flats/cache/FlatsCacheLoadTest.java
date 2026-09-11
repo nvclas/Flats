@@ -158,7 +158,8 @@ class FlatsCacheLoadTest {
         void benchmarkRemoveFlatScalability() {
             int unrelatedCellCount = 2_000;
 
-            List<CompletableFuture<Void>> loadFutures = new ArrayList<>(unrelatedCellCount);
+            List<CompletableFuture<Void>> loadFutures = new ArrayList<>(unrelatedCellCount + 1);
+            loadFutures.add(flatsCache.prefetchGridCell("world", 0, 0));
             for (int i = 0; i < unrelatedCellCount; i++) {
                 loadFutures.add(flatsCache.prefetchGridCell("world", 10_000 + i, 10_000 + i));
             }

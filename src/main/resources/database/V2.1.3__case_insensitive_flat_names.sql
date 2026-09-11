@@ -1,38 +1,20 @@
--- 1. Automatically resolve duplicates by appending underscores iteratively
-WITH RECURSIVE
--- Find all duplicate names (ignoring case) keeping the first occurrence intact
-duplicates AS (SELECT name AS      original_name,
-                      ROW_NUMBER() OVER (
-                          PARTITION BY LOWER(name)
-                          ORDER BY ROWID
-                          ) AS rn
-               FROM flats),
--- Recursively append '_' until a free name is found
-resolved (original_name, current_name) AS (SELECT original_name,
-                                                  original_name || '_' AS current_name
-                                           FROM duplicates
-                                           WHERE rn > 1
-
-                                           UNION ALL
-
-                                           SELECT r.original_name,
-                                                  r.current_name || '_'
-                                           FROM resolved r
-                                           WHERE EXISTS (SELECT 1
-                                                         FROM flats f
-                                                         WHERE LOWER(f.name) = LOWER(r.current_name))),
--- Select only the final unique name for each original row
-final_names AS (SELECT original_name,
-                       current_name,
-                       ROW_NUMBER() OVER (
-                           PARTITION BY original_name
-                           ORDER BY LENGTH(current_name) DESC
-                           ) AS max_rn
-                FROM resolved)
+-- 1. Resolve case-insensitive duplicates deterministically.
+--    In groups of names that differ only by case, the row with the lowest ROWID
+--    keeps its original name. All other rows get a suffix based on their position
+--    ('_dup1', '_dup2', etc.).
+--    Since ROW_NUMBER() gives every duplicate a unique index,
+--    renamed rows can never collide with each other.
+WITH duplicates AS (SELECT name  AS original_name,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY LOWER(name)
+                               ORDER BY ROWID
+                               ) AS rn
+                    FROM flats)
 UPDATE flats
-SET name = fn.current_name FROM final_names fn
-WHERE flats.name = fn.original_name
-  AND fn.max_rn = 1;
+SET name = flats.name || '_dup' || (d.rn - 1)
+FROM duplicates d
+WHERE flats.name = d.original_name
+  AND d.rn > 1;
 
--- 2. Create the unique index on the cleaned dataset
+-- 2. Create the unique index enforcing case-insensitive uniqueness going forward.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_flats_name_unique_nocase ON flats (name COLLATE NOCASE);

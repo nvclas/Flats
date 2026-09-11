@@ -130,7 +130,7 @@ public class FlatsStorage {
     private void upsertFlatMetadata(@NotNull Flat flat) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement("""
                 INSERT INTO flats (name, owner_uuid) VALUES (?, ?)
-                ON CONFLICT(name) DO UPDATE SET owner_uuid = EXCLUDED.owner_uuid""")) {
+                ON CONFLICT(name COLLATE NOCASE) DO UPDATE SET owner_uuid = EXCLUDED.owner_uuid""")) {
             ps.setString(1, flat.getName());
             ps.setString(2, flat.getOwner() == null ? null : flat.getOwner().getUniqueId().toString());
             ps.executeUpdate();
@@ -231,9 +231,9 @@ public class FlatsStorage {
                 if (rs.next()) {
                     String name = rs.getString("name");
                     String uuidStr = rs.getString("owner_uuid");
-                    OfflinePlayer owner = (uuidStr != null && !uuidStr.isEmpty())
-                            ? Bukkit.getOfflinePlayer(UUID.fromString(uuidStr))
-                            : null;
+                    OfflinePlayer owner =
+                            (uuidStr != null && !uuidStr.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(uuidStr))
+                                    : null;
                     return new FlatMetadata(name, owner);
                 }
             }
@@ -355,8 +355,8 @@ public class FlatsStorage {
      * @return The total number of flats, or {@code 0} if an error occurs.
      */
     public synchronized int getTotalFlatsCount() {
-        try (Statement statement = connection.createStatement();
-                ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM flats")) {
+        try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(
+                "SELECT COUNT(*) FROM flats")) {
             if (rs.next()) {
                 return rs.getInt(1);
             }
@@ -421,10 +421,7 @@ public class FlatsStorage {
     }
 
     private @NotNull String escapeLikePattern(@NotNull String input) {
-        return input
-                .replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
+        return input.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     /**

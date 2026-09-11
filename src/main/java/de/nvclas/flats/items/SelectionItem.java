@@ -9,7 +9,6 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -24,8 +23,15 @@ public class SelectionItem {
     private static final String DISPLAY_NAME = "Selection";
     private static final Material MATERIAL = Material.STICK;
     private static final String KEY_IDENTIFIER = "selection_item";
-    private static final NamespacedKey SELECTION_KEY = new NamespacedKey(JavaPlugin.getPlugin(Flats.class),
-            KEY_IDENTIFIER);
+
+    private static NamespacedKey selectionKey;
+
+    private static @NotNull NamespacedKey getKey(@NotNull Flats flatsPlugin) {
+        if (selectionKey == null) {
+            selectionKey = new NamespacedKey(flatsPlugin, KEY_IDENTIFIER);
+        }
+        return selectionKey;
+    }
 
     /**
      * Creates and returns a preconfigured {@link ItemStack} representing the selection item.
@@ -33,14 +39,14 @@ public class SelectionItem {
      *
      * @return a non-null {@link ItemStack} representing the selection tool used in various commands or events.
      */
-    public static @NotNull ItemStack getItem() {
+    public static @NotNull ItemStack getItem(@NotNull Flats flatsPlugin) {
         ItemStack is = new ItemStack(MATERIAL);
         is.editMeta(im -> {
             im.displayName(Component.text(DISPLAY_NAME)
                     .color(NamedTextColor.GOLD)
                     .decoration(TextDecoration.ITALIC, false)
             );
-            im.getPersistentDataContainer().set(SELECTION_KEY, PersistentDataType.BOOLEAN, true);
+            im.getPersistentDataContainer().set(getKey(flatsPlugin), PersistentDataType.BOOLEAN, true);
             im.setMaxStackSize(1);
         });
         return is;

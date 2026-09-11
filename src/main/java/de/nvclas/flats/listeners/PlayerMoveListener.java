@@ -78,8 +78,12 @@ public class PlayerMoveListener implements Listener {
     }
 
     private void updatePlayerFlat(@NotNull Player player, @NotNull Location location) {
+        if (!flatsCache.isLocationLoaded(location)) {
+            return;
+        }
+
         Flat currentFlat = playerFlats.get(player);
-        Flat newFlat = flatsCache.getFlatAtLocation(location);
+        Flat newFlat = flatsCache.getCachedFlatAtLocation(location);
 
         if (Objects.equals(currentFlat, newFlat)) {
             return;

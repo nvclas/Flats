@@ -33,6 +33,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class FlatsCache {
 
+    private static final int MAX_CACHED_FLATS = 1_000;
+    private static final Duration CACHE_EXPIRATION = Duration.ofMinutes(30);
+
     /**
      * A cache for storing and retrieving {@link Flat} objects by their names.
      * <p>
@@ -42,8 +45,8 @@ public class FlatsCache {
      * Used to optimize retrieval of frequently accessed flats and reduce direct access to storage.
      */
     private final Cache<String, Flat> cache = Caffeine.newBuilder()
-            .maximumSize(1_000)
-            .expireAfterAccess(Duration.ofMinutes(30))
+            .maximumSize(MAX_CACHED_FLATS)
+            .expireAfterAccess(CACHE_EXPIRATION)
             .build();
 
     /**
@@ -99,9 +102,7 @@ public class FlatsCache {
             int maxZ = minZ + SpatialIndex.GRID_SIZE - 1;
 
             return CompletableFuture.supplyAsync(
-                            () -> flatsStorage.getAreasIntersecting(worldName, minX, maxX, minZ, maxZ),
-                            dbExecutor
-                    )
+                            () -> flatsStorage.getAreasIntersecting(worldName, minX, maxX, minZ, maxZ), dbExecutor)
                     .thenAccept(areas -> spatialIndex.setAreas(worldName, gridX, gridZ, areas))
                     .whenComplete((res, ex) -> loadingFutures.remove(key));
         });
@@ -271,6 +272,11 @@ public class FlatsCache {
         return name != null ? getFlat(name) : null;
     }
 
+    public @Nullable Flat getCachedFlatAtLocation(@NotNull Location location) {
+        String name = spatialIndex.getFlatNameAtLocation(location);
+        return name != null ? cache.getIfPresent(normalizeName(name)) : null;
+    }
+
     /**
      * Retrieves the {@link Area} at the specified {@link Location}, if any exists.
      * <p>
@@ -282,6 +288,16 @@ public class FlatsCache {
     public @Nullable Area getAreaAtLocation(@NotNull Location location) {
         ensureLoaded(location);
         return spatialIndex.getAreaAtLocation(location);
+    }
+
+    /**
+     * Checks if the given location has been loaded into the spatial index.
+     *
+     * @param location the location to check; must not be null.
+     * @return {@code true} if the location is loaded, {@code false} otherwise.
+     */
+    public boolean isLocationLoaded(@NotNull Location location) {
+        return spatialIndex.isLoaded(spatialIndex.getGridKey(location));
     }
 
     /**

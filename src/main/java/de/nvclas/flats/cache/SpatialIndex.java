@@ -14,6 +14,9 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents a spatial index that organizes and queries {@link Flat} objects based on their
@@ -24,6 +27,9 @@ import java.util.List;
  */
 public class SpatialIndex {
 
+    private static final int MAX_CACHED_GRIDS = 50_000;
+    private static final Duration CACHE_EXPIRATION = Duration.ofMinutes(30);
+
     /**
      * The size of each grid cell in blocks.
      */
@@ -33,9 +39,11 @@ public class SpatialIndex {
      * If a key is present, the cell is considered "loaded". An empty list means no areas intersect the cell.
      */
     private final Cache<GridKey, List<FlatArea>> gridCache = Caffeine.newBuilder()
-            .maximumSize(50_000)
-            .expireAfterAccess(Duration.ofMinutes(30))
+            .maximumSize(MAX_CACHED_GRIDS)
+            .expireAfterAccess(CACHE_EXPIRATION)
             .build();
+
+    private final Map<String, Set<GridKey>> flatGridKeys = new ConcurrentHashMap<>();
 
     /**
      * Adds an {@link Area} to the spatial index.
@@ -53,11 +61,16 @@ public class SpatialIndex {
         for (int gridX = minGridX; gridX <= maxGridX; gridX++) {
             for (int gridZ = minGridZ; gridZ <= maxGridZ; gridZ++) {
                 GridKey key = new GridKey(worldName, gridX, gridZ);
+                boolean[] wasPresent = {false};
                 gridCache.asMap().computeIfPresent(key, (k, loadedAreas) -> {
+                    wasPresent[0] = true;
                     List<FlatArea> updated = new ArrayList<>(loadedAreas);
                     updated.add(flatArea);
                     return Collections.unmodifiableList(updated);
                 });
+                if (wasPresent[0]) {
+                    flatGridKeys.computeIfAbsent(flatArea.flatName(), k -> ConcurrentHashMap.newKeySet()).add(key);
+                }
             }
         }
     }
@@ -72,11 +85,14 @@ public class SpatialIndex {
      */
     public void setAreas(@NotNull String worldName, int gridX, int gridZ, @NotNull List<Area> areas) {
         List<FlatArea> flatAreas = new ArrayList<>(areas.size());
+        GridKey key = new GridKey(worldName, gridX, gridZ);
         for (Area area : areas) {
-            flatAreas.add(FlatArea.fromArea(area));
+            FlatArea flatArea = FlatArea.fromArea(area);
+            flatAreas.add(flatArea);
+            flatGridKeys.computeIfAbsent(flatArea.flatName(), k -> ConcurrentHashMap.newKeySet()).add(key);
         }
 
-        gridCache.put(new GridKey(worldName, gridX, gridZ), List.copyOf(flatAreas));
+        gridCache.put(key, List.copyOf(flatAreas));
     }
 
     /**
@@ -125,10 +141,15 @@ public class SpatialIndex {
      * @param flatName The name of the flat to be removed. Must not be null.
      */
     public void removeFlat(@NotNull String flatName) {
-        for (GridKey key : gridCache.asMap().keySet()) {
-            gridCache.asMap().computeIfPresent(key, (k, loadedAreas) -> loadedAreas.stream()
-                    .filter(area -> !area.flatName().equals(flatName))
-                    .toList());
+        Set<GridKey> keys = flatGridKeys.remove(flatName);
+        if (keys == null) {
+            return;
+        }
+        for (GridKey key : keys) {
+            gridCache.asMap()
+                    .computeIfPresent(key, (k, loadedAreas) -> loadedAreas.stream()
+                            .filter(area -> !area.flatName().equals(flatName))
+                            .toList());
         }
     }
 
@@ -190,9 +211,7 @@ public class SpatialIndex {
         }
 
         public boolean isWithinBounds(int x, int y, int z) {
-            return x >= minX && x <= maxX
-                    && y >= minY && y <= maxY
-                    && z >= minZ && z <= maxZ;
+            return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
         }
 
         public @Nullable Area toArea() {

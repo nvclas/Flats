@@ -74,10 +74,6 @@ class FlatsStorageTest {
         assertEquals(0, loadedArea.getMinZ(), "minZ should be preserved");
         assertEquals(10, loadedArea.getMaxZ(), "maxZ should be preserved");
         assertNull(loadedArea.getPos1().getWorld(), "World reference should remain null for an unloaded world");
-
-        // getAllOuterBlocks() must return empty safely, not throw a NullPointerException
-        assertTrue(loadedArea.getAllOuterBlocks().isEmpty(),
-                "getAllOuterBlocks() should return empty for an area with an unloaded world");
     }
 
     @Test

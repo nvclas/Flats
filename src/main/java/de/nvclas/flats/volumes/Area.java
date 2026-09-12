@@ -166,19 +166,7 @@ public class Area {
             return List.of();
         }
 
-        double x1 = minX, y1 = minY, z1 = minZ;
-        double x2 = maxX + 1.0, y2 = maxY + 1.0, z2 = maxZ + 1.0;
-
-        Location[] corners = {
-                new Location(world, x1, y1, z1),
-                new Location(world, x2, y1, z1),
-                new Location(world, x1, y2, z1),
-                new Location(world, x1, y1, z2),
-                new Location(world, x2, y2, z1),
-                new Location(world, x2, y1, z2),
-                new Location(world, x1, y2, z2),
-                new Location(world, x2, y2, z2)
-        };
+        Location[] corners = getCorners(world);
 
         List<Edge> edges = new ArrayList<>();
         for (int i = 0; i < corners.length; i++) {
@@ -189,6 +177,26 @@ public class Area {
             }
         }
         return edges;
+    }
+
+    private @NotNull Location[] getCorners(World world) {
+        double x1 = minX;
+        double y1 = minY;
+        double z1 = minZ;
+        double x2 = maxX + 1.0;
+        double y2 = maxY + 1.0;
+        double z2 = maxZ + 1.0;
+
+        return new Location[]{
+                new Location(world, x1, y1, z1),
+                new Location(world, x2, y1, z1),
+                new Location(world, x1, y2, z1),
+                new Location(world, x1, y1, z2),
+                new Location(world, x2, y2, z1),
+                new Location(world, x2, y1, z2),
+                new Location(world, x1, y2, z2),
+                new Location(world, x2, y2, z2)
+        };
     }
 
     private static boolean isEdge(@NotNull Location a, @NotNull Location b) {

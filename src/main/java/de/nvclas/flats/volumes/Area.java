@@ -5,8 +5,8 @@ import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,20 +79,15 @@ public class Area {
     }
 
     /**
-     * Constructs a new {@code Area} directly from raw coordinate data and a world name,
-     * without requiring the world to be currently loaded.
+     * Creates a new {@link Area} instance using raw data including world name, bounds, and flat name.
      * <p>
-     * This is used when loading persisted area data from the database. The {@link Location}
-     * objects for {@code pos1} and {@code pos2} will have a {@code null} world reference if
-     * the specified world is not currently loaded; operations that need an active world
-     * (such as {@link #getAllOuterBlocks()}) already guard against a {@code null} world and
-     * will return empty/safe results until the world becomes available.
+     * This method initializes the area based on the corners defined by the {@link Bounds} object
+     * and associates it with the specified flat name and world.
      *
-     * @param worldName The name of the world this area belongs to. Must not be null.
-     * @param bounds    The area's normalized minimum and maximum coordinates.
-     * @param flatName  The name of the flat this area belongs to. Must not be null.
-     * @return A new {@code Area} that holds the world name and coordinates in memory even
-     * when the world is not currently loaded.
+     * @param worldName The name of the world in which the area resides. Must not be null.
+     * @param bounds    The {@link Bounds} object defining the minimum and maximum corner coordinates of the area. Must not be null.
+     * @param flatName  The name of the flat associated with this area. Must not be null.
+     * @return A new {@link Area} object initialized with the specified data.
      */
     public static Area fromRawData(@NotNull String worldName, @NotNull Bounds bounds, @NotNull String flatName) {
         World world = Bukkit.getWorld(worldName);
@@ -148,61 +143,99 @@ public class Area {
     }
 
     /**
-     * Retrieves all outer boundary blocks of the area defined by this {@link Area} object.
-     * <p>
-     * The method calculates and includes blocks along the edges of the three-dimensional
-     * space defined by the corner points {@code pos1} and {@code pos2}.
+     * Returns the world this area is located in.
      *
-     * @return A non-null {@link List} of {@link Block} objects representing the outer boundary
-     * blocks of the defined area. The list will be empty if the world associated with
-     * {@code pos1} is {@code null}.
+     * @return the {@link World} this area belongs to, or {@code null} if that world
+     * is not currently loaded
      */
-    public @NotNull List<Block> getAllOuterBlocks() {
-        List<Block> blocks = new ArrayList<>();
-        World world = pos1.getWorld();
+    public @Nullable World getWorld() {
+        return pos1.getWorld();
+    }
+
+    /**
+     * Computes the 12 edges of this area's bounding box, in world space (i.e. at block
+     * boundaries, one block "outside" the max coordinates, so the frame wraps the full
+     * volume rather than cutting through the outer blocks).
+     *
+     * @return a list of the 12 {@link Edge}s of the bounding box, or an empty list if this
+     * area's world is not currently loaded.
+     */
+    public @NotNull List<Edge> getEdges() {
+        World world = getWorld();
         if (world == null) {
-            return blocks;
+            return List.of();
         }
 
-        addXYPlanes(blocks, world);
-        addXZPlanes(blocks, world);
-        addYZPlanes(blocks, world);
-        return blocks;
-    }
+        Location[] corners = getCorners(world);
 
-    private void addXYPlanes(List<Block> blocks, World world) {
-        for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                blocks.add(world.getBlockAt(x, y, minZ));
-                if (maxZ > minZ) {
-                    blocks.add(world.getBlockAt(x, y, maxZ));
+        List<Edge> edges = new ArrayList<>();
+        for (int i = 0; i < corners.length; i++) {
+            for (int j = i + 1; j < corners.length; j++) {
+                if (isEdge(corners[i], corners[j])) {
+                    edges.add(new Edge(corners[i], corners[j]));
                 }
             }
         }
+        return edges;
     }
 
-    private void addXZPlanes(List<Block> blocks, World world) {
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ + 1; z < maxZ; z++) {
-                blocks.add(world.getBlockAt(x, minY, z));
-                if (maxY > minY) {
-                    blocks.add(world.getBlockAt(x, maxY, z));
-                }
-            }
-        }
+    private @NotNull Location[] getCorners(World world) {
+        double x1 = minX;
+        double y1 = minY;
+        double z1 = minZ;
+        double x2 = maxX + 1.0;
+        double y2 = maxY + 1.0;
+        double z2 = maxZ + 1.0;
+
+        return new Location[]{
+                new Location(world, x1, y1, z1),
+                new Location(world, x2, y1, z1),
+                new Location(world, x1, y2, z1),
+                new Location(world, x1, y1, z2),
+                new Location(world, x2, y2, z1),
+                new Location(world, x2, y1, z2),
+                new Location(world, x1, y2, z2),
+                new Location(world, x2, y2, z2)
+        };
     }
 
-    private void addYZPlanes(List<Block> blocks, World world) {
-        for (int y = minY + 1; y < maxY; y++) {
-            for (int z = minZ + 1; z < maxZ; z++) {
-                blocks.add(world.getBlockAt(minX, y, z));
-                if (maxX > minX) {
-                    blocks.add(world.getBlockAt(maxX, y, z));
-                }
-            }
-        }
+    private static boolean isEdge(@NotNull Location a, @NotNull Location b) {
+        int sameCoords = 0;
+        if (a.getX() == b.getX())
+            sameCoords++;
+        if (a.getY() == b.getY())
+            sameCoords++;
+        if (a.getZ() == b.getZ())
+            sameCoords++;
+        return sameCoords == 2;
     }
 
+    /**
+     * Represents an edge between two {@link Location} points.
+     * <p>
+     * An {@code Edge} defines a straight connection from a start location to an end location
+     * within a three-dimensional space.
+     *
+     * @param start The starting {@link Location} of the edge. Must not be null.
+     * @param end   The ending {@link Location} of the edge. Must not be null.
+     */
+    public record Edge(Location start, Location end) {
+    }
+
+    /**
+     * Represents a three-dimensional bounding box defined by minimum and maximum
+     * coordinates along the X, Y, and Z axes.
+     * <p>
+     * The bounds encapsulate a cuboid shape and are immutable.
+     * This can be used for spatial calculations, region definitions, or boundary checks.
+     *
+     * @param minX The smallest X coordinate within the bounds (inclusive).
+     * @param maxX The largest X coordinate within the bounds (inclusive).
+     * @param minY The smallest Y coordinate within the bounds (inclusive).
+     * @param maxY The largest Y coordinate within the bounds (inclusive).
+     * @param minZ The smallest Z coordinate within the bounds (inclusive).
+     * @param maxZ The largest Z coordinate within the bounds (inclusive).
+     */
     public record Bounds(int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
 
         public static Bounds fromLocations(@NotNull Location pos1, @NotNull Location pos2) {

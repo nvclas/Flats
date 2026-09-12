@@ -34,7 +34,7 @@ public class MigrationManager {
      * @param plugin       The plugin instance.
      * @param flatsStorage The new storage instance.
      */
-    public static void migrate(Flats plugin, FlatsStorage flatsStorage) {
+    public static void migrateYamlToDatabase(Flats plugin, FlatsStorage flatsStorage) {
         File flatsFile = new File(plugin.getDataFolder(), "flats.yml");
         if (!flatsFile.exists()) {
             return;
@@ -55,7 +55,7 @@ public class MigrationManager {
         } else {
             int count = 0;
             for (String flatName : flatsSection.getKeys(false)) {
-                Flat flat = loadFlat(flatName, config, plugin);
+                Flat flat = loadFlatFromYaml(flatName, config, plugin);
                 if (flat != null) {
                     flatsStorage.saveFlat(flat);
                     count++;
@@ -81,7 +81,7 @@ public class MigrationManager {
         }
     }
 
-    private static @Nullable Flat loadFlat(String flatName, YamlConfiguration config, Flats plugin) {
+    private static @Nullable Flat loadFlatFromYaml(String flatName, YamlConfiguration config, Flats plugin) {
         String ownerUuid = config.getString(Paths.getOwnerPath(flatName));
         OfflinePlayer owner = null;
         if (ownerUuid != null && !ownerUuid.isEmpty()) {

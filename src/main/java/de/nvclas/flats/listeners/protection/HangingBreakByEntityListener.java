@@ -17,7 +17,7 @@ public class HangingBreakByEntityListener implements Listener {
 
     @EventHandler
     public void onHangingBreak(HangingBreakByEntityEvent event) {
-        Flat flat = flatsCache.getFlatByLocation(event.getEntity().getLocation());
+        Flat flat = flatsCache.getFlatAtLocation(event.getEntity().getLocation());
         EventCancelChecker.cancelEventIfPlayerNotTrustedOrOwner(event, flat, event.getRemover());
     }
 

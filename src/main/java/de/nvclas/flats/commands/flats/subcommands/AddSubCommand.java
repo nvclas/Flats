@@ -7,6 +7,7 @@ import de.nvclas.flats.config.SettingsConfig;
 import de.nvclas.flats.util.I18n;
 import de.nvclas.flats.util.Permissions;
 import de.nvclas.flats.volumes.Area;
+import de.nvclas.flats.volumes.Flat;
 import de.nvclas.flats.volumes.Selection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -40,13 +41,14 @@ public class AddSubCommand implements SubCommand {
         String flatName = args[1];
         Area area = Area.fromSelection(selection, flatName);
 
-        if (!flatsCache.existsFlat(flatName)) {
+        Flat flat = flatsCache.getFlat(flatName);
+        if (flat == null) {
             flatsCache.create(flatName, area);
             player.sendMessage(Flats.PREFIX + I18n.translate("add.success", flatName));
             return;
         }
-        flatsCache.addAreaToFlat(flatsCache.getExistingFlat(flatName), area);
-        player.sendMessage(Flats.PREFIX + I18n.translate("add.area_added", flatName));
+        flatsCache.addAreaToFlat(flat, area);
+        player.sendMessage(Flats.PREFIX + I18n.translate("add.area_added", flat.getName()));
     }
 
     private boolean isSelectionValid(Player player, Selection selection) {

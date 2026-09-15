@@ -37,7 +37,7 @@ public class PlayerMoveListener implements Listener {
         updatePlayerFlat(event.getPlayer(), location);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerTeleport(@NotNull PlayerTeleportEvent event) {
         Location to = event.getTo();
         flatsCache.prefetchSurroundingGridCells(to, 1);

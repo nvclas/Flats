@@ -10,9 +10,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class SelectSubCommand implements SubCommand {
 
+    private final Flats flatsPlugin;
     private final SettingsConfig settingsConfig;
 
     public SelectSubCommand(Flats flatsPlugin) {
+        this.flatsPlugin = flatsPlugin;
         this.settingsConfig = flatsPlugin.getSettingsConfig();
     }
 
@@ -22,6 +24,6 @@ public class SelectSubCommand implements SubCommand {
             Permissions.showNoPermissionMessage(player);
             return;
         }
-        player.getInventory().addItem(SelectionItem.getItem());
+        player.getInventory().addItem(SelectionItem.getItem(flatsPlugin));
     }
 }

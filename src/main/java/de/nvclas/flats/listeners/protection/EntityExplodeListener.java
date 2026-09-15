@@ -18,7 +18,7 @@ public class EntityExplodeListener implements Listener {
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
         event.blockList().removeIf(block -> {
-            Flat flat = flatsCache.getFlatByLocation(block.getLocation());
+            Flat flat = flatsCache.getFlatAtLocation(block.getLocation());
             return flat != null;
         });
     }

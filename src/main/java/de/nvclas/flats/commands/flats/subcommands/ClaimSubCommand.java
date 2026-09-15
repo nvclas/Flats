@@ -22,7 +22,7 @@ public class ClaimSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        Flat flat = flatsCache.getFlatByLocation(player.getLocation());
+        Flat flat = flatsCache.getFlatAtLocation(player.getLocation());
         if (!Permissions.canClaimFlats(player, settingsConfig)) {
             Permissions.showNoPermissionMessage(player);
             return;

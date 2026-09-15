@@ -62,19 +62,17 @@ public class UpdateDownloader {
     }
 
     /**
-     * Downloads the latest release of the plugin and moves the downloaded file to the plugins directory.
+     * Initiates an asynchronous process to download the latest release of the plugin, if available.
+     * <p>
+     * Errors during the operation are logged, and an appropriate {@link UpdateStatus} is returned to
+     * indicate the result of the operation.
      *
-     * @return the resulting {@link UpdateStatus}.
+     * @return a {@link CompletableFuture} that resolves to an {@link UpdateStatus}, representing the outcome
+     *         of the download operation. Possible values include {@link UpdateStatus#SUCCESS} when the download
+     *         and update are successful, {@link UpdateStatus#NOT_FOUND} if no release information is found,
+     *         {@link UpdateStatus#ALREADY_UP_TO_DATE} if the plugin is already running the latest version,
+     *         and {@link UpdateStatus#FAILED} if the process encounters an error.
      */
-    public UpdateStatus downloadLatestRelease() {
-        try {
-            return downloadLatestReleaseAsync().join();
-        } catch (Exception e) {
-            logException(UPDATE_PROCESS_ERROR, e);
-            return UpdateStatus.FAILED;
-        }
-    }
-
     public CompletableFuture<UpdateStatus> downloadLatestReleaseAsync() {
         return fetchLatestReleaseAsync().thenCompose(this::processRelease).exceptionally(e -> {
             Throwable cause = (e instanceof CompletionException && e.getCause() != null) ? e.getCause() : e;

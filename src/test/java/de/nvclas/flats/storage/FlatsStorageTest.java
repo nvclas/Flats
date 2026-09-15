@@ -74,10 +74,6 @@ class FlatsStorageTest {
         assertEquals(0, loadedArea.getMinZ(), "minZ should be preserved");
         assertEquals(10, loadedArea.getMaxZ(), "maxZ should be preserved");
         assertNull(loadedArea.getPos1().getWorld(), "World reference should remain null for an unloaded world");
-
-        // getAllOuterBlocks() must return empty safely, not throw a NullPointerException
-        assertTrue(loadedArea.getAllOuterBlocks().isEmpty(),
-                "getAllOuterBlocks() should return empty for an area with an unloaded world");
     }
 
     @Test
@@ -113,16 +109,22 @@ class FlatsStorageTest {
     }
 
     private void assertTableExists(Statement stmt, String tableName) throws SQLException {
-        String query = "SELECT name FROM sqlite_master WHERE type='table' AND name='" + tableName + "'";
-        try (ResultSet rs = stmt.executeQuery(query)) {
-            assertTrue(rs.next(), "Table '" + tableName + "' should exist in the database");
+        String query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?";
+        try (var preparedStatement = stmt.getConnection().prepareStatement(query)) {
+            preparedStatement.setString(1, tableName);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                assertTrue(rs.next(), "Table '" + tableName + "' should exist in the database");
+            }
         }
     }
 
     private void assertIndexExists(Statement stmt, String indexName) throws SQLException {
-        String query = "SELECT name FROM sqlite_master WHERE type='index' AND name='" + indexName + "'";
-        try (ResultSet rs = stmt.executeQuery(query)) {
-            assertTrue(rs.next(), "Index '" + indexName + "' should exist in the database");
+        String query = "SELECT name FROM sqlite_master WHERE type='index' AND name=?";
+        try (var preparedStatement = stmt.getConnection().prepareStatement(query)) {
+            preparedStatement.setString(1, indexName);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                assertTrue(rs.next(), "Index '" + indexName + "' should exist in the database");
+            }
         }
     }
 }

@@ -31,17 +31,17 @@ public class FlatsStorage {
 
     public static final String DATABASE_NAME = "flats.db";
     private static final String DATABASE_DIR = "database";
-    private final Flats plugin;
+    private final Flats flatsPlugin;
     private Connection connection;
 
-    public FlatsStorage(Flats plugin) {
-        this.plugin = plugin;
+    public FlatsStorage(Flats flatsPlugin) {
+        this.flatsPlugin = flatsPlugin;
         initConnection();
         migrate();
     }
 
     private void initConnection() {
-        File dataFolder = plugin.getDataFolder();
+        File dataFolder = flatsPlugin.getDataFolder();
         if (!dataFolder.exists() && !dataFolder.mkdir()) {
             throw new IllegalStateException("Failed to create plugin data folder: " + dataFolder.getAbsolutePath());
         }
@@ -52,6 +52,13 @@ public class FlatsStorage {
             try (Statement statement = connection.createStatement()) {
                 statement.execute("PRAGMA foreign_keys = ON;");
                 statement.execute("PRAGMA busy_timeout = 3000;");
+                statement.execute("PRAGMA journal_mode = WAL;");
+                statement.execute("PRAGMA synchronous = NORMAL;");
+                statement.execute("PRAGMA temp_store = MEMORY;");
+                statement.execute("PRAGMA cache_size = -16000;");
+                statement.execute("PRAGMA mmap_size = 67108864;");
+                statement.execute("PRAGMA analysis_limit = 400;");
+                statement.execute("PRAGMA optimize;");
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Could not initialize database connection", e);
@@ -59,11 +66,11 @@ public class FlatsStorage {
     }
 
     private @NotNull String getJdbcUrl() {
-        return "jdbc:sqlite:" + new File(plugin.getDataFolder(), DATABASE_NAME).getAbsolutePath();
+        return "jdbc:sqlite:" + new File(flatsPlugin.getDataFolder(), DATABASE_NAME).getAbsolutePath();
     }
 
     private void migrate() {
-        Flyway flyway = Flyway.configure(plugin.getClass().getClassLoader())
+        Flyway flyway = Flyway.configure(flatsPlugin.getClass().getClassLoader())
                 .dataSource(getJdbcUrl(), null, null)
                 .baselineOnMigrate(true)
                 .locations(DATABASE_DIR)
@@ -72,8 +79,8 @@ public class FlatsStorage {
         try {
             flyway.migrate();
         } catch (FlywayException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Database migration failed");
-            Bukkit.getPluginManager().disablePlugin(plugin);
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Database migration failed");
+            Bukkit.getPluginManager().disablePlugin(flatsPlugin);
         }
     }
 
@@ -89,7 +96,7 @@ public class FlatsStorage {
                 connection.close();
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not close database connection");
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not close database connection");
         }
     }
 
@@ -103,7 +110,7 @@ public class FlatsStorage {
      *
      * @param flat The {@link Flat} to be saved. Must not be null.
      */
-    public void saveFlat(@NotNull Flat flat) {
+    public synchronized void saveFlat(@NotNull Flat flat) {
         try {
             connection.setAutoCommit(false);
 
@@ -114,16 +121,16 @@ public class FlatsStorage {
             connection.commit();
         } catch (SQLException e) {
             rollbackTransaction(e);
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not save flat " + flat.getName());
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not save flat " + flat.getName());
         } finally {
             resetAutoCommit();
         }
     }
 
     private void upsertFlatMetadata(@NotNull Flat flat) throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO flats (name, owner_uuid) VALUES (?, ?) "
-                        + "ON CONFLICT(name) DO UPDATE SET owner_uuid = EXCLUDED.owner_uuid")) {
+        try (PreparedStatement ps = connection.prepareStatement("""
+                INSERT INTO flats (name, owner_uuid) VALUES (?, ?)
+                ON CONFLICT(name COLLATE NOCASE) DO UPDATE SET owner_uuid = EXCLUDED.owner_uuid""")) {
             ps.setString(1, flat.getName());
             ps.setString(2, flat.getOwner() == null ? null : flat.getOwner().getUniqueId().toString());
             ps.executeUpdate();
@@ -174,7 +181,7 @@ public class FlatsStorage {
                 connection.rollback();
             }
         } catch (SQLException e) {
-            plugin.getLogger()
+            flatsPlugin.getLogger()
                     .log(Level.SEVERE, e,
                             () -> "Could not rollback transaction after error: " + originalException.getMessage());
         }
@@ -186,7 +193,7 @@ public class FlatsStorage {
                 connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not set auto-commit to true");
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not set auto-commit to true");
         }
     }
 
@@ -199,33 +206,35 @@ public class FlatsStorage {
      * @param name The name of the flat to load. Must not be {@code null}.
      * @return A {@link Flat} object if the flat exists; {@code null} otherwise.
      */
-    public @Nullable Flat loadFlat(@NotNull String name) {
+    public synchronized @Nullable Flat loadFlat(@NotNull String name) {
         try {
             FlatMetadata metadata = loadMetadata(name);
             if (metadata == null) {
                 return null;
             }
 
-            List<Area> areas = loadAreas(name);
-            List<OfflinePlayer> trusted = loadTrustedPlayers(name);
+            List<Area> areas = loadAreas(metadata.name());
+            List<OfflinePlayer> trusted = loadTrustedPlayers(metadata.name());
 
-            return new Flat(name, metadata.owner(), areas, trusted);
+            return new Flat(metadata.name(), metadata.owner(), areas, trusted);
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not load flat " + name);
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not load flat " + name);
             return null;
         }
     }
 
     private @Nullable FlatMetadata loadMetadata(@NotNull String flatName) throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement("SELECT owner_uuid FROM flats WHERE name = ?")) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT name, owner_uuid FROM flats WHERE name = ? COLLATE NOCASE")) {
             ps.setString(1, flatName);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
+                    String name = rs.getString("name");
                     String uuidStr = rs.getString("owner_uuid");
-                    OfflinePlayer owner = (uuidStr != null && !uuidStr.isEmpty())
-                            ? Bukkit.getOfflinePlayer(UUID.fromString(uuidStr))
-                            : null;
-                    return new FlatMetadata(true, owner);
+                    OfflinePlayer owner =
+                            (uuidStr != null && !uuidStr.isEmpty()) ? Bukkit.getOfflinePlayer(UUID.fromString(uuidStr))
+                                    : null;
+                    return new FlatMetadata(name, owner);
                 }
             }
         }
@@ -270,12 +279,12 @@ public class FlatsStorage {
      *
      * @param name the name of the flat to delete; must not be {@code null}.
      */
-    public void deleteFlat(@NotNull String name) {
-        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM flats WHERE name = ?")) {
+    public synchronized void deleteFlat(@NotNull String name) {
+        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM flats WHERE name = ? COLLATE NOCASE")) {
             ps.setString(1, name);
             ps.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not delete flat " + name);
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not delete flat " + name);
         }
     }
 
@@ -287,7 +296,7 @@ public class FlatsStorage {
      * @param player The {@link OfflinePlayer} whose owned flats are to be counted. Must not be {@code null}.
      * @return The total number of flats owned by the specified player, or {@code 0} if none are found or an error occurs.
      */
-    public int getOwnedFlatsCount(@NotNull OfflinePlayer player) {
+    public synchronized int getOwnedFlatsCount(@NotNull OfflinePlayer player) {
         try (PreparedStatement ps = connection.prepareStatement("SELECT COUNT(*) FROM flats WHERE owner_uuid = ?")) {
             ps.setString(1, player.getUniqueId().toString());
             try (ResultSet rs = ps.executeQuery()) {
@@ -296,7 +305,8 @@ public class FlatsStorage {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get owned flats count for " + player.getName());
+            flatsPlugin.getLogger()
+                    .log(Level.SEVERE, e, () -> "Could not get owned flats count for " + player.getName());
         }
         return 0;
     }
@@ -309,16 +319,8 @@ public class FlatsStorage {
      *
      * @return {@code true} if the database is empty or an error occurs; {@code false} otherwise.
      */
-    public boolean isEmpty() {
-        try (Statement statement = connection.createStatement();
-                ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM flats")) {
-            if (rs.next()) {
-                return rs.getInt(1) == 0;
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not check if database is empty");
-        }
-        return true;
+    public synchronized boolean isEmpty() {
+        return getTotalFlatsCount() == 0;
     }
 
     /**
@@ -330,14 +332,14 @@ public class FlatsStorage {
      * @param name the name of the flat to check; must not be {@code null}.
      * @return {@code true} if a flat with the given name exists, {@code false} otherwise.
      */
-    public boolean existsFlat(@NotNull String name) {
-        try (PreparedStatement ps = connection.prepareStatement("SELECT 1 FROM flats WHERE name = ?")) {
+    public synchronized boolean existsFlat(@NotNull String name) {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT 1 FROM flats WHERE name = ? COLLATE NOCASE")) {
             ps.setString(1, name);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not check if flat exists: " + name);
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not check if flat exists: " + name);
         }
         return false;
     }
@@ -352,14 +354,14 @@ public class FlatsStorage {
      *
      * @return The total number of flats, or {@code 0} if an error occurs.
      */
-    public int getTotalFlatsCount() {
-        try (Statement statement = connection.createStatement();
-                ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM flats")) {
+    public synchronized int getTotalFlatsCount() {
+        try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(
+                "SELECT COUNT(*) FROM flats")) {
             if (rs.next()) {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get total flats count");
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not get total flats count");
         }
         return 0;
     }
@@ -373,7 +375,7 @@ public class FlatsStorage {
      * @param limit  The maximum number of flat names to retrieve.
      * @return A list of flat names, or an empty list if no results are found.
      */
-    public @NotNull List<String> getPaginatedFlatNames(int offset, int limit) {
+    public synchronized @NotNull List<String> getPaginatedFlatNames(int offset, int limit) {
         List<String> names = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT name FROM flats ORDER BY name LIMIT ? OFFSET ?")) {
@@ -385,7 +387,7 @@ public class FlatsStorage {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get paginated flat names");
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not get paginated flat names");
         }
         return names;
     }
@@ -400,11 +402,11 @@ public class FlatsStorage {
      * @param limit  The maximum number of flat names to return. Must be a positive integer.
      * @return A list of flat names matching the specified prefix. Returns an empty list if no matching names are found.
      */
-    public @NotNull List<String> getFilteredFlatNames(@NotNull String prefix, int limit) {
+    public synchronized @NotNull List<String> getFilteredFlatNames(@NotNull String prefix, int limit) {
         List<String> names = new ArrayList<>();
         String escapedPrefix = escapeLikePattern(prefix);
         try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT name FROM flats WHERE name LIKE ? ESCAPE '\\' ORDER BY name LIMIT ?")) {
+                "SELECT name FROM flats WHERE name LIKE ? ESCAPE '\\' ORDER BY name COLLATE NOCASE LIMIT ?")) {
             ps.setString(1, escapedPrefix + "%");
             ps.setInt(2, limit);
             try (ResultSet rs = ps.executeQuery()) {
@@ -413,16 +415,13 @@ public class FlatsStorage {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get filtered flat names");
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not get filtered flat names");
         }
         return names;
     }
 
     private @NotNull String escapeLikePattern(@NotNull String input) {
-        return input
-                .replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
+        return input.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     /**
@@ -435,10 +434,15 @@ public class FlatsStorage {
      * @param maxZ      the maximum z-coordinate of the boundary.
      * @return a list of {@link Area} objects representing the intersecting areas. If no areas intersect, an empty list is returned.
      */
-    public @NotNull List<Area> getAreasIntersecting(@NotNull String worldName, int minX, int maxX, int minZ, int maxZ) {
+    public synchronized @NotNull List<Area> getAreasIntersecting(@NotNull String worldName, int minX, int maxX,
+            int minZ, int maxZ) {
         List<Area> areas = new ArrayList<>();
-        String sql = "SELECT flat_name, world, min_x, min_y, min_z, max_x, max_y, max_z FROM areas " +
-                "WHERE world = ? AND NOT (max_x < ? OR min_x > ? OR max_z < ? OR min_z > ?)";
+        String sql = """
+                SELECT flat_name, world, min_x, min_y, min_z, max_x, max_y, max_z FROM areas WHERE world = ?
+                  AND max_x >= ?
+                  AND min_x <= ?
+                  AND max_z >= ?
+                  AND min_z <= ?""";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, worldName);
             ps.setInt(2, minX);
@@ -451,7 +455,7 @@ public class FlatsStorage {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get areas intersecting " + worldName);
+            flatsPlugin.getLogger().log(Level.SEVERE, e, () -> "Could not get areas intersecting " + worldName);
         }
         return areas;
     }
@@ -468,6 +472,6 @@ public class FlatsStorage {
         return Area.fromRawData(worldName, new Area.Bounds(minX, maxX, minY, maxY, minZ, maxZ), flatName);
     }
 
-    private record FlatMetadata(boolean exists, @Nullable OfflinePlayer owner) {
+    private record FlatMetadata(@NotNull String name, @Nullable OfflinePlayer owner) {
     }
 }

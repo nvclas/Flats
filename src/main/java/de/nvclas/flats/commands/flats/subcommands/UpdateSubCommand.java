@@ -26,8 +26,9 @@ public class UpdateSubCommand implements SubCommand {
         }
         UpdateDownloader updateDownloader = new UpdateDownloader(flatsPlugin,
                 "https://api.github.com/repos/nvclas/Flats/releases/latest");
-        updateDownloader.downloadLatestReleaseAsync().thenAccept(status ->
-                Bukkit.getScheduler().runTask(flatsPlugin, () -> sendStatusMessage(player, updateDownloader, status)));
+        updateDownloader.downloadLatestReleaseAsync()
+                .thenAccept(status -> Bukkit.getScheduler()
+                        .runTask(flatsPlugin, () -> sendStatusMessage(player, updateDownloader, status)));
     }
 
     private void sendStatusMessage(@NotNull Player player, @NotNull UpdateDownloader updateDownloader,

@@ -15,6 +15,7 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -51,13 +52,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 @DisplayName("Flats Command Tests")
 class FlatsCommandTest {
 
-    // Constants
     private static final int SELECTION_VOLUME = 1000;
     private static final int FLAT_SIZE = 10;
     private static final int MAX_Y_COORD = 100;
     private static final int FAR_AWAY_COORD = 1000;
 
-    // Test fixtures
     @MockBukkitInject
     private ServerMock server;
     @MockBukkitInject
@@ -155,18 +154,6 @@ class FlatsCommandTest {
     }
 
     /**
-     * Executes a specified command as an operator by temporarily granting operator privileges
-     * to the current player during the command execution.
-     *
-     * @param command the command to be executed as an operator; must not be {@code null}.
-     */
-    private void executeCommandAsOp(String command) {
-        player.setOp(true);
-        executeCommand(command);
-        player.setOp(false);
-    }
-
-    /**
      * Executes a player command and verifies that it succeeds.
      *
      * <p>Typically used to simulate a player issuing a command and validating its behavior within
@@ -239,20 +226,23 @@ class FlatsCommandTest {
     }
 
     /**
-     * Places the player at a far-away location, outside the vicinity of any flats.
-     * <p>
-     * This method is primarily used in test scenarios to ensure the player is not within any flat's boundaries.
-     */
-    private void placePlayerFarFromFlats() {
-        player.setLocation(new Location(world, FAR_AWAY_COORD, flatInteriorY, FAR_AWAY_COORD));
-    }
-
-    /**
      * Tests for general command behavior and error cases.
      */
     @Nested
     @DisplayName("General Command Tests")
     class GeneralCommandTests {
+
+        /**
+         * Executes a specified command as an operator by temporarily granting operator privileges
+         * to the current player during the command execution.
+         *
+         * @param command the command to be executed as an operator; must not be {@code null}.
+         */
+        private void executeCommandAsOp(String command) {
+            player.setOp(true);
+            executeCommand(command);
+            player.setOp(false);
+        }
 
         @ParameterizedTest(name = "Command \"{0}\" should show message key \"{1}\"")
         @CsvSource({"flats unknown, help.header", "flats, help.header", "flats add testFlat, error.nothing_selected",
@@ -282,7 +272,7 @@ class FlatsCommandTest {
         @DisplayName("Player with permission receives selection item")
         void selectCommand() {
             executeCommandWithPermission("flats select", Permissions.EDIT_FLATS);
-            assertTrue(player.getInventory().contains(SelectionItem.getItem()),
+            assertTrue(player.getInventory().contains(SelectionItem.getItem(plugin)),
                     "Player should receive the selection item.");
         }
     }
@@ -453,6 +443,15 @@ class FlatsCommandTest {
     @DisplayName("Info/List/Show Command Tests")
     class InfoListShowCommandTests {
 
+        /**
+         * Places the player at a far-away location, outside the vicinity of any flats.
+         * <p>
+         * This method is primarily used in test scenarios to ensure the player is not within any flat's boundaries.
+         */
+        private void placePlayerFarFromFlats() {
+            player.setLocation(new Location(world, FAR_AWAY_COORD, flatInteriorY, FAR_AWAY_COORD));
+        }
+
         @Test
         @DisplayName("Info command shows flat details when player is in a flat")
         void infoCommandWhenInFlat() {
@@ -483,6 +482,7 @@ class FlatsCommandTest {
             verifyMessageEquals("info.unoccupied");
         }
 
+        @Disabled("Disabled as MockBukkit has not implemented the necessary methods")
         @Test
         @DisplayName("Show command highlights nearby flats")
         void showCommand() {
@@ -503,6 +503,7 @@ class FlatsCommandTest {
             // Visual assertion isn't applicable in tests but confirm no errors occur.
         }
 
+        @Disabled("Disabled as MockBukkit has not implemented the necessary methods")
         @Test
         @DisplayName("Show command includes large flats when the player is inside but far from both corners")
         void showCommandLargeFlatContainingPlayer() {

@@ -54,8 +54,9 @@ public class ListSubCommand implements SubCommand {
         int offset = (page - 1) * pageSize;
         for (String name : flatsCache.getPaginatedFlatNames(offset, pageSize)) {
             Flat flat = flatsCache.getFlat(name);
-            if (flat == null)
+            if (flat == null) {
                 continue;
+            }
 
             player.sendMessage(Flats.PREFIX + I18n.translate("info.flat", flat.getName()));
             if (!flat.hasOwner()) {

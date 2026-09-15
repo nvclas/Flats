@@ -26,7 +26,7 @@ public class FlatsCommandUtils {
      * player is not in a flat or does not own the flat at their location.
      */
     public @Nullable Flat getOwnedFlatAtPlayerLocation(Player player, FlatsCache flatsCache) {
-        Flat flat = flatsCache.getFlatByLocation(player.getLocation());
+        Flat flat = flatsCache.getFlatAtLocation(player.getLocation());
         if (flat == null) {
             player.sendMessage(Flats.PREFIX + I18n.translate("error.not_in_flat"));
             return null;

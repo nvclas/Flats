@@ -2,6 +2,7 @@ package de.nvclas.flats.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalCause;
 import de.nvclas.flats.volumes.Area;
 import de.nvclas.flats.volumes.Flat;
 import org.bukkit.Bukkit;
@@ -40,6 +41,12 @@ public class SpatialIndex {
     private final Cache<GridKey, List<FlatArea>> gridCache = Caffeine.newBuilder()
             .maximumSize(MAX_CACHED_GRIDS)
             .expireAfterAccess(CACHE_EXPIRATION)
+            .removalListener((GridKey key, List<FlatArea> loadedAreas, RemovalCause cause) -> {
+                if (key == null || loadedAreas == null || cause == RemovalCause.REPLACED) {
+                    return;
+                }
+                removeGridKeyReferences(key, loadedAreas);
+            })
             .build();
 
     private final Map<String, Set<GridKey>> flatGridKeys = new ConcurrentHashMap<>();
@@ -172,6 +179,15 @@ public class SpatialIndex {
     public @Nullable Area getAreaAtLocation(@NotNull Location location) {
         FlatArea flatArea = getFlatAreaAtLocation(location);
         return flatArea != null ? flatArea.toArea() : null;
+    }
+
+    private void removeGridKeyReferences(@NotNull GridKey key, @NotNull List<FlatArea> loadedAreas) {
+        for (FlatArea area : loadedAreas) {
+            flatGridKeys.computeIfPresent(area.flatName(), (flatName, keys) -> {
+                keys.remove(key);
+                return keys.isEmpty() ? null : keys;
+            });
+        }
     }
 
     private @Nullable FlatArea getFlatAreaAtLocation(@NotNull Location location) {

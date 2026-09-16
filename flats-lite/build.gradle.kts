@@ -8,6 +8,9 @@ plugins {
     alias(libs.plugins.runPaper)
 }
 
+group = "de.nvclas"
+version = "1.0.0"
+
 dependencies {
     implementation(project(":flats-core"))
     paperweight.paperDevBundle(libs.versions.paper)

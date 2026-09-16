@@ -1,12 +1,15 @@
 plugins {
-    java
+    `java-library`
     alias(libs.plugins.paperweight.userdev)
     alias(libs.plugins.lombok)
 }
 
+group = "de.nvclas"
+version = "2.1.3"
+
 dependencies {
     paperweight.paperDevBundle(libs.versions.paper)
-    implementation(libs.annotations)
+    api(libs.annotations)
 
     compileOnly(libs.flyway.core)
     compileOnly(libs.caffeine)

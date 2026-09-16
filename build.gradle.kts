@@ -5,6 +5,3 @@ plugins {
     alias(libs.plugins.lombok) apply false
     alias(libs.plugins.shadow) apply false
 }
-
-group = "de.nvclas"
-version = "2.1.3"

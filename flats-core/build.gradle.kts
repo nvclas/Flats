@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "de.nvclas"
-version = "2.1.3"
+version = libs.versions.flats.core.get()
 
 dependencies {
     paperweight.paperDevBundle(libs.versions.paper)

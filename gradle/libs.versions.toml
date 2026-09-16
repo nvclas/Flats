@@ -1,4 +1,8 @@
 [versions]
+flats-lite = "1.0.0"
+flats-pro = "1.0.0"
+flats-core = "3.0.0"
+
 annotations = "26.1.+"
 lombok = "9.5.+"
 runPaper = "3.1.+"

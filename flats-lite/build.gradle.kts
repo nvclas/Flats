@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "de.nvclas"
-version = "1.0.0"
+version = libs.versions.flats.lite.get()
 
 dependencies {
     implementation(project(":flats-core"))
@@ -57,10 +57,11 @@ tasks.processResources {
 }
 
 tasks.shadowJar {
-    archiveBaseName.set("Flats")
-    archiveClassifier.set("")
+    val coreVersion = libs.versions.flats.core.get()
+    val liteVersion = libs.versions.flats.lite.get()
+    archiveFileName.set("Flats_${coreVersion}_${liteVersion}.jar")
 }
 
-tasks.assemble {
-    dependsOn(tasks.reobfJar)
+tasks.jar {
+    enabled = false
 }

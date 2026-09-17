@@ -1,4 +1,4 @@
-package de.nvclas.flats.testutil;
+package de.nvclas.flats.core.testutil;
 
 import lombok.experimental.UtilityClass;
 import org.junit.jupiter.api.Assertions;

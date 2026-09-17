@@ -1,15 +1,15 @@
-package de.nvclas.flats.commands;
+package de.nvclas.flats.core.commands;
 
-import de.nvclas.flats.Flats;
-import de.nvclas.flats.cache.FlatsCache;
-import de.nvclas.flats.commands.flats.FlatsCommand;
-import de.nvclas.flats.items.SelectionItem;
-import de.nvclas.flats.testutil.TestUtils;
-import de.nvclas.flats.util.I18n;
-import de.nvclas.flats.util.Permissions;
-import de.nvclas.flats.volumes.Area;
-import de.nvclas.flats.volumes.Flat;
-import de.nvclas.flats.volumes.Selection;
+import de.nvclas.flats.core.cache.FlatsCache;
+import de.nvclas.flats.core.config.SettingsConfig;
+import de.nvclas.flats.core.items.SelectionItem;
+import de.nvclas.flats.core.testutil.TestFlatsPlugin;
+import de.nvclas.flats.core.testutil.TestUtils;
+import de.nvclas.flats.core.util.I18n;
+import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.volumes.Area;
+import de.nvclas.flats.core.volumes.Flat;
+import de.nvclas.flats.core.volumes.Selection;
 import org.bukkit.Location;
 import org.bukkit.permissions.PermissionAttachment;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * Test class for verifying the functionality of the {@link  FlatsCommand} and sub commands.
+ * Test class for verifying the functionality of the {@link MainCommand} and sub commands.
  * <p>
  * This class contains unit tests to ensure that the commands provided by the plugin
  * behave as expected in various scenarios, including valid selections, claiming flats,
@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @ExtendWith(MockBukkitExtension.class)
 @DisplayName("Flats Command Tests")
-class FlatsCommandTest {
+class MainCommandTest {
 
     private static final int SELECTION_VOLUME = 1000;
     private static final int FLAT_SIZE = 10;
@@ -60,7 +60,7 @@ class FlatsCommandTest {
     @MockBukkitInject
     private ServerMock server;
     @MockBukkitInject
-    private Flats plugin;
+    private TestFlatsPlugin plugin;
     @MockBukkitInject
     private PlayerMock player;
     @MockBukkitInject
@@ -101,12 +101,11 @@ class FlatsCommandTest {
 
     /**
      * Configures the plugin settings to enable the use of advanced permissions.
-     * <p>
-     * This method modifies the settings configuration file and is typically invoked
-     * during the test setup phase to ensure consistent configuration behavior.
      */
     private void setupConfiguration() {
-        plugin.getSettingsConfig().getConfigFile().set("useAdvancedPermissions", true);
+        if (plugin.getConfigAdapter() instanceof SettingsConfig settingsConfig) {
+            settingsConfig.getConfigFile().set("useAdvancedPermissions", true);
+        }
     }
 
     /**
@@ -132,11 +131,6 @@ class FlatsCommandTest {
     /**
      * Creates a valid {@link Flat} instance, assigns the current player as the owner,
      * and moves the player into the created flat.
-     * <p>
-     * This method ensures that the created flat meets all validity constraints
-     * and is properly initialized before assigning ownership and placing the player.
-     * <p>
-     * Intended for use in tests that require a player to be set up in an owned flat.
      */
     private Flat createAndClaimFlat() {
         Flat flat = createValidFlat();
@@ -155,12 +149,6 @@ class FlatsCommandTest {
 
     /**
      * Executes a player command and verifies that it succeeds.
-     *
-     * <p>Typically used to simulate a player issuing a command and validating its behavior within
-     * the test environment.
-     *
-     * @param command the command to be executed, including any arguments,
-     *                as a {@code String}.
      */
     private void executeCommand(String command) {
         assertTrue(player.performCommand(command), "Command execution should succeed: " + command);
@@ -168,12 +156,9 @@ class FlatsCommandTest {
 
     /**
      * Verifies that the next message received by the player matches the expected message.
-     *
-     * @param expectedMessageKey the translation key for the expected message.
-     * @param formatArgs         optional arguments to format the expected message.
      */
     private void verifyMessageEquals(String expectedMessageKey, Object... formatArgs) {
-        String expectedMessage = Flats.PREFIX + I18n.translate(expectedMessageKey, formatArgs);
+        String expectedMessage = plugin.getPrefix() + I18n.translate(expectedMessageKey, formatArgs);
         String actualMessage = player.nextMessage();
         assertNotNull(actualMessage, "Player should receive a message.");
         TestUtils.assertEqualMessage(expectedMessage, actualMessage);
@@ -181,8 +166,6 @@ class FlatsCommandTest {
 
     /**
      * Sets up and configures a valid selection for the player by defining its two corner points.
-     * <p>
-     * Ensures the selection's volume matches the predefined expected value.
      */
     private void setupValidSelection() {
         Selection selection = Selection.getSelection(player);
@@ -195,11 +178,6 @@ class FlatsCommandTest {
 
     /**
      * Creates and registers a valid flat with randomized properties and ensures the operation is successful.
-     * <p>
-     * This method sets up a valid selection, executes the necessary commands to create the flat, and verifies
-     * the success of the operation.
-     *
-     * @return The created {@link Flat}, guaranteed to be valid and existing in the flats cache.
      */
     private @NotNull Flat createValidFlat() {
         randomizeTestFlatValues();
@@ -211,15 +189,6 @@ class FlatsCommandTest {
 
     /**
      * Places the player at the preset coordinates of the flat's interior.
-     *
-     * <p>
-     * This method is used to position the player inside the designated area of a flat.
-     * It is typically invoked during commands or operations that require the player
-     * to interact with a specific flat's environment.
-     *
-     * <p>
-     * The method assumes that the flat's interior coordinates are already predefined
-     * and assigns them to the player's location in the given world.
      */
     private void placePlayerInFlat() {
         player.setLocation(new Location(world, flatInteriorX, flatInteriorY, flatInteriorZ));
@@ -232,12 +201,6 @@ class FlatsCommandTest {
     @DisplayName("General Command Tests")
     class GeneralCommandTests {
 
-        /**
-         * Executes a specified command as an operator by temporarily granting operator privileges
-         * to the current player during the command execution.
-         *
-         * @param command the command to be executed as an operator; must not be {@code null}.
-         */
         private void executeCommandAsOp(String command) {
             player.setOp(true);
             executeCommand(command);
@@ -345,9 +308,8 @@ class FlatsCommandTest {
             Flat fourthFlat = createValidFlat();
             placePlayerInFlat();
 
-
             executeCommandWithPermission("flats claim", Permissions.CLAIM_FLATS);
-            verifyMessageEquals("claim.max_claimable_flats_reached", plugin.getSettingsConfig().getMaxClaimableFlats());
+            verifyMessageEquals("claim.max_claimable_flats_reached", plugin.getConfigAdapter().getMaxClaimableFlats());
             assertFalse(fourthFlat.isOwner(player), "Player should not be able to claim more than the limit of flats");
         }
 
@@ -443,11 +405,6 @@ class FlatsCommandTest {
     @DisplayName("Info/List/Show Command Tests")
     class InfoListShowCommandTests {
 
-        /**
-         * Places the player at a far-away location, outside the vicinity of any flats.
-         * <p>
-         * This method is primarily used in test scenarios to ensure the player is not within any flat's boundaries.
-         */
         private void placePlayerFarFromFlats() {
             player.setLocation(new Location(world, FAR_AWAY_COORD, flatInteriorY, FAR_AWAY_COORD));
         }
@@ -490,7 +447,6 @@ class FlatsCommandTest {
             placePlayerInFlat();
             executeCommandWithPermission("flats show", Permissions.SHOW_FLATS);
             verifyMessageEquals("show.success.singular", 10);
-            // Visual assertion isn't applicable in tests but confirm no errors occur.
         }
 
         @Test
@@ -500,7 +456,6 @@ class FlatsCommandTest {
 
             executeCommandWithPermission("flats show", Permissions.SHOW_FLATS);
             verifyMessageEquals("show.none");
-            // Visual assertion isn't applicable in tests but confirm no errors occur.
         }
 
         @Disabled("Disabled as MockBukkit has not implemented the necessary methods")

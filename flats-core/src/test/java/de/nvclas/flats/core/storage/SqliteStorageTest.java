@@ -1,8 +1,9 @@
-package de.nvclas.flats.storage;
+package de.nvclas.flats.core.storage;
 
-import de.nvclas.flats.Flats;
-import de.nvclas.flats.volumes.Area;
-import de.nvclas.flats.volumes.Flat;
+import de.nvclas.flats.core.testutil.TestFlatsPlugin;
+import de.nvclas.flats.core.volumes.Area;
+import de.nvclas.flats.core.volumes.Flat;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.mockbukkit.mockbukkit.ServerMock;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -27,12 +29,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(MockBukkitExtension.class)
 @DisplayName("FlatsStorage Migration Tests")
-class FlatsStorageTest {
+class SqliteStorageTest {
 
     @MockBukkitInject
     private ServerMock server;
     @MockBukkitInject
-    private Flats plugin;
+    private TestFlatsPlugin plugin;
 
     @AfterEach
     void tearDown() {
@@ -56,11 +58,9 @@ class FlatsStorageTest {
 
         // Save the flat — saveFlat() uses area.getWorldName(), so no live World is required
         Flat flat = new Flat("test_flat", area);
-        plugin.getFlatsStorage().saveFlat(flat);
+        plugin.getStorageAdapter().saveFlat(flat);
 
-        // Load it back: the critical assertion is that the flat is returned with its areas intact,
-        // not silently dropped because the world is currently unloaded
-        Flat loaded = plugin.getFlatsStorage().loadFlat("test_flat");
+        Flat loaded = plugin.getStorageAdapter().loadFlat("test_flat");
 
         assertNotNull(loaded, "Flat should be loaded even when its world is not currently loaded");
         assertEquals(1, loaded.getAreas().size(), "All areas should be preserved when the world is not loaded");
@@ -79,7 +79,7 @@ class FlatsStorageTest {
     @Test
     @DisplayName("Verify that Flyway migrations are correctly applied")
     void testMigrationsApplied() throws SQLException {
-        File dbFile = new File(plugin.getDataFolder(), FlatsStorage.DATABASE_NAME);
+        File dbFile = new File(plugin.getDataFolder(), SqliteStorage.DATABASE_NAME);
         assertTrue(dbFile.exists(), "Database file should exist after migration");
 
         String url = "jdbc:sqlite:" + dbFile.getAbsolutePath();
@@ -108,9 +108,9 @@ class FlatsStorageTest {
         }
     }
 
-    private void assertTableExists(Statement stmt, String tableName) throws SQLException {
+    private void assertTableExists(@NotNull Statement stmt, @NotNull String tableName) throws SQLException {
         String query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?";
-        try (var preparedStatement = stmt.getConnection().prepareStatement(query)) {
+        try (PreparedStatement preparedStatement = stmt.getConnection().prepareStatement(query)) {
             preparedStatement.setString(1, tableName);
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 assertTrue(rs.next(), "Table '" + tableName + "' should exist in the database");
@@ -118,9 +118,9 @@ class FlatsStorageTest {
         }
     }
 
-    private void assertIndexExists(Statement stmt, String indexName) throws SQLException {
+    private void assertIndexExists(@NotNull Statement stmt, @NotNull String indexName) throws SQLException {
         String query = "SELECT name FROM sqlite_master WHERE type='index' AND name=?";
-        try (var preparedStatement = stmt.getConnection().prepareStatement(query)) {
+        try (PreparedStatement preparedStatement = stmt.getConnection().prepareStatement(query)) {
             preparedStatement.setString(1, indexName);
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 assertTrue(rs.next(), "Index '" + indexName + "' should exist in the database");

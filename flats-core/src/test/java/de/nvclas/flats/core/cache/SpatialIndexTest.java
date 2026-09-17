@@ -1,6 +1,6 @@
-package de.nvclas.flats.cache;
+package de.nvclas.flats.core.cache;
 
-import de.nvclas.flats.volumes.Area;
+import de.nvclas.flats.core.volumes.Area;
 import org.bukkit.Location;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,9 +46,9 @@ class SpatialIndexTest {
         Location locationInWorldA = new Location(worldA, 0, 64, 0);
         Location locationInWorldB = new Location(worldB, 0, 64, 0);
 
-        assertTrue(spatialIndex.isLoaded(locationInWorldA),
+        assertTrue(spatialIndex.isLoaded(spatialIndex.getGridKey(locationInWorldA)),
                 "Grid cell (0,0) in world_a should be loaded after setAreas");
-        assertFalse(spatialIndex.isLoaded(locationInWorldB),
+        assertFalse(spatialIndex.isLoaded(spatialIndex.getGridKey(locationInWorldB)),
                 "Grid cell (0,0) in world_b must NOT be considered loaded just because world_a's cell was loaded");
     }
 

@@ -1,9 +1,9 @@
-package de.nvclas.flats.cache;
+package de.nvclas.flats.core.cache;
 
-import de.nvclas.flats.Flats;
-import de.nvclas.flats.events.FlatEnteredOrLeftEvent;
-import de.nvclas.flats.volumes.Area;
-import de.nvclas.flats.volumes.Flat;
+import de.nvclas.flats.core.events.FlatEnteredOrLeftEvent;
+import de.nvclas.flats.core.testutil.TestFlatsPlugin;
+import de.nvclas.flats.core.volumes.Area;
+import de.nvclas.flats.core.volumes.Flat;
 import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -35,7 +35,7 @@ class FlatsCacheTest {
     @MockBukkitInject
     private ServerMock server;
     @MockBukkitInject
-    private Flats plugin;
+    private TestFlatsPlugin plugin;
     @MockBukkitInject
     private WorldMock world;
     @MockBukkitInject
@@ -61,7 +61,7 @@ class FlatsCacheTest {
     void testGetFlatAtLocationWaitsWhenUncached() {
         Area area = new Area(new Location(world, 100, 10, 100), new Location(world, 120, 20, 120), "cached_flat");
         Flat flat = new Flat("cached_flat", area);
-        plugin.getFlatsStorage().saveFlat(flat);
+        plugin.getStorageAdapter().saveFlat(flat);
 
         // Ensure cache is cold for this location by creating a query at (105, 15, 105)
         Location queryLocation = new Location(world, 105, 15, 105);
@@ -80,7 +80,9 @@ class FlatsCacheTest {
         flatsCache.prefetchSurroundingGridCells(center, 1);
 
         // Grid cells -1, 0, 1 in x and z should eventually be loaded
-        CompletableFuture<Void> queryFuture = flatsCache.prefetchLocation(new Location(world, 16, 64, 16));
+        int gridX = Math.floorDiv(16, SpatialIndex.GRID_SIZE);
+        int gridZ = Math.floorDiv(16, SpatialIndex.GRID_SIZE);
+        CompletableFuture<Void> queryFuture = flatsCache.prefetchGridCell(world.getName(), gridX, gridZ);
         queryFuture.join();
 
         Area area = flatsCache.getAreaAtLocation(new Location(world, 16, 64, 16));
@@ -101,9 +103,11 @@ class FlatsCacheTest {
     @DisplayName("Player movement reloads an expired flat entry before firing the enter event")
     void testPlayerMoveReloadsFlatWhenOnlySpatialCellIsLoaded() {
         Area area = new Area(new Location(world, 100, 10, 100), new Location(world, 110, 20, 110), "movement_flat");
-        plugin.getFlatsStorage().saveFlat(new Flat("movement_flat", area));
+        plugin.getStorageAdapter().saveFlat(new Flat("movement_flat", area));
 
-        flatsCache.prefetchLocation(new Location(world, 105, 15, 105)).join();
+        int gridX = Math.floorDiv(105, SpatialIndex.GRID_SIZE);
+        int gridZ = Math.floorDiv(105, SpatialIndex.GRID_SIZE);
+        flatsCache.prefetchGridCell(world.getName(), gridX, gridZ).join();
 
         AtomicInteger enterEvents = new AtomicInteger();
         server.getPluginManager().registerEvents(new Listener() {

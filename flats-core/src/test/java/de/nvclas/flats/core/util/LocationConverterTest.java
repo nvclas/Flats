@@ -1,5 +1,4 @@
-package de.nvclas.flats.util;
-
+package de.nvclas.flats.core.util;
 
 import org.bukkit.Location;
 import org.junit.jupiter.api.AfterEach;

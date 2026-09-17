@@ -1,13 +1,14 @@
-package de.nvclas.flats.cache;
+package de.nvclas.flats.core.cache;
 
-import de.nvclas.flats.Flats;
-import de.nvclas.flats.events.FlatEnteredOrLeftEvent;
-import de.nvclas.flats.listeners.PlayerMoveListener;
-import de.nvclas.flats.volumes.Area;
-import de.nvclas.flats.volumes.Flat;
+import de.nvclas.flats.core.events.FlatEnteredOrLeftEvent;
+import de.nvclas.flats.core.listeners.PlayerMoveListener;
+import de.nvclas.flats.core.testutil.TestFlatsPlugin;
+import de.nvclas.flats.core.volumes.Area;
+import de.nvclas.flats.core.volumes.Flat;
 import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,7 +50,7 @@ class FlatsCacheLoadTest {
     @MockBukkitInject
     private ServerMock server;
     @MockBukkitInject
-    private Flats plugin;
+    private TestFlatsPlugin plugin;
     @MockBukkitInject
     private WorldMock world;
 
@@ -78,7 +79,7 @@ class FlatsCacheLoadTest {
     /**
      * Creates a standard test area with a offset multiplier to keep flats separated.
      */
-    private Area createTestArea(int index, int spacing, String name) {
+    private @NotNull Area createTestArea(int index, int spacing, @NotNull String name) {
         int baseX = index * spacing;
         return new Area(
                 new Location(world, baseX, 0, 0),
@@ -128,14 +129,17 @@ class FlatsCacheLoadTest {
 
             for (int i = 0; i < playerCount; i++) {
                 String name = "burst_flat_" + i;
-                plugin.getFlatsStorage().saveFlat(new Flat(name, createTestArea(i, spacing, name)));
+                plugin.getStorageAdapter().saveFlat(new Flat(name, createTestArea(i, spacing, name)));
             }
 
-            long start = System.nanoTime();
             List<CompletableFuture<Void>> futures = new ArrayList<>(playerCount);
+            long start = System.nanoTime();
             for (int i = 0; i < playerCount; i++) {
-                Location loc = new Location(world, i * spacing + 5, 5, 5);
-                futures.add(flatsCache.prefetchLocation(loc));
+                int blockX = i * spacing + 5;
+                int blockZ = 5;
+                int gridX = Math.floorDiv(blockX, SpatialIndex.GRID_SIZE);
+                int gridZ = Math.floorDiv(blockZ, SpatialIndex.GRID_SIZE);
+                futures.add(flatsCache.prefetchGridCell(world.getName(), gridX, gridZ));
             }
 
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();

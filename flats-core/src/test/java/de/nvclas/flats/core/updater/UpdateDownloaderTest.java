@@ -1,8 +1,8 @@
-package de.nvclas.flats.updater;
+package de.nvclas.flats.core.updater;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import de.nvclas.flats.Flats;
+import de.nvclas.flats.core.testutil.TestFlatsPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,7 +53,7 @@ class UpdateDownloaderTest {
     @MockBukkitInject
     private ServerMock server;
     @MockBukkitInject
-    private Flats plugin;
+    private TestFlatsPlugin plugin;
 
     private HttpServer httpServer;
     private Path movedJar;

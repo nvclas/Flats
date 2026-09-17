@@ -1,0 +1,32 @@
+package de.nvclas.flats.lite.listeners.protection;
+
+import de.nvclas.flats.core.cache.FlatsCache;
+import de.nvclas.flats.core.volumes.Flat;
+import de.nvclas.flats.lite.Flats;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEvent;
+
+public class PlayerInteractListener implements Listener {
+
+    private final FlatsCache flatsCache;
+
+    public PlayerInteractListener(Flats flatsPlugin) {
+        this.flatsCache = flatsPlugin.getFlatsCache();
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        if (event.getClickedBlock() != null) {
+            Flat flat = flatsCache.getFlatAtLocation(event.getClickedBlock().getLocation());
+            EventCancelChecker.cancelEventIfPlayerNotTrustedOrOwner(event, flat, player);
+            return;
+        }
+        if (event.getInteractionPoint() != null) {
+            Flat flat = flatsCache.getFlatAtLocation(event.getInteractionPoint());
+            EventCancelChecker.cancelEventIfPlayerNotTrustedOrOwner(event, flat, player);
+        }
+    }
+}

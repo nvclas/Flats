@@ -19,43 +19,36 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Represents a spatial index that organizes and queries {@link Flat} objects based on their
- * spatial locations and areas.
- * <p>
- * This class uses a grid-based mapping system to efficiently manage the association
- * between spatial boundaries and {@link Flat} objects.
- */
 public class SpatialIndex {
 
-    /**
-     * The size of each grid cell in blocks.
-     */
     public static final int GRID_SIZE = 16;
     private static final int MAX_CACHED_GRIDS = 50_000;
     private static final Duration CACHE_EXPIRATION = Duration.ofMinutes(30);
-    /**
-     * A cache of (world, grid x, grid z) to the list of {@link FlatArea} objects that intersect with those cells.
-     * If a key is present, the cell is considered "loaded". An empty list means no areas intersect the cell.
-     */
+
     private final Cache<GridKey, List<FlatArea>> gridCache = Caffeine.newBuilder()
             .maximumSize(MAX_CACHED_GRIDS)
             .expireAfterAccess(CACHE_EXPIRATION)
             .removalListener((GridKey key, List<FlatArea> loadedAreas, RemovalCause cause) -> {
-                if (cause == RemovalCause.REPLACED) {
-                    return;
+                if (cause != RemovalCause.REPLACED) {
+                    removeGridKeyReferences(key, loadedAreas);
                 }
-                removeGridKeyReferences(key, loadedAreas);
             })
             .build();
 
     private final Map<String, Set<GridKey>> flatGridKeys = new ConcurrentHashMap<>();
 
-    /**
-     * Adds an {@link Area} to the spatial index.
-     *
-     * @param area The {@link Area} to add. Must not be null.
-     */
+    public void setAreas(@NotNull String worldName, int gridX, int gridZ, @NotNull List<Area> areas) {
+        List<FlatArea> flatAreas = new ArrayList<>(areas.size());
+        GridKey key = new GridKey(worldName, gridX, gridZ);
+        for (Area area : areas) {
+            FlatArea flatArea = FlatArea.fromArea(area);
+            flatAreas.add(flatArea);
+            flatGridKeys.computeIfAbsent(flatArea.flatName(), k -> ConcurrentHashMap.newKeySet()).add(key);
+        }
+
+        gridCache.put(key, List.copyOf(flatAreas));
+    }
+
     public void addArea(@NotNull Area area) {
         FlatArea flatArea = FlatArea.fromArea(area);
         String worldName = area.getWorldName();
@@ -81,61 +74,6 @@ public class SpatialIndex {
         }
     }
 
-    /**
-     * Sets the areas for a specific grid cell in a specific world.
-     *
-     * @param worldName The name of the world.
-     * @param gridX     The grid X coordinate.
-     * @param gridZ     The grid Z coordinate.
-     * @param areas     The list of areas in this cell.
-     */
-    public void setAreas(@NotNull String worldName, int gridX, int gridZ, @NotNull List<Area> areas) {
-        List<FlatArea> flatAreas = new ArrayList<>(areas.size());
-        GridKey key = new GridKey(worldName, gridX, gridZ);
-        for (Area area : areas) {
-            FlatArea flatArea = FlatArea.fromArea(area);
-            flatAreas.add(flatArea);
-            flatGridKeys.computeIfAbsent(flatArea.flatName(), k -> ConcurrentHashMap.newKeySet()).add(key);
-        }
-
-        gridCache.put(key, List.copyOf(flatAreas));
-    }
-
-    /**
-     * Checks if a grid cell identified by the given {@link GridKey} is currently loaded.
-     * <p>
-     * A grid cell is considered loaded if it has an associated cached entry in the spatial index.
-     *
-     * @param key The {@link GridKey} identifying the grid cell. Must not be {@code null}.
-     * @return {@code true} if the grid cell is loaded, {@code false} otherwise.
-     */
-    public boolean isLoaded(@NotNull GridKey key) {
-        return gridCache.getIfPresent(key) != null;
-    }
-
-    /**
-     * Gets the grid key for the given location.
-     * <p>
-     * If the location's world is null, the key uses an empty string for the world name.
-     * Such a key will never match a loaded cell (since cells are only loaded via
-     * {@link #setAreas(String, int, int, java.util.List)} with a real world name),
-     * so null-world locations are always treated as not loaded.
-     *
-     * @param location The location.
-     * @return The grid key, including the world name.
-     */
-    public GridKey getGridKey(@NotNull Location location) {
-        int gridX = Math.floorDiv(location.getBlockX(), GRID_SIZE);
-        int gridZ = Math.floorDiv(location.getBlockZ(), GRID_SIZE);
-        String worldName = location.getWorld() != null ? location.getWorld().getName() : "";
-        return new GridKey(worldName, gridX, gridZ);
-    }
-
-    /**
-     * Removes all areas associated with the specified flat name from the spatial index.
-     *
-     * @param flatName The name of the flat to be removed. Must not be null.
-     */
     public void removeFlat(@NotNull String flatName) {
         Set<GridKey> keys = flatGridKeys.remove(flatName);
         if (keys == null) {
@@ -147,6 +85,17 @@ public class SpatialIndex {
                             .filter(area -> !area.flatName().equals(flatName))
                             .toList());
         }
+    }
+
+    public boolean isLoaded(@NotNull GridKey key) {
+        return gridCache.getIfPresent(key) != null;
+    }
+
+    public @NotNull GridKey getGridKey(@NotNull Location location) {
+        int gridX = Math.floorDiv(location.getBlockX(), GRID_SIZE);
+        int gridZ = Math.floorDiv(location.getBlockZ(), GRID_SIZE);
+        String worldName = location.getWorld() != null ? location.getWorld().getName() : "";
+        return new GridKey(worldName, gridX, gridZ);
     }
 
     /**
@@ -171,15 +120,6 @@ public class SpatialIndex {
         return flatArea != null ? flatArea.toArea() : null;
     }
 
-    private void removeGridKeyReferences(@NotNull GridKey key, @NotNull List<FlatArea> loadedAreas) {
-        for (FlatArea area : loadedAreas) {
-            flatGridKeys.computeIfPresent(area.flatName(), (flatName, keys) -> {
-                keys.remove(key);
-                return keys.isEmpty() ? null : keys;
-            });
-        }
-    }
-
     private @Nullable FlatArea getFlatAreaAtLocation(@NotNull Location location) {
         World world = location.getWorld();
         if (world == null) {
@@ -200,8 +140,16 @@ public class SpatialIndex {
                 return area;
             }
         }
-
         return null;
+    }
+
+    private void removeGridKeyReferences(@NotNull GridKey key, @NotNull List<FlatArea> loadedAreas) {
+        for (FlatArea area : loadedAreas) {
+            flatGridKeys.computeIfPresent(area.flatName(), (flatName, keys) -> {
+                keys.remove(key);
+                return keys.isEmpty() ? null : keys;
+            });
+        }
     }
 
     /**
@@ -232,6 +180,5 @@ public class SpatialIndex {
      * A key for the grid cache, representing a grid cell's coordinates within a specific world.
      */
     public record GridKey(String worldName, int x, int z) {
-
     }
 }

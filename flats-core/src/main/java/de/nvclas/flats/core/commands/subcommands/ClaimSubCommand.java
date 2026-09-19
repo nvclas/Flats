@@ -25,7 +25,7 @@ public class ClaimSubCommand implements SubCommand {
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
         Flat flat = flatsCache.getFlatAtLocation(player.getLocation());
-        if (!Permissions.canClaimFlats(player, configAdapter)) {
+        if (!Permissions.canClaimFlats(plugin, player, configAdapter)) {
             Permissions.showNoPermissionMessage(plugin, player);
             return;
         }
@@ -42,7 +42,7 @@ public class ClaimSubCommand implements SubCommand {
                     plugin.getPrefix() + I18n.translate("claim.already_owned_by", flat.getOwner().getName()));
             return;
         }
-        if (!Permissions.hasAdminPermission(player) &&
+        if (!Permissions.hasAdminPermission(plugin, player) &&
                 flatsCache.getOwnedFlatsCount(player) >= configAdapter.getMaxClaimableFlats()) {
             player.sendMessage(plugin.getPrefix() + I18n.translate("claim.max_claimable_flats_reached",
                     configAdapter.getMaxClaimableFlats()));

@@ -142,7 +142,7 @@ class MainCommandTest {
 
     private void executeCommandWithPermission(String command, String permission) {
         PermissionAttachment permissions = player.addAttachment(plugin);
-        permissions.setPermission(permission, true);
+        permissions.setPermission(plugin.getPermissionPrefix() + "." + permission, true);
         executeCommand(command);
         player.removeAttachment(permissions);
     }

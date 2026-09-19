@@ -27,12 +27,12 @@ public class UntrustSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canTrustPlayers(player, configAdapter)) {
+        if (!Permissions.canTrustPlayers(plugin, player, configAdapter)) {
             Permissions.showNoPermissionMessage(plugin, player);
             return;
         }
         if (args.length < 2) {
-            player.sendMessage(plugin.getPrefix() + I18n.translate("untrust.usage"));
+            player.sendMessage(plugin.getPrefix() + I18n.translate("untrust.usage", plugin.getMainCommandName()));
             return;
         }
         Flat flat = FlatsCommandUtils.getOwnedFlatAtPlayerLocation(plugin, player, flatsCache);

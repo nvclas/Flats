@@ -23,7 +23,7 @@ public class FlatEnteredOrLeftListener implements Listener {
         ConfigAdapter configAdapter = plugin.getConfigAdapter();
         Player player = event.getPlayer();
 
-        if (!configAdapter.isAutoGamemodeEnabled() || Permissions.hasAdminPermission(player)) {
+        if (!configAdapter.isAutoGamemodeEnabled() || Permissions.hasAdminPermission(plugin, player)) {
             return;
         }
 

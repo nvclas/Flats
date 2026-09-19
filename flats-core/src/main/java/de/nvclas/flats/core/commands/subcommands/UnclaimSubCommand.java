@@ -25,7 +25,7 @@ public class UnclaimSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canClaimFlats(player, configAdapter)) {
+        if (!Permissions.canClaimFlats(plugin, player, configAdapter)) {
             Permissions.showNoPermissionMessage(plugin, player);
             return;
         }

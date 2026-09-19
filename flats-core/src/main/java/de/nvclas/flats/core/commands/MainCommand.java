@@ -55,7 +55,7 @@ public class MainCommand implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        if (Permissions.hasZeroPermissions(player, configAdapter)) {
+        if (Permissions.hasZeroPermissions(plugin, player, configAdapter)) {
             Permissions.showNoPermissionMessage(plugin, player);
             return true;
         }
@@ -70,67 +70,67 @@ public class MainCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelpMessages(Player player) {
-        player.sendMessage(plugin.getPrefix() + I18n.translate("help.header"));
-        if (Permissions.canEditFlats(player, configAdapter)) {
+        player.sendMessage(plugin.getPrefix() + I18n.translate("help.header", plugin.getMainCommandName()));
+        if (Permissions.canEditFlats(plugin, player, configAdapter)) {
             sendEditHelpMessages(player);
         }
-        if (Permissions.canListFlats(player, configAdapter)) {
+        if (Permissions.canListFlats(plugin, player, configAdapter)) {
             sendListHelpMessages(player);
         }
-        if (Permissions.canInfoFlats(player, configAdapter)) {
+        if (Permissions.canInfoFlats(plugin, player, configAdapter)) {
             sendInfoHelpMessages(player);
         }
-        if (Permissions.canClaimFlats(player, configAdapter)) {
+        if (Permissions.canClaimFlats(plugin, player, configAdapter)) {
             sendClaimHelpMessages(player);
         }
-        if (Permissions.canTrustPlayers(player, configAdapter)) {
+        if (Permissions.canTrustPlayers(plugin, player, configAdapter)) {
             sendTrustHelpMessages(player);
         }
-        if (Permissions.canShowFlats(player, configAdapter)) {
+        if (Permissions.canShowFlats(plugin, player, configAdapter)) {
             sendShowHelpMessages(player);
         }
-        if (Permissions.hasAdminPermission(player)) {
+        if (Permissions.hasAdminPermission(plugin, player)) {
             sendAdminHelpMessages(player);
         }
     }
 
     private void sendEditHelpMessages(Player player) {
-        player.sendMessage(I18n.translate("help.select"));
-        player.sendMessage(I18n.translate("help.add"));
-        player.sendMessage(I18n.translate("help.remove"));
+        player.sendMessage(I18n.translate("help.select", plugin.getMainCommandName()));
+        player.sendMessage(I18n.translate("help.add", plugin.getMainCommandName()));
+        player.sendMessage(I18n.translate("help.remove", plugin.getMainCommandName()));
     }
 
     private void sendListHelpMessages(Player player) {
-        player.sendMessage(I18n.translate("help.list"));
+        player.sendMessage(I18n.translate("help.list", plugin.getMainCommandName()));
     }
 
     private void sendInfoHelpMessages(Player player) {
-        player.sendMessage(I18n.translate("help.info"));
+        player.sendMessage(I18n.translate("help.info", plugin.getMainCommandName()));
     }
 
     private void sendClaimHelpMessages(Player player) {
-        player.sendMessage(I18n.translate("help.claim"));
-        player.sendMessage(I18n.translate("help.unclaim"));
+        player.sendMessage(I18n.translate("help.claim", plugin.getMainCommandName()));
+        player.sendMessage(I18n.translate("help.unclaim", plugin.getMainCommandName()));
     }
 
     private void sendTrustHelpMessages(Player player) {
-        player.sendMessage(I18n.translate("help.trust"));
-        player.sendMessage(I18n.translate("help.untrust"));
+        player.sendMessage(I18n.translate("help.trust", plugin.getMainCommandName()));
+        player.sendMessage(I18n.translate("help.untrust", plugin.getMainCommandName()));
     }
 
     private void sendShowHelpMessages(Player player) {
-        player.sendMessage(I18n.translate("help.show"));
+        player.sendMessage(I18n.translate("help.show", plugin.getMainCommandName()));
     }
 
     private void sendAdminHelpMessages(Player player) {
-        player.sendMessage(I18n.translate("help.update"));
+        player.sendMessage(I18n.translate("help.update", plugin.getMainCommandName(), plugin.getPluginName()));
     }
 
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
             @NotNull String label, @NotNull String @NotNull [] args) {
-        if (!"flats".equalsIgnoreCase(command.getName()) || !(sender instanceof Player player)) {
+        if (!plugin.getMainCommandName().equalsIgnoreCase(command.getName()) || !(sender instanceof Player player)) {
             return null;
         }
 
@@ -154,22 +154,25 @@ public class MainCommand implements CommandExecutor, TabCompleter {
     }
 
     private List<String> getSecondArgumentCompletions(Player player, String subCommand, String input) {
-        if (MainSubCommand.REMOVE.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canEditFlats(player,
+        if (MainSubCommand.REMOVE.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canEditFlats(plugin,
+                player,
                 configAdapter)) {
             return getFlatNameCompletions(input);
         }
 
-        if (MainSubCommand.INFO.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canInfoFlats(player,
+        if (MainSubCommand.INFO.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canInfoFlats(plugin,
+                player,
                 configAdapter)) {
             return getFlatNameCompletions(input);
         }
 
-        if (MainSubCommand.TRUST.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canTrustPlayers(
+        if (MainSubCommand.TRUST.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canTrustPlayers(plugin,
                 player, configAdapter)) {
             return getOnlinePlayerCompletions(input);
         }
 
         if (MainSubCommand.UNTRUST.getSubCommandName().equalsIgnoreCase(subCommand) && Permissions.canTrustPlayers(
+                plugin,
                 player, configAdapter)) {
             return getTrustedPlayerCompletions(player, input);
         }
@@ -208,13 +211,13 @@ public class MainCommand implements CommandExecutor, TabCompleter {
 
     private boolean hasPermissionForCommand(Player player, String command) {
         return switch (command.toLowerCase(Locale.ROOT)) {
-            case "select", "add", "remove" -> Permissions.canEditFlats(player, configAdapter);
-            case "list" -> Permissions.canListFlats(player, configAdapter);
-            case "info" -> Permissions.canInfoFlats(player, configAdapter);
-            case "claim", "unclaim" -> Permissions.canClaimFlats(player, configAdapter);
-            case "trust", "untrust" -> Permissions.canTrustPlayers(player, configAdapter);
-            case "show" -> Permissions.canShowFlats(player, configAdapter);
-            case "update" -> Permissions.hasAdminPermission(player);
+            case "select", "add", "remove" -> Permissions.canEditFlats(plugin, player, configAdapter);
+            case "list" -> Permissions.canListFlats(plugin, player, configAdapter);
+            case "info" -> Permissions.canInfoFlats(plugin, player, configAdapter);
+            case "claim", "unclaim" -> Permissions.canClaimFlats(plugin, player, configAdapter);
+            case "trust", "untrust" -> Permissions.canTrustPlayers(plugin, player, configAdapter);
+            case "show" -> Permissions.canShowFlats(plugin, player, configAdapter);
+            case "update" -> Permissions.hasAdminPermission(plugin, player);
             default -> false;
         };
     }

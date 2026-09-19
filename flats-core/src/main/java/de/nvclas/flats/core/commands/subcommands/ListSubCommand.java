@@ -24,7 +24,7 @@ public class ListSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canListFlats(player, configAdapter)) {
+        if (!Permissions.canListFlats(plugin, player, configAdapter)) {
             Permissions.showNoPermissionMessage(plugin, player);
             return;
         }

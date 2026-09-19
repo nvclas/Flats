@@ -20,7 +20,7 @@ public class SelectSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canEditFlats(player, configAdapter)) {
+        if (!Permissions.canEditFlats(plugin, player, configAdapter)) {
             Permissions.showNoPermissionMessage(plugin, player);
             return;
         }

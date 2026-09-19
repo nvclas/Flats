@@ -12,14 +12,14 @@ import org.jetbrains.annotations.NotNull;
 @UtilityClass
 public class Permissions {
 
-    public static final String ADMIN = "flats.admin";
-    public static final String EDIT_FLATS = "flats.edit";
-    public static final String CLAIM_FLATS = "flats.claim";
-    public static final String SHOW_FLATS = "flats.show";
-    public static final String LIST_FLATS = "flats.list";
-    public static final String INFO_FLATS = "flats.info";
-    public static final String TRUST_PLAYERS = "flats.trust";
-    public static final String SKIP_COMMAND_DELAY = "flats.skip_command_delay";
+    public static final String ADMIN = "admin";
+    public static final String EDIT_FLATS = "edit";
+    public static final String CLAIM_FLATS = "claim";
+    public static final String SHOW_FLATS = "show";
+    public static final String LIST_FLATS = "list";
+    public static final String INFO_FLATS = "info";
+    public static final String TRUST_PLAYERS = "trust";
+    public static final String SKIP_COMMAND_DELAY = "skip_command_delay";
 
     /**
      * Displays a message to the specified player indicating that they do not have the
@@ -33,41 +33,57 @@ public class Permissions {
     }
 
     /**
+     * Builds a full permission node from the plugin-specific permission prefix and suffix.
+     *
+     * @param node   the permission suffix
+     * @param plugin the active plugin instance providing the permission prefix
+     * @return the full permission node
+     */
+    public static @NotNull String getPermission(@NotNull BaseFlats plugin, @NotNull String node) {
+        return plugin.getPermissionPrefix() + "." + node;
+    }
+
+    /**
      * Checks if the specified player has administrative permissions.
      *
+     * @param plugin The active plugin instance providing the permission prefix.
      * @param player The {@link Player} whose permissions are being checked.
      * @return {@code true} if the player has administrative permissions, {@code false} otherwise.
      */
-    public static boolean hasAdminPermission(@NotNull Player player) {
-        return player.hasPermission(ADMIN);
+    public static boolean hasAdminPermission(@NotNull BaseFlats plugin, @NotNull Player player) {
+        return player.hasPermission(getPermission(plugin, ADMIN));
     }
 
     /**
      * Determines whether the specified player has permission to edit flats based on the current
      * configuration settings.
      *
+     * @param plugin        The active plugin instance providing the permission prefix.
      * @param player        The {@link Player} whose permissions are being checked.
      * @param configAdapter The {@link ConfigAdapter} containing the configuration for permission settings.
      * @return {@code true} if the player has the required permission to edit flats; {@code false} otherwise.
      */
-    public static boolean canEditFlats(@NotNull Player player, @NotNull ConfigAdapter configAdapter) {
+    public static boolean canEditFlats(@NotNull BaseFlats plugin, @NotNull Player player,
+            @NotNull ConfigAdapter configAdapter) {
         if (configAdapter.isAdvancedPermissionsEnabled()) {
-            return player.hasPermission(EDIT_FLATS);
+            return player.hasPermission(getPermission(plugin, EDIT_FLATS));
         } else {
-            return player.hasPermission(ADMIN);
+            return hasAdminPermission(plugin, player);
         }
     }
 
     /**
      * Determines whether the specified player is allowed to claim flats based on the given configuration.
      *
+     * @param plugin        The active plugin instance providing the permission prefix.
      * @param player        The player whose permissions are being checked.
      * @param configAdapter The configuration adapter that provides relevant settings.
      * @return {@code true} if the player is allowed to claim flats, {@code false} otherwise.
      */
-    public static boolean canClaimFlats(@NotNull Player player, @NotNull ConfigAdapter configAdapter) {
+    public static boolean canClaimFlats(@NotNull BaseFlats plugin, @NotNull Player player,
+            @NotNull ConfigAdapter configAdapter) {
         if (configAdapter.isAdvancedPermissionsEnabled()) {
-            return player.hasPermission(CLAIM_FLATS);
+            return player.hasPermission(getPermission(plugin, CLAIM_FLATS));
         } else {
             return true;
         }
@@ -76,13 +92,15 @@ public class Permissions {
     /**
      * Checks whether the player is allowed to view flats based on the configured settings and permissions.
      *
+     * @param plugin        The active plugin instance providing the permission prefix.
      * @param player        The {@link Player} whose permissions are being checked.
      * @param configAdapter The {@link ConfigAdapter} instance providing the configuration settings.
      * @return {@code true} if the player can view flats; {@code false} otherwise.
      */
-    public static boolean canShowFlats(@NotNull Player player, @NotNull ConfigAdapter configAdapter) {
+    public static boolean canShowFlats(@NotNull BaseFlats plugin, @NotNull Player player,
+            @NotNull ConfigAdapter configAdapter) {
         if (configAdapter.isAdvancedPermissionsEnabled()) {
-            return player.hasPermission(SHOW_FLATS);
+            return player.hasPermission(getPermission(plugin, SHOW_FLATS));
         } else {
             return true;
         }
@@ -91,15 +109,17 @@ public class Permissions {
     /**
      * Checks whether a player has the necessary permissions to list flats.
      *
+     * @param plugin        The active plugin instance providing the permission prefix.
      * @param player        The player whose permissions are being checked.
      * @param configAdapter The configuration containing permission settings.
      * @return {@code true} if the player has the required permission to list flats; {@code false} otherwise.
      */
-    public static boolean canListFlats(@NotNull Player player, @NotNull ConfigAdapter configAdapter) {
+    public static boolean canListFlats(@NotNull BaseFlats plugin, @NotNull Player player,
+            @NotNull ConfigAdapter configAdapter) {
         if (configAdapter.isAdvancedPermissionsEnabled()) {
-            return player.hasPermission(LIST_FLATS);
+            return player.hasPermission(getPermission(plugin, LIST_FLATS));
         } else {
-            return player.hasPermission(ADMIN);
+            return hasAdminPermission(plugin, player);
         }
     }
 
@@ -107,13 +127,15 @@ public class Permissions {
      * Determines if the player is allowed to view information about flats based on permissions
      * and the configuration settings.
      *
+     * @param plugin        The active plugin instance providing the permission prefix.
      * @param player        The {@link Player} whose permissions are being checked.
      * @param configAdapter The {@link ConfigAdapter} object that contains permission settings.
      * @return {@code true} if the player is allowed to view flat information; {@code false} otherwise.
      */
-    public static boolean canInfoFlats(@NotNull Player player, @NotNull ConfigAdapter configAdapter) {
+    public static boolean canInfoFlats(@NotNull BaseFlats plugin, @NotNull Player player,
+            @NotNull ConfigAdapter configAdapter) {
         if (configAdapter.isAdvancedPermissionsEnabled()) {
-            return player.hasPermission(INFO_FLATS);
+            return player.hasPermission(getPermission(plugin, INFO_FLATS));
         } else {
             return true;
         }
@@ -122,13 +144,15 @@ public class Permissions {
     /**
      * Determines whether the specified player can be trusted based on the provided settings configuration.
      *
+     * @param plugin        The active plugin instance providing the permission prefix.
      * @param player        The {@link Player} whose trustworthiness is being checked.
      * @param configAdapter The {@link ConfigAdapter} instance containing permission-related settings.
      * @return {@code true} if the player can be trusted; {@code false} otherwise.
      */
-    public static boolean canTrustPlayers(@NotNull Player player, @NotNull ConfigAdapter configAdapter) {
+    public static boolean canTrustPlayers(@NotNull BaseFlats plugin, @NotNull Player player,
+            @NotNull ConfigAdapter configAdapter) {
         if (configAdapter.isAdvancedPermissionsEnabled()) {
-            return player.hasPermission(TRUST_PLAYERS);
+            return player.hasPermission(getPermission(plugin, TRUST_PLAYERS));
         } else {
             return true;
         }
@@ -137,29 +161,33 @@ public class Permissions {
     /**
      * Determines whether the player can skip the command delay based on their permissions and the configuration settings.
      *
+     * @param plugin        The active plugin instance providing the permission prefix.
      * @param player        The {@link Player} whose permissions are being checked.
      * @param configAdapter The {@link ConfigAdapter} instance containing the configuration settings.
      * @return {@code true} if the player can skip the command delay, {@code false} otherwise.
      */
-    public static boolean canSkipCommandDelay(@NotNull Player player, @NotNull ConfigAdapter configAdapter) {
+    public static boolean canSkipCommandDelay(@NotNull BaseFlats plugin, @NotNull Player player,
+            @NotNull ConfigAdapter configAdapter) {
         if (configAdapter.isAdvancedPermissionsEnabled()) {
-            return player.hasPermission(SKIP_COMMAND_DELAY);
+            return player.hasPermission(getPermission(plugin, SKIP_COMMAND_DELAY));
         } else {
-            return player.hasPermission(ADMIN);
+            return hasAdminPermission(plugin, player);
         }
     }
 
     /**
      * Checks if a player has no permissions related to flat management.
      *
+     * @param plugin        The active plugin instance providing the permission prefix.
      * @param player        The player whose permissions are being checked.
      * @param configAdapter The settings configuration governing the permission checks.
      * @return {@code true} if the player has none of the relevant permissions; {@code false} otherwise.
      */
-    public static boolean hasZeroPermissions(@NotNull Player player, @NotNull ConfigAdapter configAdapter) {
-        return !canEditFlats(player, configAdapter) && !canClaimFlats(player, configAdapter) &&
-                !canShowFlats(player, configAdapter) && !canListFlats(player, configAdapter) &&
-                !canInfoFlats(player, configAdapter) && !canTrustPlayers(player, configAdapter) &&
-                !canSkipCommandDelay(player, configAdapter);
+    public static boolean hasZeroPermissions(@NotNull BaseFlats plugin, @NotNull Player player,
+            @NotNull ConfigAdapter configAdapter) {
+        return !canEditFlats(plugin, player, configAdapter) && !canClaimFlats(plugin, player, configAdapter) &&
+                !canShowFlats(plugin, player, configAdapter) && !canListFlats(plugin, player, configAdapter) &&
+                !canInfoFlats(plugin, player, configAdapter) && !canTrustPlayers(plugin, player, configAdapter) &&
+                !canSkipCommandDelay(plugin, player, configAdapter);
     }
 }

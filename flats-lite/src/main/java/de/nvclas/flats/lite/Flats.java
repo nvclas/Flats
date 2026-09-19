@@ -3,16 +3,9 @@ package de.nvclas.flats.lite;
 import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.config.SettingsConfig;
+import de.nvclas.flats.core.listeners.ProtectionListener;
 import de.nvclas.flats.core.storage.SqliteStorage;
 import de.nvclas.flats.core.storage.StorageAdapter;
-import de.nvclas.flats.lite.listeners.protection.BlockBreakListener;
-import de.nvclas.flats.lite.listeners.protection.BlockExplodeListener;
-import de.nvclas.flats.lite.listeners.protection.BlockPlaceListener;
-import de.nvclas.flats.lite.listeners.protection.EntityChangeBlockListener;
-import de.nvclas.flats.lite.listeners.protection.EntityDamageByEntityListener;
-import de.nvclas.flats.lite.listeners.protection.EntityExplodeListener;
-import de.nvclas.flats.lite.listeners.protection.HangingBreakByEntityListener;
-import de.nvclas.flats.lite.listeners.protection.PlayerInteractListener;
 import org.bukkit.plugin.PluginManager;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,6 +17,11 @@ public class Flats extends BaseFlats {
 
     @Override
     public @NotNull String getMainCommandName() {
+        return "flats";
+    }
+
+    @Override
+    public @NotNull String getPermissionPrefix() {
         return "flats";
     }
 
@@ -40,18 +38,11 @@ public class Flats extends BaseFlats {
     @Override
     protected void registerProtection() {
         PluginManager pm = getServer().getPluginManager();
-        pm.registerEvents(new BlockBreakListener(this), this);
-        pm.registerEvents(new BlockExplodeListener(this), this);
-        pm.registerEvents(new BlockPlaceListener(this), this);
-        pm.registerEvents(new EntityChangeBlockListener(this), this);
-        pm.registerEvents(new EntityDamageByEntityListener(this), this);
-        pm.registerEvents(new EntityExplodeListener(this), this);
-        pm.registerEvents(new HangingBreakByEntityListener(this), this);
-        pm.registerEvents(new PlayerInteractListener(this), this);
+        pm.registerEvents(new ProtectionListener(this), this);
     }
 
     @Override
-    protected @NotNull String getPluginName() {
+    public @NotNull String getPluginName() {
         return "Flats";
     }
 }

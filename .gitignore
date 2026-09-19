@@ -119,4 +119,3 @@ server/
 !gradle-wrapper.jar
 
 # Excluded modules
-flats-pro/

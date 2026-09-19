@@ -29,7 +29,7 @@ public class StickInteractListener implements Listener {
         Player player = event.getPlayer();
 
         if (event.getItem() == null || !event.getItem().isSimilar(SelectionItem.getItem(plugin))
-                || !Permissions.canEditFlats(player, configAdapter)) {
+                || !Permissions.canEditFlats(plugin, player, configAdapter)) {
             return;
         }
 

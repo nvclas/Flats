@@ -26,7 +26,7 @@ public class InfoSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canInfoFlats(player, configAdapter)) {
+        if (!Permissions.canInfoFlats(plugin, player, configAdapter)) {
             Permissions.showNoPermissionMessage(plugin, player);
             return;
         }

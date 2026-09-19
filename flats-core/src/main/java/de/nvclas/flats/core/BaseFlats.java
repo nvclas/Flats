@@ -29,6 +29,10 @@ public abstract class BaseFlats extends JavaPlugin {
 
     public abstract @NotNull String getMainCommandName();
 
+    public abstract @NotNull String getPluginName();
+
+    public abstract @NotNull String getPermissionPrefix();
+
     protected abstract @NotNull ConfigAdapter createConfigAdapter();
 
     protected abstract @NotNull StorageAdapter createStorageAdapter();
@@ -55,14 +59,11 @@ public abstract class BaseFlats extends JavaPlugin {
         registerCommonListeners();
         registerProtection();
 
-        enableSubmodule();
-
         getLogger().log(Level.INFO, () -> getPluginName() + " initialized successfully");
     }
 
     @Override
     public void onDisable() {
-        disableSubmodule();
         CommandDelayScheduler.stopAll();
 
         if (this.flatsCache != null) {
@@ -97,11 +98,4 @@ public abstract class BaseFlats extends JavaPlugin {
         pm.registerEvents(new FlatEnteredOrLeftListener(this), this);
     }
 
-    protected abstract @NotNull String getPluginName();
-
-    protected void enableSubmodule() {
-    }
-
-    protected void disableSubmodule() {
-    }
 }

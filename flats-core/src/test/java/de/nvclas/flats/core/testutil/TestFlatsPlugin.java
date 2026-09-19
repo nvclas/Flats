@@ -20,6 +20,11 @@ public class TestFlatsPlugin extends BaseFlats {
     }
 
     @Override
+    public @NotNull String getPermissionPrefix() {
+        return "flats";
+    }
+
+    @Override
     protected @NotNull ConfigAdapter createConfigAdapter() {
         return new SettingsConfig("settings.yml", this);
     }
@@ -35,7 +40,7 @@ public class TestFlatsPlugin extends BaseFlats {
     }
 
     @Override
-    protected @NotNull String getPluginName() {
+    public @NotNull String getPluginName() {
         return "FlatsTest";
     }
 }

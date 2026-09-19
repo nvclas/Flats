@@ -26,12 +26,12 @@ public class AddSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canEditFlats(player, configAdapter)) {
+        if (!Permissions.canEditFlats(plugin, player, configAdapter)) {
             Permissions.showNoPermissionMessage(plugin, player);
             return;
         }
         if (args.length < 2) {
-            player.sendMessage(plugin.getPrefix() + I18n.translate("add.usage"));
+            player.sendMessage(plugin.getPrefix() + I18n.translate("add.usage", plugin.getMainCommandName()));
             return;
         }
 

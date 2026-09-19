@@ -44,7 +44,7 @@ public class ShowSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canShowFlats(player, configAdapter)) {
+        if (!Permissions.canShowFlats(plugin, player, configAdapter)) {
             Permissions.showNoPermissionMessage(plugin, player);
             return;
         }
@@ -53,7 +53,7 @@ public class ShowSubCommand implements SubCommand {
             return;
         }
 
-        if (!Permissions.canSkipCommandDelay(player, configAdapter)) {
+        if (!Permissions.canSkipCommandDelay(plugin, player, configAdapter)) {
             new CommandDelayScheduler(MainSubCommand.SHOW.getFullCommandName(), DEFAULT_SHOW_TIME).start(player,
                     plugin);
         }

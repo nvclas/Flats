@@ -20,7 +20,7 @@ public class UpdateSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.hasAdminPermission(player)) {
+        if (!Permissions.hasAdminPermission(plugin, player)) {
             Permissions.showNoPermissionMessage(plugin, player);
             return;
         }
@@ -36,8 +36,10 @@ public class UpdateSubCommand implements SubCommand {
         switch (status) {
             case SUCCESS -> player.sendMessage(
                     plugin.getPrefix() + I18n.translate("update.success", updateDownloader.getFileName()));
-            case NOT_FOUND -> player.sendMessage(plugin.getPrefix() + I18n.translate("update.not_found"));
-            case FAILED -> player.sendMessage(plugin.getPrefix() + I18n.translate("update.failed"));
+            case NOT_FOUND ->
+                    player.sendMessage(plugin.getPrefix() + I18n.translate("update.not_found", plugin.getPluginName()));
+            case FAILED ->
+                    player.sendMessage(plugin.getPrefix() + I18n.translate("update.failed", plugin.getPluginName()));
             case ALREADY_UP_TO_DATE ->
                     player.sendMessage(plugin.getPrefix() + I18n.translate("update.already_up_to_date"));
         }

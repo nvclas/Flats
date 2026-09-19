@@ -1,17 +1,13 @@
 package de.nvclas.flats.core.updater;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -19,12 +15,11 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.logging.Level;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Manages downloading plugin updates from GitHub and placing them into the server's update directory.
@@ -32,20 +27,14 @@ import java.util.regex.Pattern;
 public class UpdateDownloader {
 
     private static final String UPDATE_PROCESS_ERROR = "An error occurred during the update process";
-    private static final long UNKNOWN_CONTENT_LENGTH = -1L;
     private static final Gson GSON = new Gson();
     private static final HttpClient DEFAULT_HTTP_CLIENT = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.ALWAYS)
             .build();
 
-    private static final Pattern FILENAME_PATTERN = Pattern.compile("(?i)filename\\*?=(?:UTF-8''|\"?)([^\";]+)\"?");
-
     private final JavaPlugin plugin;
     private final HttpClient httpClient;
-
-    @Getter
-    @Setter
-    private String apiUrl;
+    private final String apiUrl;
 
     @Getter
     private String fileName;
@@ -59,45 +48,32 @@ public class UpdateDownloader {
         this.httpClient = DEFAULT_HTTP_CLIENT;
     }
 
-    /**
-     * Initiates an asynchronous process to download the latest release of the plugin, if available.
-     * <p>
-     * Errors during the operation are logged, and an appropriate {@link UpdateStatus} is returned to
-     * indicate the result of the operation.
-     *
-     * @return a {@link CompletableFuture} that resolves to an {@link UpdateStatus}, representing the outcome
-     * of the download operation. Possible values include {@link UpdateStatus#SUCCESS} when the download
-     * and update are successful, {@link UpdateStatus#NOT_FOUND} if no release information is found,
-     * {@link UpdateStatus#ALREADY_UP_TO_DATE} if the plugin is already running the latest version,
-     * and {@link UpdateStatus#FAILED} if the process encounters an error.
-     */
-    public CompletableFuture<UpdateStatus> downloadLatestReleaseAsync() {
-        return fetchLatestReleaseAsync().thenCompose(this::processRelease).exceptionally(e -> {
-            Throwable cause = (e instanceof CompletionException && e.getCause() != null) ? e.getCause() : e;
-            logException(UPDATE_PROCESS_ERROR, cause);
-            return UpdateStatus.FAILED;
-        });
+    public @NotNull CompletableFuture<UpdateStatus> downloadLatestReleaseAsync() {
+        return fetchLatestReleaseAsync()
+                .thenCompose(this::processRelease)
+                .exceptionally(e -> {
+                    Throwable cause = (e instanceof CompletionException && e.getCause() != null) ? e.getCause() : e;
+                    logException(UPDATE_PROCESS_ERROR, cause);
+                    return UpdateStatus.FAILED;
+                });
     }
 
-    private CompletableFuture<ReleaseInfo> fetchLatestReleaseAsync() {
+    private @NotNull CompletableFuture<ReleaseInfo> fetchLatestReleaseAsync() {
         HttpRequest request = createGitHubApiRequest(apiUrl);
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenApply(response -> {
-            int statusCode = response.statusCode();
-            if (statusCode == 404) {
-                return ReleaseInfo.notFound();
-            }
-            if (statusCode == 403) {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> switch (response.statusCode()) {
+                    case 200 -> parseReleaseInfo(response.body());
+                    case 404 -> ReleaseInfo.notFound();
+                    case 403 -> {
                 plugin.getLogger().log(Level.WARNING, "GitHub API rate limit exceeded or forbidden access.");
-                return ReleaseInfo.notFound();
+                        yield ReleaseInfo.notFound();
             }
-            if (statusCode != 200) {
-                throw new CompletionException(new IOException("Failed to fetch latest release: HTTP " + statusCode));
-            }
-            return parseReleaseInfo(response.body());
+                    default -> throw new CompletionException(
+                            new IOException("Failed to fetch latest release: HTTP " + response.statusCode()));
         });
     }
 
-    private CompletableFuture<UpdateStatus> processRelease(@NotNull ReleaseInfo releaseInfo) {
+    private @NotNull CompletableFuture<UpdateStatus> processRelease(@NotNull ReleaseInfo releaseInfo) {
         if (!releaseInfo.exists()) {
             return CompletableFuture.completedFuture(UpdateStatus.NOT_FOUND);
         }
@@ -112,80 +88,76 @@ public class UpdateDownloader {
         }
 
         logVersionStatus(currentVersion, latestVersion, false);
-        return downloadJarAsync(releaseInfo.downloadUrl()).thenApply(
-                tempFile -> moveToUpdateFolder(tempFile, releaseInfo.fileName()));
+        return downloadJarAsync(releaseInfo.downloadUrl(), releaseInfo.fileName())
+                .thenApply(tempFile -> moveToUpdateFolder(tempFile, releaseInfo.fileName()));
     }
 
     private @NotNull ReleaseInfo parseReleaseInfo(String responseBody) {
-        JsonObject jsonResponse = GSON.fromJson(responseBody, JsonObject.class);
-        if (jsonResponse == null) {
-            throw new CompletionException(new IOException("GitHub API returned an invalid JSON body"));
-        }
-
-        String version = extractLatestVersion(jsonResponse);
-        JsonArray assets = jsonResponse.getAsJsonArray("assets");
-        if (version == null || assets == null) {
+        GitHubRelease release = GSON.fromJson(responseBody, GitHubRelease.class);
+        if (release == null || release.tag_name() == null || release.assets() == null) {
             return ReleaseInfo.notFound();
         }
 
-        for (int i = 0; i < assets.size(); i++) {
-            JsonObject asset = assets.get(i).getAsJsonObject();
-            String name = asset.get("name").getAsString();
-            if (name.endsWith(".jar")) {
-                String downloadUrl = asset.get("browser_download_url").getAsString();
-                plugin.getLogger().log(Level.INFO, () -> "Fetched latest release URL: " + downloadUrl);
-                return new ReleaseInfo(version, name, downloadUrl);
+        String tagName = release.tag_name();
+        String version = tagName.startsWith("v") ? tagName.substring(1) : tagName;
+        plugin.getLogger().log(Level.INFO, () -> "Latest version: " + version);
+
+        for (GitHubAsset asset : release.assets()) {
+            if (asset.name() != null && asset.name().endsWith(".jar") && asset.browser_download_url() != null) {
+                plugin.getLogger().log(Level.INFO, () -> "Fetched latest release URL: " + asset.browser_download_url());
+                return new ReleaseInfo(version, asset.name(), asset.browser_download_url());
             }
         }
 
-        plugin.getLogger().log(Level.WARNING, () -> "No JAR asset found in the latest release.");
+        plugin.getLogger().log(Level.WARNING, "No JAR asset found in the latest release.");
         return ReleaseInfo.notFound();
     }
 
-    private @Nullable String extractLatestVersion(JsonObject jsonResponse) {
-        if (!jsonResponse.has("tag_name")) {
-            return null;
+    private @NotNull CompletableFuture<Path> downloadJarAsync(@NotNull String downloadUrl,
+            @NotNull String targetFileName) {
+        Path tempFile;
+        try {
+            tempFile = createTempDownloadFile(targetFileName);
+        } catch (IOException e) {
+            return CompletableFuture.failedFuture(e);
         }
 
-        String tagName = jsonResponse.get("tag_name").getAsString();
-        String version = tagName.startsWith("v") ? tagName.substring(1) : tagName;
-        plugin.getLogger().log(Level.INFO, () -> "Latest version: " + version);
-        return version;
-    }
-
-    private void logVersionStatus(String currentVersion, String latestVersion, boolean isUpToDate) {
-        if (isUpToDate) {
-            plugin.getLogger().log(Level.INFO, () -> "Current version " + currentVersion + " is already up to date");
-        } else {
-            plugin.getLogger()
-                    .log(Level.INFO, () -> "Updating from version " + currentVersion + " to " + latestVersion);
-        }
-    }
-
-    private CompletableFuture<Path> downloadJarAsync(@NotNull String downloadUrl) {
         HttpRequest request = createDownloadRequest(downloadUrl);
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream()).thenApply(response -> {
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofFile(tempFile)).thenApply(response -> {
             if (response.statusCode() != 200) {
+                deleteQuietly(tempFile);
                 throw new CompletionException(
                         new IOException("Failed to download file: HTTP " + response.statusCode()));
             }
 
             try {
-                String resolvedFileName = extractFileName(response, downloadUrl);
-                Path tempFile = createTempDownloadFile(resolvedFileName);
+                long downloadedSize = Files.size(tempFile);
+                if (downloadedSize <= 0) {
+                    deleteQuietly(tempFile);
+                    throw new IOException("Downloaded file is empty");
+                }
+
                 long expectedLength = response.headers()
                         .firstValueAsLong("Content-Length")
-                        .orElse(UNKNOWN_CONTENT_LENGTH);
+                        .orElse(-1L);
 
-                saveDownloadedFile(response.body(), tempFile, expectedLength);
+                if (expectedLength != -1L && expectedLength != downloadedSize) {
+                    deleteQuietly(tempFile);
+                    throw new IOException(
+                            "Downloaded file is incomplete. Expected " + expectedLength + " bytes but got "
+                                    + downloadedSize + " bytes");
+                }
+
+                plugin.getLogger().log(Level.INFO, () -> "Download completed: " + tempFile.getFileName());
                 return tempFile;
             } catch (IOException e) {
+                deleteQuietly(tempFile);
                 throw new CompletionException(e);
             }
         });
     }
 
-    private HttpRequest createGitHubApiRequest(String url) {
+    private @NotNull HttpRequest createGitHubApiRequest(String url) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Accept", "application/vnd.github+json")
@@ -194,7 +166,7 @@ public class UpdateDownloader {
                 .build();
     }
 
-    private HttpRequest createDownloadRequest(String url) {
+    private @NotNull HttpRequest createDownloadRequest(String url) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Accept", "application/octet-stream")
@@ -203,47 +175,14 @@ public class UpdateDownloader {
                 .build();
     }
 
-    private String extractFileName(@NotNull HttpResponse<?> response, @NotNull String defaultUrl) {
-        return response.headers().firstValue("Content-Disposition").map(header -> {
-            Matcher matcher = FILENAME_PATTERN.matcher(header);
-            return matcher.find() ? matcher.group(1).trim() : null;
-        }).filter(name -> !name.isBlank()).orElseGet(() -> {
-            int lastSlash = defaultUrl.lastIndexOf('/');
-            return lastSlash != -1 ? defaultUrl.substring(lastSlash + 1) : defaultUrl;
-        });
-    }
-
-    private @NotNull Path createTempDownloadFile(String resolvedFileName) throws IOException {
+    private @NotNull Path createTempDownloadFile(@NotNull String targetFileName) throws IOException {
         Path tempDir = plugin.getDataFolder().toPath().resolve("updates");
         Files.createDirectories(tempDir);
-        String sanitizedName = resolvedFileName.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String sanitizedName = targetFileName.replaceAll("[^a-zA-Z0-9._-]", "_");
         return Files.createTempFile(tempDir, "download-", "-" + sanitizedName);
     }
 
-    private void saveDownloadedFile(InputStream inputStream, Path targetFile, long expectedLength) throws IOException {
-        long bytesCopied;
-        try (InputStream stream = inputStream) {
-            bytesCopied = Files.copy(stream, targetFile, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            Files.deleteIfExists(targetFile);
-            throw e;
-        }
-
-        if (bytesCopied <= 0) {
-            Files.deleteIfExists(targetFile);
-            throw new IOException("Downloaded file is empty");
-        }
-        if (expectedLength != UNKNOWN_CONTENT_LENGTH && expectedLength != bytesCopied) {
-            Files.deleteIfExists(targetFile);
-            throw new IOException(
-                    "Downloaded file is incomplete. Expected " + expectedLength + " bytes but got " + bytesCopied
-                            + " bytes");
-        }
-
-        plugin.getLogger().log(Level.INFO, () -> "Download completed: " + targetFile.getFileName());
-    }
-
-    private UpdateStatus moveToUpdateFolder(@NotNull Path tempFile, @Nullable String targetFileName) {
+    private @NotNull UpdateStatus moveToUpdateFolder(@NotNull Path tempFile, @Nullable String targetFileName) {
         File updateFolder = plugin.getServer().getUpdateFolderFile();
         if (targetFileName == null || targetFileName.isBlank()) {
             plugin.getLogger().log(Level.SEVERE, "Could not resolve target file name");
@@ -266,6 +205,15 @@ public class UpdateDownloader {
         }
     }
 
+    private void logVersionStatus(String currentVersion, String latestVersion, boolean isUpToDate) {
+        if (isUpToDate) {
+            plugin.getLogger().log(Level.INFO, () -> "Current version " + currentVersion + " is already up to date");
+        } else {
+            plugin.getLogger()
+                    .log(Level.INFO, () -> "Updating from version " + currentVersion + " to " + latestVersion);
+        }
+    }
+
     private void deleteQuietly(@NotNull Path path) {
         try {
             Files.deleteIfExists(path);
@@ -279,7 +227,6 @@ public class UpdateDownloader {
     }
 
     private record ReleaseInfo(String version, String fileName, String downloadUrl) {
-
         private static ReleaseInfo notFound() {
             return new ReleaseInfo(null, null, null);
         }
@@ -287,5 +234,11 @@ public class UpdateDownloader {
         private boolean exists() {
             return version != null && fileName != null && downloadUrl != null;
         }
+    }
+
+    private record GitHubRelease(String tag_name, List<GitHubAsset> assets) {
+    }
+
+    private record GitHubAsset(String name, String browser_download_url) {
     }
 }

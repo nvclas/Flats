@@ -5,7 +5,12 @@ import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.config.SettingsConfig;
 import de.nvclas.flats.core.storage.SqliteStorage;
 import de.nvclas.flats.core.storage.StorageAdapter;
+import de.nvclas.flats.core.updater.UpdateResult;
+import de.nvclas.flats.core.updater.UpdateService;
+import de.nvclas.flats.core.updater.UpdateStatus;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.concurrent.CompletableFuture;
 
 public class TestFlatsPlugin extends BaseFlats {
 
@@ -32,6 +37,11 @@ public class TestFlatsPlugin extends BaseFlats {
     @Override
     protected @NotNull StorageAdapter createStorageAdapter() {
         return new SqliteStorage(this);
+    }
+
+    @Override
+    protected @NotNull UpdateService createUpdateService() {
+        return () -> CompletableFuture.completedFuture(UpdateResult.status(UpdateStatus.ALREADY_UP_TO_DATE));
     }
 
     @Override

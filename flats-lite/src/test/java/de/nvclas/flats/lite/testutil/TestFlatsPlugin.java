@@ -1,20 +1,19 @@
-package de.nvclas.flats.lite;
+package de.nvclas.flats.lite.testutil;
 
 import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.config.SettingsConfig;
-import de.nvclas.flats.core.listeners.ProtectionListener;
 import de.nvclas.flats.core.storage.SqliteStorage;
 import de.nvclas.flats.core.storage.StorageAdapter;
 import de.nvclas.flats.core.updater.UpdateService;
 import de.nvclas.flats.lite.updater.GitHubUpdateService;
-import org.bukkit.plugin.PluginManager;
 import org.jetbrains.annotations.NotNull;
 
-public class Flats extends BaseFlats {
+public class TestFlatsPlugin extends BaseFlats {
+
     @Override
     public @NotNull String getPrefix() {
-        return "§7[§6Flats§7] §r";
+        return "[Flats] ";
     }
 
     @Override
@@ -44,12 +43,11 @@ public class Flats extends BaseFlats {
 
     @Override
     protected void registerProtection() {
-        PluginManager pm = getServer().getPluginManager();
-        pm.registerEvents(new ProtectionListener(this), this);
+        // Dummy implementation for tests
     }
 
     @Override
     public @NotNull String getPluginName() {
-        return "Flats";
+        return "FlatsTest";
     }
 }

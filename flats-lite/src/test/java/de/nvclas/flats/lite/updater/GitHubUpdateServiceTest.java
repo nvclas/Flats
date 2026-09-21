@@ -1,8 +1,11 @@
-package de.nvclas.flats.core.updater;
+package de.nvclas.flats.lite.updater;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import de.nvclas.flats.core.testutil.TestFlatsPlugin;
+import de.nvclas.flats.core.updater.UpdateResult;
+import de.nvclas.flats.core.updater.UpdateStatus;
+import de.nvclas.flats.lite.testutil.TestFlatsPlugin;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(MockBukkitExtension.class)
-@DisplayName("UpdateDownloader Tests")
-class UpdateDownloaderTest {
+@DisplayName("GitHubUpdateService Tests")
+class GitHubUpdateServiceTest {
 
     private static final String MOCK_VERSION = "99.99";
 
@@ -87,12 +90,12 @@ class UpdateDownloaderTest {
         });
         httpServer.start();
 
-        UpdateDownloader downloader = new UpdateDownloader(plugin, baseUrl() + "/releases/latest");
+        GitHubUpdateService updateService = new GitHubUpdateService(plugin, baseUrl() + "/releases/latest");
 
-        UpdateStatus status = downloader.downloadLatestReleaseAsync().join();
+        UpdateResult result = updateService.updateAsync().join();
 
         movedJar = plugin.getServer().getUpdateFolderFile().toPath().resolve("Flats-" + MOCK_VERSION + ".jar");
-        assertEquals(UpdateStatus.SUCCESS, status);
+        assertEquals(UpdateStatus.SUCCESS, result.status());
         assertTrue(Files.exists(movedJar), "Downloaded jar should be moved to the update directory");
         assertEquals(jarBytes.length, Files.size(movedJar));
     }
@@ -104,11 +107,11 @@ class UpdateDownloaderTest {
         httpServer.createContext("/releases/latest", exchange -> respondJson(exchange, RELEASE_WITHOUT_JAR_ASSET_JSON));
         httpServer.start();
 
-        UpdateDownloader downloader = new UpdateDownloader(plugin, baseUrl() + "/releases/latest");
+        GitHubUpdateService updateService = new GitHubUpdateService(plugin, baseUrl() + "/releases/latest");
 
-        UpdateStatus status = downloader.downloadLatestReleaseAsync().join();
+        UpdateResult result = updateService.updateAsync().join();
 
-        assertEquals(UpdateStatus.NOT_FOUND, status);
+        assertEquals(UpdateStatus.NOT_FOUND, result.status());
     }
 
     @Test
@@ -120,11 +123,11 @@ class UpdateDownloaderTest {
                 RELEASE_VERSION_JSON_TEMPLATE.formatted(currentVersion, currentVersion, baseUrl(), currentVersion)));
         httpServer.start();
 
-        UpdateDownloader downloader = new UpdateDownloader(plugin, baseUrl() + "/releases/latest");
+        GitHubUpdateService updateService = new GitHubUpdateService(plugin, baseUrl() + "/releases/latest");
 
-        UpdateStatus status = downloader.downloadLatestReleaseAsync().join();
+        UpdateResult result = updateService.updateAsync().join();
 
-        assertEquals(UpdateStatus.ALREADY_UP_TO_DATE, status);
+        assertEquals(UpdateStatus.ALREADY_UP_TO_DATE, result.status());
     }
 
     @Test
@@ -139,20 +142,20 @@ class UpdateDownloaderTest {
         });
         httpServer.start();
 
-        UpdateDownloader downloader = new UpdateDownloader(plugin, baseUrl() + "/releases/latest");
+        GitHubUpdateService updateService = new GitHubUpdateService(plugin, baseUrl() + "/releases/latest");
 
-        UpdateStatus status = downloader.downloadLatestReleaseAsync().join();
+        UpdateResult result = updateService.updateAsync().join();
 
         movedJar = plugin.getServer().getUpdateFolderFile().toPath().resolve("Flats-" + MOCK_VERSION + ".jar");
-        assertEquals(UpdateStatus.FAILED, status);
+        assertEquals(UpdateStatus.FAILED, result.status());
         assertFalse(Files.exists(movedJar), "No target jar should be moved on failed download");
     }
 
-    private String baseUrl() {
+    private @NotNull String baseUrl() {
         return "http://localhost:" + httpServer.getAddress().getPort();
     }
 
-    private void respondJson(HttpExchange exchange, String body) throws IOException {
+    private void respondJson(@NotNull HttpExchange exchange, @NotNull String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json");
         exchange.sendResponseHeaders(200, bytes.length);
@@ -161,7 +164,7 @@ class UpdateDownloaderTest {
         }
     }
 
-    private void deleteRecursively(Path path) {
+    private void deleteRecursively(@NotNull Path path) {
         try {
             if (Files.notExists(path)) {
                 return;

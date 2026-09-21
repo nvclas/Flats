@@ -18,6 +18,14 @@ dependencies {
 
     compileOnly(libs.flyway.core)
     compileOnly(libs.caffeine)
+
+    testImplementation(libs.flyway.core)
+    testImplementation(libs.caffeine)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.paper)
+    testImplementation(libs.mockbukkit)
+    testImplementation(libs.sqlite)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 paperweight {
@@ -64,4 +72,8 @@ tasks.shadowJar {
 
 tasks.jar {
     enabled = false
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

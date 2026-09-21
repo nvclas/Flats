@@ -2,8 +2,7 @@ package de.nvclas.flats.core.commands.subcommands;
 
 import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.commands.SubCommand;
-import de.nvclas.flats.core.updater.UpdateDownloader;
-import de.nvclas.flats.core.updater.UpdateStatus;
+import de.nvclas.flats.core.updater.UpdateResult;
 import de.nvclas.flats.core.util.I18n;
 import de.nvclas.flats.core.util.Permissions;
 import org.bukkit.Bukkit;
@@ -14,7 +13,7 @@ public class UpdateSubCommand implements SubCommand {
 
     private final BaseFlats plugin;
 
-    public UpdateSubCommand(BaseFlats plugin) {
+    public UpdateSubCommand(@NotNull BaseFlats plugin) {
         this.plugin = plugin;
     }
 
@@ -24,18 +23,25 @@ public class UpdateSubCommand implements SubCommand {
             Permissions.showNoPermissionMessage(plugin, player);
             return;
         }
-        UpdateDownloader updateDownloader = new UpdateDownloader(plugin,
-                "https://api.github.com/repos/nvclas/Flats/releases/latest");
-        updateDownloader.downloadLatestReleaseAsync()
-                .thenAccept(status -> Bukkit.getScheduler()
-                        .runTask(plugin, () -> sendStatusMessage(player, updateDownloader, status)));
+
+        plugin.getUpdateService().updateAsync()
+                .thenAccept(result -> Bukkit.getScheduler()
+                        .runTask(plugin, () -> sendStatusMessage(player, result)));
     }
 
-    private void sendStatusMessage(@NotNull Player player, @NotNull UpdateDownloader updateDownloader,
-            @NotNull UpdateStatus status) {
-        switch (status) {
+    private void sendStatusMessage(@NotNull Player player, @NotNull UpdateResult result) {
+        switch (result.status()) {
             case SUCCESS -> player.sendMessage(
-                    plugin.getPrefix() + I18n.translate("update.success", updateDownloader.getFileName()));
+                    plugin.getPrefix() + I18n.translate("update.success", result.fileName()));
+            case UPDATE_AVAILABLE -> {
+                if (result.downloadUrl() != null) {
+                    player.sendMessage(
+                            plugin.getPrefix() + I18n.translate("update.available_link", result.latestVersion(),
+                                    result.downloadUrl()));
+                } else {
+                    player.sendMessage(plugin.getPrefix() + I18n.translate("update.available", result.latestVersion()));
+                }
+            }
             case NOT_FOUND ->
                     player.sendMessage(plugin.getPrefix() + I18n.translate("update.not_found", plugin.getPluginName()));
             case FAILED ->

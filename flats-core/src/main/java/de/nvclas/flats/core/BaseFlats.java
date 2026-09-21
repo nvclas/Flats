@@ -9,6 +9,7 @@ import de.nvclas.flats.core.listeners.PlayerMoveListener;
 import de.nvclas.flats.core.listeners.StickInteractListener;
 import de.nvclas.flats.core.schedulers.CommandDelayScheduler;
 import de.nvclas.flats.core.storage.StorageAdapter;
+import de.nvclas.flats.core.updater.UpdateService;
 import de.nvclas.flats.core.util.I18n;
 import lombok.Getter;
 import org.bukkit.command.PluginCommand;
@@ -18,11 +19,22 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.logging.Level;
 
+/**
+ * Abstract base class for Flats plugins.
+ * <p>
+ * Subclasses must implement the abstract methods to provide plugin-specific configurations,
+ * command names, and storage mechanisms.
+ * <p>
+ * This class handles the core plugin lifecycle, including initialization of configuration,
+ * storage, caching, command registration, and common event listeners.
+ */
 @Getter
 public abstract class BaseFlats extends JavaPlugin {
 
     private ConfigAdapter configAdapter;
     private StorageAdapter storageAdapter;
+    private UpdateService updateService;
+
     private FlatsCache flatsCache;
 
     public abstract @NotNull String getPrefix();
@@ -36,6 +48,8 @@ public abstract class BaseFlats extends JavaPlugin {
     protected abstract @NotNull ConfigAdapter createConfigAdapter();
 
     protected abstract @NotNull StorageAdapter createStorageAdapter();
+
+    protected abstract @NotNull UpdateService createUpdateService();
 
     protected abstract void registerProtection();
 

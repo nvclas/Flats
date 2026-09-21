@@ -1,7 +1,9 @@
-package de.nvclas.flats.core.updater;
+package de.nvclas.flats.lite.updater;
 
 import com.google.gson.Gson;
-import lombok.Getter;
+import de.nvclas.flats.core.updater.UpdateResult;
+import de.nvclas.flats.core.updater.UpdateService;
+import de.nvclas.flats.core.updater.UpdateStatus;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,9 +24,9 @@ import java.util.concurrent.CompletionException;
 import java.util.logging.Level;
 
 /**
- * Manages downloading plugin updates from GitHub and placing them into the server's update directory.
+ * Manages checking and downloading plugin updates from GitHub releases.
  */
-public class UpdateDownloader {
+public class GitHubUpdateService implements UpdateService {
 
     private static final String UPDATE_PROCESS_ERROR = "An error occurred during the update process";
     private static final Gson GSON = new Gson();
@@ -36,26 +38,24 @@ public class UpdateDownloader {
     private final HttpClient httpClient;
     private final String apiUrl;
 
-    @Getter
-    private String fileName;
-
-    @Getter
-    private String latestVersion;
-
-    public UpdateDownloader(JavaPlugin plugin, String apiUrl) {
+    public GitHubUpdateService(@NotNull JavaPlugin plugin, @NotNull String apiUrl) {
         this.plugin = plugin;
         this.apiUrl = apiUrl;
         this.httpClient = DEFAULT_HTTP_CLIENT;
     }
 
-    public @NotNull CompletableFuture<UpdateStatus> downloadLatestReleaseAsync() {
-        return fetchLatestReleaseAsync()
-                .thenCompose(this::processRelease)
-                .exceptionally(e -> {
-                    Throwable cause = (e instanceof CompletionException && e.getCause() != null) ? e.getCause() : e;
-                    logException(UPDATE_PROCESS_ERROR, cause);
-                    return UpdateStatus.FAILED;
-                });
+    public GitHubUpdateService(@NotNull JavaPlugin plugin) {
+        this(plugin, "https://api.github.com/repos/nvclas/Flats/releases/latest");
+    }
+
+
+    @Override
+    public @NotNull CompletableFuture<UpdateResult> updateAsync() {
+        return fetchLatestReleaseAsync().thenCompose(this::processRelease).exceptionally(e -> {
+            Throwable cause = (e instanceof CompletionException && e.getCause() != null) ? e.getCause() : e;
+            logException(UPDATE_PROCESS_ERROR, cause);
+            return UpdateResult.status(UpdateStatus.FAILED);
+        });
     }
 
     private @NotNull CompletableFuture<ReleaseInfo> fetchLatestReleaseAsync() {
@@ -65,34 +65,34 @@ public class UpdateDownloader {
                     case 200 -> parseReleaseInfo(response.body());
                     case 404 -> ReleaseInfo.notFound();
                     case 403 -> {
-                plugin.getLogger().log(Level.WARNING, "GitHub API rate limit exceeded or forbidden access.");
+                        plugin.getLogger().log(Level.WARNING, "GitHub API rate limit exceeded or forbidden access.");
                         yield ReleaseInfo.notFound();
-            }
+                    }
                     default -> throw new CompletionException(
                             new IOException("Failed to fetch latest release: HTTP " + response.statusCode()));
-        });
+                });
     }
 
-    private @NotNull CompletableFuture<UpdateStatus> processRelease(@NotNull ReleaseInfo releaseInfo) {
+    private @NotNull CompletableFuture<UpdateResult> processRelease(@NotNull ReleaseInfo releaseInfo) {
         if (!releaseInfo.exists()) {
-            return CompletableFuture.completedFuture(UpdateStatus.NOT_FOUND);
+            return CompletableFuture.completedFuture(UpdateResult.status(UpdateStatus.NOT_FOUND));
         }
 
-        latestVersion = releaseInfo.version();
-        fileName = releaseInfo.fileName();
-
+        String latestVersion = releaseInfo.version();
+        String fileName = releaseInfo.fileName();
         String currentVersion = plugin.getPluginMeta().getVersion();
+
         if (Objects.equals(currentVersion, latestVersion)) {
             logVersionStatus(currentVersion, latestVersion, true);
-            return CompletableFuture.completedFuture(UpdateStatus.ALREADY_UP_TO_DATE);
+            return CompletableFuture.completedFuture(UpdateResult.status(UpdateStatus.ALREADY_UP_TO_DATE));
         }
 
         logVersionStatus(currentVersion, latestVersion, false);
-        return downloadJarAsync(releaseInfo.downloadUrl(), releaseInfo.fileName())
-                .thenApply(tempFile -> moveToUpdateFolder(tempFile, releaseInfo.fileName()));
+        return downloadJarAsync(releaseInfo.downloadUrl(), fileName).thenApply(
+                tempFile -> moveToUpdateFolder(tempFile, fileName, latestVersion));
     }
 
-    private @NotNull ReleaseInfo parseReleaseInfo(String responseBody) {
+    private @NotNull ReleaseInfo parseReleaseInfo(@NotNull String responseBody) {
         GitHubRelease release = GSON.fromJson(responseBody, GitHubRelease.class);
         if (release == null || release.tag_name() == null || release.assets() == null) {
             return ReleaseInfo.notFound();
@@ -137,9 +137,7 @@ public class UpdateDownloader {
                     throw new IOException("Downloaded file is empty");
                 }
 
-                long expectedLength = response.headers()
-                        .firstValueAsLong("Content-Length")
-                        .orElse(-1L);
+                long expectedLength = response.headers().firstValueAsLong("Content-Length").orElse(-1L);
 
                 if (expectedLength != -1L && expectedLength != downloadedSize) {
                     deleteQuietly(tempFile);
@@ -157,7 +155,7 @@ public class UpdateDownloader {
         });
     }
 
-    private @NotNull HttpRequest createGitHubApiRequest(String url) {
+    private @NotNull HttpRequest createGitHubApiRequest(@NotNull String url) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Accept", "application/vnd.github+json")
@@ -166,7 +164,7 @@ public class UpdateDownloader {
                 .build();
     }
 
-    private @NotNull HttpRequest createDownloadRequest(String url) {
+    private @NotNull HttpRequest createDownloadRequest(@NotNull String url) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Accept", "application/octet-stream")
@@ -182,12 +180,13 @@ public class UpdateDownloader {
         return Files.createTempFile(tempDir, "download-", "-" + sanitizedName);
     }
 
-    private @NotNull UpdateStatus moveToUpdateFolder(@NotNull Path tempFile, @Nullable String targetFileName) {
+    private @NotNull UpdateResult moveToUpdateFolder(@NotNull Path tempFile, @Nullable String targetFileName,
+            @Nullable String latestVersion) {
         File updateFolder = plugin.getServer().getUpdateFolderFile();
         if (targetFileName == null || targetFileName.isBlank()) {
             plugin.getLogger().log(Level.SEVERE, "Could not resolve target file name");
             deleteQuietly(tempFile);
-            return UpdateStatus.FAILED;
+            return UpdateResult.status(UpdateStatus.FAILED);
         }
 
         Path targetPath = updateFolder.toPath().resolve(targetFileName);
@@ -197,15 +196,15 @@ public class UpdateDownloader {
             plugin.getLogger()
                     .log(Level.INFO, () -> "Update downloaded to update folder: " + targetPath
                             + ". Will apply on next restart.");
-            return UpdateStatus.SUCCESS;
+            return UpdateResult.success(targetFileName, latestVersion);
         } catch (IOException e) {
             logException("Failed to move file to update folder", e);
             deleteQuietly(tempFile);
-            return UpdateStatus.FAILED;
+            return UpdateResult.status(UpdateStatus.FAILED);
         }
     }
 
-    private void logVersionStatus(String currentVersion, String latestVersion, boolean isUpToDate) {
+    private void logVersionStatus(@NotNull String currentVersion, @NotNull String latestVersion, boolean isUpToDate) {
         if (isUpToDate) {
             plugin.getLogger().log(Level.INFO, () -> "Current version " + currentVersion + " is already up to date");
         } else {
@@ -222,7 +221,7 @@ public class UpdateDownloader {
         }
     }
 
-    private void logException(String message, Throwable e) {
+    private void logException(@NotNull String message, @NotNull Throwable e) {
         plugin.getLogger().log(Level.SEVERE, e, () -> message + ": " + e.getMessage());
     }
 

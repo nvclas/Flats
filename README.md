@@ -50,7 +50,7 @@ flats and their attributes whereas `settings.yml` contains general settings like
 ## Supported Languages
 
 You can change the active language by editing the language code inside the `settings.yml`. Currently, the plugin
-supports the following languages:
+supports the following languages (AI-translated, except for German and English):
 
 - `en_us` - English (USA)
 - `es_es` - Español (España)
@@ -81,7 +81,7 @@ The plugin provides several commands to interact with the areas:
 - `/flats info [flat]` - Shows information about the flat the player is currently in or a specific flat.
 - `/flats trust <player>` - Allows the specified player to build in the flat the player is currently in.
 - `/flats untrust <player>` - Removes the specified player's access to the flat the player is currently in.
-- `/flats show` - Show every flat my marking it with yellow glass.
+- `/flats show` - Show every flat by marking it with yellow outlines.
 - And more
 
 ## Permissions
@@ -93,7 +93,7 @@ The plugin uses a permission system to control access to certain commands:
 - `flats.admin` - Administrative permission for commands like plugin updates and system management.
 - `flats.edit` - Allows creating, modifying, and deleting flats.
 - `flats.claim` - Enables claiming and unclaiming existing flats.
-- `flats.show` - Grants access to `/flats show` command to highlight nearby flats visually.
+- `flats.show` - Grants access to highlight nearby flats visually.
 - `flats.list` - Permission to view a list of all existing flats.
 - `flats.info` - Allows viewing detailed information about individual flats.
 - `flats.trust` - Enables trusting and untrusting other players, allowing them to build on claimed flats.

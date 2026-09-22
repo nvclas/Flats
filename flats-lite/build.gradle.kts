@@ -67,7 +67,7 @@ tasks.processResources {
 tasks.shadowJar {
     val coreVersion = libs.versions.flats.core.get()
     val liteVersion = libs.versions.flats.lite.get()
-    archiveFileName.set("Flats_${coreVersion}_${liteVersion}.jar")
+    archiveFileName.set("Flats_${coreVersion}-${liteVersion}.jar")
 }
 
 tasks.jar {

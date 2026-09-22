@@ -1,9 +1,11 @@
 package de.nvclas.flats.core.commands;
 
+import de.nvclas.flats.core.BaseFlats;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 
 /**
- * Represents a set of subcommands associated with the "flats" command context.
+ * Represents a set of subcommands associated with main command context.
  * Each enumerated value corresponds to a specific subcommand action.
  */
 @Getter
@@ -27,13 +29,13 @@ public enum MainSubCommand {
     }
 
     /**
-     * Constructs and returns the full command name by appending the subcommand name
-     * to the base "flats" command.
+     * Constructs the fully qualified name of the command by combining the main command name and the subcommand name.
      *
-     * @return The full command name in the format "flats {subCommandName}", where
-     * {@code subCommandName} is the specific subcommand assigned to this instance.
+     * @param plugin the plugin instance containing the main command name.
+     * @param command the subcommand whose name is required.
+     * @return a string representing the full command name (e.g., "flats add").
      */
-    public String getFullCommandName() {
-        return "flats " + subCommandName;
+    public static String getFullCommandName(@NotNull BaseFlats plugin, @NotNull MainSubCommand command) {
+        return plugin.getMainCommandName() + " " + command.getSubCommandName();
     }
 }

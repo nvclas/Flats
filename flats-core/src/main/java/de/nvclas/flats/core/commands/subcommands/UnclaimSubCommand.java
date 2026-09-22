@@ -6,7 +6,7 @@ import de.nvclas.flats.core.commands.SubCommand;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.util.FlatsCommandUtils;
 import de.nvclas.flats.core.util.I18n;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import de.nvclas.flats.core.volumes.Flat;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -25,8 +25,8 @@ public class UnclaimSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canClaimFlats(plugin, player, configAdapter)) {
-            Permissions.showNoPermissionMessage(plugin, player);
+        if (!Permission.canClaimFlats(plugin, player, configAdapter)) {
+            Permission.showNoPermissionMessage(plugin, player);
             return;
         }
         Flat flat = FlatsCommandUtils.getOwnedFlatAtPlayerLocation(plugin, player, flatsCache);

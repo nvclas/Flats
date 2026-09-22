@@ -4,7 +4,7 @@ import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.commands.SubCommand;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.items.SelectionItem;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,8 +20,8 @@ public class SelectSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canEditFlats(plugin, player, configAdapter)) {
-            Permissions.showNoPermissionMessage(plugin, player);
+        if (!Permission.canEditFlats(plugin, player, configAdapter)) {
+            Permission.showNoPermissionMessage(plugin, player);
             return;
         }
         player.getInventory().addItem(SelectionItem.getItem(plugin));

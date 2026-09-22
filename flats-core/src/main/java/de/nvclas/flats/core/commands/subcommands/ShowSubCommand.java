@@ -8,7 +8,7 @@ import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.schedulers.CommandDelayScheduler;
 import de.nvclas.flats.core.util.CommandUtils;
 import de.nvclas.flats.core.util.I18n;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import de.nvclas.flats.core.volumes.Area;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -44,26 +44,24 @@ public class ShowSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canShowFlats(plugin, player, configAdapter)) {
-            Permissions.showNoPermissionMessage(plugin, player);
+        if (!Permission.canShowFlats(plugin, player, configAdapter)) {
+            Permission.showNoPermissionMessage(plugin, player);
             return;
         }
 
-        if (CommandUtils.isCommandOnCooldown(plugin, player, MainSubCommand.SHOW.getFullCommandName())) {
+        if (CommandUtils.isCommandOnCooldown(plugin, player,
+                MainSubCommand.getFullCommandName(plugin, MainSubCommand.SHOW))) {
             return;
         }
 
-        if (!Permissions.canSkipCommandDelay(plugin, player, configAdapter)) {
-            new CommandDelayScheduler(MainSubCommand.SHOW.getFullCommandName(), DEFAULT_SHOW_TIME).start(player,
-                    plugin);
+        if (!Permission.canSkipCommandDelay(plugin, player, configAdapter)) {
+            new CommandDelayScheduler(MainSubCommand.getFullCommandName(plugin, MainSubCommand.SHOW),
+                    DEFAULT_SHOW_TIME).start(player, plugin);
         }
 
         List<Area> nearbyAreas = getNearbyAreas(player);
 
-        long flatsAmount = nearbyAreas.stream()
-                .map(Area::getFlatName)
-                .distinct()
-                .count();
+        long flatsAmount = nearbyAreas.stream().map(Area::getFlatName).distinct().count();
 
         if (flatsAmount == 0) {
             player.sendMessage(plugin.getPrefix() + I18n.translate("show.none"));
@@ -77,9 +75,7 @@ public class ShowSubCommand implements SubCommand {
                     plugin.getPrefix() + I18n.translate("show.success.plural", flatsAmount, DEFAULT_SHOW_TIME));
         }
 
-        List<Area.Edge> edgesToShow = nearbyAreas.stream()
-                .flatMap(area -> area.getEdges().stream())
-                .toList();
+        List<Area.Edge> edgesToShow = nearbyAreas.stream().flatMap(area -> area.getEdges().stream()).toList();
         showFrames(player, edgesToShow);
     }
 
@@ -106,9 +102,8 @@ public class ShowSubCommand implements SubCommand {
                 .map(Entity.class::cast)
                 .toList();
 
-        Bukkit.getScheduler().runTaskLater(plugin,
-                () -> spawnedEntities.forEach(Entity::remove),
-                20L * DEFAULT_SHOW_TIME);
+        Bukkit.getScheduler()
+                .runTaskLater(plugin, () -> spawnedEntities.forEach(Entity::remove), 20L * DEFAULT_SHOW_TIME);
     }
 
     private @NotNull BlockDisplay spawnEdgeDisplay(@NotNull Player player, @NotNull Location start,
@@ -126,16 +121,11 @@ public class ShowSubCommand implements SubCommand {
         float offsetY = dy != 0 ? 0f : -EDGE_THICKNESS / 2f;
         float offsetZ = dz != 0 ? 0f : -EDGE_THICKNESS / 2f;
 
-        Location origin = new Location(start.getWorld(),
-                Math.min(start.getX(), end.getX()),
-                Math.min(start.getY(), end.getY()),
-                Math.min(start.getZ(), end.getZ()));
+        Location origin = new Location(start.getWorld(), Math.min(start.getX(), end.getX()),
+                Math.min(start.getY(), end.getY()), Math.min(start.getZ(), end.getZ()));
 
-        Transformation transformation = new Transformation(
-                new Vector3f(offsetX, offsetY, offsetZ),
-                new Quaternionf(),
-                new Vector3f(scaleX, scaleY, scaleZ),
-                new Quaternionf());
+        Transformation transformation = new Transformation(new Vector3f(offsetX, offsetY, offsetZ), new Quaternionf(),
+                new Vector3f(scaleX, scaleY, scaleZ), new Quaternionf());
 
         BlockDisplay display = origin.getWorld().spawn(origin, BlockDisplay.class, entity -> {
             entity.setBlock(FRAME_BLOCK_DATA);

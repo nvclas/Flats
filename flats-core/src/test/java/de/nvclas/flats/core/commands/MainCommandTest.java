@@ -6,7 +6,7 @@ import de.nvclas.flats.core.items.SelectionItem;
 import de.nvclas.flats.core.testutil.TestFlatsPlugin;
 import de.nvclas.flats.core.testutil.TestUtils;
 import de.nvclas.flats.core.util.I18n;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import de.nvclas.flats.core.volumes.Area;
 import de.nvclas.flats.core.volumes.Flat;
 import de.nvclas.flats.core.volumes.Selection;
@@ -140,9 +140,9 @@ class MainCommandTest {
         return flat;
     }
 
-    private void executeCommandWithPermission(String command, String permission) {
+    private void executeCommandWithPermission(String command, Permission permission) {
         PermissionAttachment permissions = player.addAttachment(plugin);
-        permissions.setPermission(plugin.getPermissionPrefix() + "." + permission, true);
+        permissions.setPermission(plugin.getPermissionPrefix() + "." + permission.getPermissionName(), true);
         executeCommand(command);
         player.removeAttachment(permissions);
     }
@@ -182,7 +182,7 @@ class MainCommandTest {
     private @NotNull Flat createValidFlat() {
         randomizeTestFlatValues();
         setupValidSelection();
-        executeCommandWithPermission("flats add " + testFlatName, Permissions.EDIT_FLATS);
+        executeCommandWithPermission("flats add " + testFlatName, Permission.EDIT_FLATS);
         verifyMessageEquals("add.success", testFlatName);
         return flatsCache.getExistingFlat(testFlatName);
     }
@@ -234,7 +234,7 @@ class MainCommandTest {
         @Test
         @DisplayName("Player with permission receives selection item")
         void selectCommand() {
-            executeCommandWithPermission("flats select", Permissions.EDIT_FLATS);
+            executeCommandWithPermission("flats select", Permission.EDIT_FLATS);
             assertTrue(player.getInventory().contains(SelectionItem.getItem(plugin)),
                     "Player should receive the selection item.");
         }
@@ -251,7 +251,7 @@ class MainCommandTest {
         @DisplayName("Add command creates a new flat")
         void addCommand() {
             setupValidSelection();
-            executeCommandWithPermission("flats add " + testFlatName, Permissions.EDIT_FLATS);
+            executeCommandWithPermission("flats add " + testFlatName, Permission.EDIT_FLATS);
             verifyMessageEquals("add.success", testFlatName);
             assertTrue(flatsCache.existsFlat(testFlatName), "Flat should exist after being added.");
         }
@@ -265,7 +265,7 @@ class MainCommandTest {
             selection.setPos1(new Location(world, selectionMinX, selectionMinY, selectionMinZ));
             selection.setPos2(new Location(world, selectionMaxX + 5, selectionMaxY + 5, selectionMaxZ + 5));
 
-            executeCommandWithPermission("flats add newFlat", Permissions.EDIT_FLATS);
+            executeCommandWithPermission("flats add newFlat", Permission.EDIT_FLATS);
             verifyMessageEquals("error.flat_intersect");
             assertFalse(flatsCache.existsFlat("newFlat"),
                     "Flat should not be created when intersecting with existing flat.");
@@ -275,7 +275,7 @@ class MainCommandTest {
         @DisplayName("Remove command deletes an existing flat")
         void removeCommand() {
             createValidFlat();
-            executeCommandWithPermission("flats remove " + testFlatName, Permissions.EDIT_FLATS);
+            executeCommandWithPermission("flats remove " + testFlatName, Permission.EDIT_FLATS);
             verifyMessageEquals("remove.success", testFlatName);
             assertFalse(flatsCache.existsFlat(testFlatName), "Flat should not exist after removal.");
         }
@@ -293,7 +293,7 @@ class MainCommandTest {
         void claimCommand() {
             Flat createdFlat = createValidFlat();
             placePlayerInFlat();
-            executeCommandWithPermission("flats claim", Permissions.CLAIM_FLATS);
+            executeCommandWithPermission("flats claim", Permission.CLAIM_FLATS);
             verifyMessageEquals("claim.success");
             assertTrue(createdFlat.isOwner(player), "Player should be the owner of the claimed flat.");
         }
@@ -308,7 +308,7 @@ class MainCommandTest {
             Flat fourthFlat = createValidFlat();
             placePlayerInFlat();
 
-            executeCommandWithPermission("flats claim", Permissions.CLAIM_FLATS);
+            executeCommandWithPermission("flats claim", Permission.CLAIM_FLATS);
             verifyMessageEquals("claim.max_claimable_flats_reached", plugin.getConfigAdapter().getMaxClaimableFlats());
             assertFalse(fourthFlat.isOwner(player), "Player should not be able to claim more than the limit of flats");
         }
@@ -320,7 +320,7 @@ class MainCommandTest {
             flat.setOwner(player);
             placePlayerInFlat();
 
-            executeCommandWithPermission("flats unclaim", Permissions.CLAIM_FLATS);
+            executeCommandWithPermission("flats unclaim", Permission.CLAIM_FLATS);
             verifyMessageEquals("unclaim.success");
             assertFalse(flat.hasOwner(), "Flat should no longer have an owner after unclaiming.");
         }
@@ -332,7 +332,7 @@ class MainCommandTest {
             flat.setOwner(target);
             placePlayerInFlat();
 
-            executeCommandWithPermission("flats unclaim", Permissions.CLAIM_FLATS);
+            executeCommandWithPermission("flats unclaim", Permission.CLAIM_FLATS);
             verifyMessageEquals("error.not_your_flat");
             assertTrue(flat.isOwner(target), "Flat should still have owner after unauthorized unclaim attempt.");
         }
@@ -350,7 +350,7 @@ class MainCommandTest {
         void trustCommandWithOnlineTarget() {
             createAndClaimFlat();
 
-            executeCommandWithPermission("flats trust " + target.getName(), Permissions.TRUST_PLAYERS);
+            executeCommandWithPermission("flats trust " + target.getName(), Permission.TRUST_PLAYERS);
             verifyMessageEquals("trust.success", target.getName());
 
             Flat flat = flatsCache.getExistingFlat(testFlatName);
@@ -363,7 +363,7 @@ class MainCommandTest {
             createAndClaimFlat();
             target.kick();
 
-            executeCommandWithPermission("flats trust " + target.getName(), Permissions.TRUST_PLAYERS);
+            executeCommandWithPermission("flats trust " + target.getName(), Permission.TRUST_PLAYERS);
             verifyMessageEquals("trust.success", target.getName());
 
             Flat flat = flatsCache.getExistingFlat(testFlatName);
@@ -374,10 +374,10 @@ class MainCommandTest {
         @DisplayName("Untrust command removes online player from trusted list")
         void untrustCommandWithOnlineTarget() {
             createAndClaimFlat();
-            executeCommandWithPermission("flats trust " + target.getName(), Permissions.TRUST_PLAYERS);
+            executeCommandWithPermission("flats trust " + target.getName(), Permission.TRUST_PLAYERS);
             verifyMessageEquals("trust.success", target.getName());
 
-            executeCommandWithPermission("flats untrust " + target.getName(), Permissions.TRUST_PLAYERS);
+            executeCommandWithPermission("flats untrust " + target.getName(), Permission.TRUST_PLAYERS);
             verifyMessageEquals("untrust.success", target.getName());
             Flat flat = flatsCache.getExistingFlat(testFlatName);
             assertFalse(flat.isTrusted(target), "Target player should no longer be trusted after untrusting.");
@@ -387,11 +387,11 @@ class MainCommandTest {
         @DisplayName("Untrust command works with offline player")
         void untrustCommandWithOfflineTarget() {
             createAndClaimFlat();
-            executeCommandWithPermission("flats trust " + target.getName(), Permissions.TRUST_PLAYERS);
+            executeCommandWithPermission("flats trust " + target.getName(), Permission.TRUST_PLAYERS);
             verifyMessageEquals("trust.success", target.getName());
             target.kick();
 
-            executeCommandWithPermission("flats untrust " + target.getName(), Permissions.TRUST_PLAYERS);
+            executeCommandWithPermission("flats untrust " + target.getName(), Permission.TRUST_PLAYERS);
             verifyMessageEquals("untrust.success", target.getName());
             Flat flat = flatsCache.getExistingFlat(testFlatName);
             assertFalse(flat.isTrusted(target), "Offline target player should no longer be trusted after untrusting.");
@@ -414,7 +414,7 @@ class MainCommandTest {
         void infoCommandWhenInFlat() {
             createAndClaimFlat();
 
-            executeCommandWithPermission("flats info", Permissions.INFO_FLATS);
+            executeCommandWithPermission("flats info", Permission.INFO_FLATS);
             verifyMessageEquals("info.flat", testFlatName);
             verifyMessageEquals("info.owner", player.getName());
         }
@@ -424,7 +424,7 @@ class MainCommandTest {
         void infoCommandWhenNotInFlat() {
             placePlayerFarFromFlats();
 
-            executeCommandWithPermission("flats info", Permissions.INFO_FLATS);
+            executeCommandWithPermission("flats info", Permission.INFO_FLATS);
             verifyMessageEquals("error.not_in_flat");
         }
 
@@ -433,7 +433,7 @@ class MainCommandTest {
         void listCommand() {
             createValidFlat();
 
-            executeCommandWithPermission("flats list", Permissions.LIST_FLATS);
+            executeCommandWithPermission("flats list", Permission.LIST_FLATS);
             verifyMessageEquals("list.title_page", 1, 1);
             verifyMessageEquals("info.flat", testFlatName);
             verifyMessageEquals("info.unoccupied");
@@ -445,7 +445,7 @@ class MainCommandTest {
         void showCommand() {
             createValidFlat();
             placePlayerInFlat();
-            executeCommandWithPermission("flats show", Permissions.SHOW_FLATS);
+            executeCommandWithPermission("flats show", Permission.SHOW_FLATS);
             verifyMessageEquals("show.success.singular", 10);
         }
 
@@ -454,7 +454,7 @@ class MainCommandTest {
         void showCommandNoNearbyFlats() {
             placePlayerFarFromFlats();
 
-            executeCommandWithPermission("flats show", Permissions.SHOW_FLATS);
+            executeCommandWithPermission("flats show", Permission.SHOW_FLATS);
             verifyMessageEquals("show.none");
         }
 
@@ -468,7 +468,7 @@ class MainCommandTest {
 
             player.setLocation(new Location(world, 150, 5, 5));
 
-            executeCommandWithPermission("flats show", Permissions.SHOW_FLATS);
+            executeCommandWithPermission("flats show", Permission.SHOW_FLATS);
             verifyMessageEquals("show.success.singular", 10);
         }
     }

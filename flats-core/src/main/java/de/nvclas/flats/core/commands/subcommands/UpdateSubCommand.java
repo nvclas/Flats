@@ -4,7 +4,7 @@ import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.commands.SubCommand;
 import de.nvclas.flats.core.updater.UpdateResult;
 import de.nvclas.flats.core.util.I18n;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -19,8 +19,8 @@ public class UpdateSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.hasAdminPermission(plugin, player)) {
-            Permissions.showNoPermissionMessage(plugin, player);
+        if (!Permission.hasAdminPermission(plugin, player)) {
+            Permission.showNoPermissionMessage(plugin, player);
             return;
         }
 

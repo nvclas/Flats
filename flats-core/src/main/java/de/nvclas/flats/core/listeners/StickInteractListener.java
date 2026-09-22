@@ -4,7 +4,7 @@ import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.items.SelectionItem;
 import de.nvclas.flats.core.util.I18n;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import de.nvclas.flats.core.volumes.Selection;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -29,7 +29,7 @@ public class StickInteractListener implements Listener {
         Player player = event.getPlayer();
 
         if (event.getItem() == null || !event.getItem().isSimilar(SelectionItem.getItem(plugin))
-                || !Permissions.canEditFlats(plugin, player, configAdapter)) {
+                || !Permission.canEditFlats(plugin, player, configAdapter)) {
             return;
         }
 

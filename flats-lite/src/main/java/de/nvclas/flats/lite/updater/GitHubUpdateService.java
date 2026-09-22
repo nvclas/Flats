@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import de.nvclas.flats.core.updater.UpdateResult;
 import de.nvclas.flats.core.updater.UpdateService;
 import de.nvclas.flats.core.updater.UpdateStatus;
+import lombok.RequiredArgsConstructor;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,28 +27,16 @@ import java.util.logging.Level;
 /**
  * Manages checking and downloading plugin updates from GitHub releases.
  */
+@RequiredArgsConstructor
 public class GitHubUpdateService implements UpdateService {
 
     private static final String UPDATE_PROCESS_ERROR = "An error occurred during the update process";
     private static final Gson GSON = new Gson();
-    private static final HttpClient DEFAULT_HTTP_CLIENT = HttpClient.newBuilder()
-            .followRedirects(HttpClient.Redirect.ALWAYS)
-            .build();
+
+    private final HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
 
     private final JavaPlugin plugin;
-    private final HttpClient httpClient;
     private final String apiUrl;
-
-    public GitHubUpdateService(@NotNull JavaPlugin plugin, @NotNull String apiUrl) {
-        this.plugin = plugin;
-        this.apiUrl = apiUrl;
-        this.httpClient = DEFAULT_HTTP_CLIENT;
-    }
-
-    public GitHubUpdateService(@NotNull JavaPlugin plugin) {
-        this(plugin, "https://api.github.com/repos/nvclas/Flats/releases/latest");
-    }
-
 
     @Override
     public @NotNull CompletableFuture<UpdateResult> updateAsync() {

@@ -5,7 +5,7 @@ import de.nvclas.flats.core.cache.FlatsCache;
 import de.nvclas.flats.core.commands.SubCommand;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.util.I18n;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import de.nvclas.flats.core.volumes.Flat;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -24,8 +24,8 @@ public class ListSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canListFlats(plugin, player, configAdapter)) {
-            Permissions.showNoPermissionMessage(plugin, player);
+        if (!Permission.canListFlats(plugin, player, configAdapter)) {
+            Permission.showNoPermissionMessage(plugin, player);
             return;
         }
 

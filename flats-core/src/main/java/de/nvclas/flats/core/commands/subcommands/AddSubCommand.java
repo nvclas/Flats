@@ -5,7 +5,7 @@ import de.nvclas.flats.core.cache.FlatsCache;
 import de.nvclas.flats.core.commands.SubCommand;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.util.I18n;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import de.nvclas.flats.core.volumes.Area;
 import de.nvclas.flats.core.volumes.Flat;
 import de.nvclas.flats.core.volumes.Selection;
@@ -26,8 +26,8 @@ public class AddSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canEditFlats(plugin, player, configAdapter)) {
-            Permissions.showNoPermissionMessage(plugin, player);
+        if (!Permission.canEditFlats(plugin, player, configAdapter)) {
+            Permission.showNoPermissionMessage(plugin, player);
             return;
         }
         if (args.length < 2) {

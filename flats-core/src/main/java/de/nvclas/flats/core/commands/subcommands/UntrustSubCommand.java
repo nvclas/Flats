@@ -7,7 +7,7 @@ import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.util.CommandUtils;
 import de.nvclas.flats.core.util.FlatsCommandUtils;
 import de.nvclas.flats.core.util.I18n;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import de.nvclas.flats.core.volumes.Flat;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -27,8 +27,8 @@ public class UntrustSubCommand implements SubCommand {
 
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
-        if (!Permissions.canTrustPlayers(plugin, player, configAdapter)) {
-            Permissions.showNoPermissionMessage(plugin, player);
+        if (!Permission.canTrustPlayers(plugin, player, configAdapter)) {
+            Permission.showNoPermissionMessage(plugin, player);
             return;
         }
         if (args.length < 2) {

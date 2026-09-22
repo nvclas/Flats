@@ -65,6 +65,9 @@ public abstract class BaseFlats extends JavaPlugin {
         // Dynamic Storage Initialization
         this.storageAdapter = createStorageAdapter();
 
+        // Update Service
+        this.updateService = createUpdateService();
+
         // Cache
         this.flatsCache = new FlatsCache(this.storageAdapter);
 

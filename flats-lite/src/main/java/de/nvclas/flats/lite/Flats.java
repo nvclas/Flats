@@ -12,6 +12,9 @@ import org.bukkit.plugin.PluginManager;
 import org.jetbrains.annotations.NotNull;
 
 public class Flats extends BaseFlats {
+
+    private static final String GITHUB_URL = "https://api.github.com/repos/nvclas/Flats/releases/latest";
+
     @Override
     public @NotNull String getPrefix() {
         return "§7[§6Flats§7] §r";
@@ -39,7 +42,7 @@ public class Flats extends BaseFlats {
 
     @Override
     protected @NotNull UpdateService createUpdateService() {
-        return new GitHubUpdateService(this);
+        return new GitHubUpdateService(this, GITHUB_URL);
     }
 
     @Override

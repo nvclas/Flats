@@ -2,7 +2,7 @@ package de.nvclas.flats.core.listeners;
 
 import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.cache.FlatsCache;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import de.nvclas.flats.core.volumes.Flat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -26,17 +26,23 @@ import org.jetbrains.annotations.NotNull;
  */
 public class ProtectionListener implements Listener {
 
+    private final BaseFlats plugin;
     private final FlatsCache flatsCache;
 
     public ProtectionListener(BaseFlats plugin) {
+        this.plugin = plugin;
         this.flatsCache = plugin.getFlatsCache();
     }
 
     private void cancelEventIfPlayerNotTrustedOrOwner(@NotNull Cancellable event, Flat flat, @NotNull Entity entity) {
-        if (flat == null || entity.hasPermission(Permissions.ADMIN)) {
+        if (flat == null) {
             return;
         }
-        if (!(entity instanceof Player player) || (!flat.isOwner(player) && !flat.isTrusted(player))) {
+        if (!(entity instanceof Player player)) {
+            event.setCancelled(true);
+            return;
+        }
+        if (!Permission.hasAdminPermission(plugin, player) && !flat.isOwner(player) && !flat.isTrusted(player)) {
             event.setCancelled(true);
         }
     }

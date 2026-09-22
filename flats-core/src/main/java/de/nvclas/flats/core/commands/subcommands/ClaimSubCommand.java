@@ -5,7 +5,7 @@ import de.nvclas.flats.core.cache.FlatsCache;
 import de.nvclas.flats.core.commands.SubCommand;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.util.I18n;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import de.nvclas.flats.core.volumes.Flat;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -25,8 +25,8 @@ public class ClaimSubCommand implements SubCommand {
     @Override
     public void execute(@NotNull Player player, @NotNull String @NotNull [] args) {
         Flat flat = flatsCache.getFlatAtLocation(player.getLocation());
-        if (!Permissions.canClaimFlats(plugin, player, configAdapter)) {
-            Permissions.showNoPermissionMessage(plugin, player);
+        if (!Permission.canClaimFlats(plugin, player, configAdapter)) {
+            Permission.showNoPermissionMessage(plugin, player);
             return;
         }
         if (flat == null) {
@@ -42,7 +42,7 @@ public class ClaimSubCommand implements SubCommand {
                     plugin.getPrefix() + I18n.translate("claim.already_owned_by", flat.getOwner().getName()));
             return;
         }
-        if (!Permissions.hasAdminPermission(plugin, player) &&
+        if (!Permission.hasAdminPermission(plugin, player) &&
                 flatsCache.getOwnedFlatsCount(player) >= configAdapter.getMaxClaimableFlats()) {
             player.sendMessage(plugin.getPrefix() + I18n.translate("claim.max_claimable_flats_reached",
                     configAdapter.getMaxClaimableFlats()));

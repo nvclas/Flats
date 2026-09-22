@@ -3,7 +3,7 @@ package de.nvclas.flats.core.listeners;
 import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.events.FlatEnteredOrLeftEvent;
-import de.nvclas.flats.core.util.Permissions;
+import de.nvclas.flats.core.util.Permission;
 import de.nvclas.flats.core.volumes.Flat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -23,7 +23,7 @@ public class FlatEnteredOrLeftListener implements Listener {
         ConfigAdapter configAdapter = plugin.getConfigAdapter();
         Player player = event.getPlayer();
 
-        if (!configAdapter.isAutoGamemodeEnabled() || Permissions.hasAdminPermission(plugin, player)) {
+        if (!configAdapter.isAutoGamemodeEnabled() || Permission.hasAdminPermission(plugin, player)) {
             return;
         }
 

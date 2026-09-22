@@ -29,7 +29,7 @@ import java.util.logging.Level;
  */
 public class SqliteStorage implements StorageAdapter {
 
-    public static final String DATABASE_NAME = "flats.db";
+    public static final String DATABASE_NAME = "data.sqlite";
     private static final String DATABASE_DIR = "db/migrations/sqlite";
     private final BaseFlats plugin;
     private Connection connection;

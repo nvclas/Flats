@@ -2,24 +2,28 @@ package de.nvclas.flats.core.util;
 
 import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.config.ConfigAdapter;
-import lombok.experimental.UtilityClass;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Utility class for handling permissions in the Flats plugin ecosystem.
  */
-@UtilityClass
-public class Permissions {
+@Getter
+@RequiredArgsConstructor
+public enum Permission {
 
-    public static final String ADMIN = "admin";
-    public static final String EDIT_FLATS = "edit";
-    public static final String CLAIM_FLATS = "claim";
-    public static final String SHOW_FLATS = "show";
-    public static final String LIST_FLATS = "list";
-    public static final String INFO_FLATS = "info";
-    public static final String TRUST_PLAYERS = "trust";
-    public static final String SKIP_COMMAND_DELAY = "skip_command_delay";
+    ADMIN("admin"),
+    EDIT_FLATS("edit"),
+    CLAIM_FLATS("claim"),
+    SHOW_FLATS("show"),
+    LIST_FLATS("list"),
+    INFO_FLATS("info"),
+    TRUST_PLAYERS("trust"),
+    SKIP_COMMAND_DELAY("skip_command_delay");
+
+    private final String permissionName;
 
     /**
      * Displays a message to the specified player indicating that they do not have the
@@ -35,12 +39,12 @@ public class Permissions {
     /**
      * Builds a full permission node from the plugin-specific permission prefix and suffix.
      *
-     * @param node   the permission suffix
-     * @param plugin the active plugin instance providing the permission prefix
+     * @param permission the permission suffix
+     * @param plugin     the active plugin instance providing the permission prefix
      * @return the full permission node
      */
-    public static @NotNull String getPermission(@NotNull BaseFlats plugin, @NotNull String node) {
-        return plugin.getPermissionPrefix() + "." + node;
+    public static @NotNull String getPermission(@NotNull BaseFlats plugin, @NotNull Permission permission) {
+        return plugin.getPermissionPrefix() + "." + permission.getPermissionName();
     }
 
     /**

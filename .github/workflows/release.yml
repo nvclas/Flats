@@ -6,13 +6,14 @@ on:
       - main
       - master
 
-permissions:
-  contents: write
-
 jobs:
   build:
     name: Build Project
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -22,13 +23,13 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: gradle
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}
-          restore-keys: ${{ runner.os }}-gradle
+      - name: Extract version
+        id: extract_version
+        run: |
+          VERSION=$(grep '^version' build.gradle.kts | sed -E 's/^version[[:space:]]*=[[:space:]]*"([^"]+)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -40,44 +41,27 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: build-artifacts
-          path: build/libs/
+          path: build/libs/*.jar
 
   release:
     name: Create Release
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
       - name: Download build artifacts
         uses: actions/download-artifact@v8
         with:
           name: build-artifacts
           path: build/libs/
 
-      - name: Extract version
-        id: extract_version
-        run: echo "VERSION=$(grep '^version' build.gradle.kts | sed -E 's/^version[[:space:]]*=[[:space:]]*\"([^\"]+)\"/\1/')" >> $GITHUB_ENV
-
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.VERSION }}
-          release_name: Flats v${{ env.VERSION }}
+          tag_name: v${{ needs.build.outputs.version }}
+          name: Flats v${{ needs.build.outputs.version }}
           body: ${{ github.event.head_commit.message }}
           draft: true
           prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/libs/Flats-${{ env.VERSION }}.jar
-          asset_name: Flats-${{ env.VERSION }}.jar
-          asset_content_type: application/java-archive
+          files: build/libs/Flats-${{ needs.build.outputs.version }}.jar

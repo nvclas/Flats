@@ -1,4 +1,8 @@
 [versions]
+flats-lite = "1.0.0"
+flats-pro = "1.0.0"
+flats-core = "3.0.0"
+
 annotations = "26.1.+"
 lombok = "9.5.+"
 runPaper = "3.1.+"
@@ -7,9 +11,17 @@ paper = "1.21.11-R0.1-SNAPSHOT"
 mockbukkit = "4.116.+"
 junit-jupiter = "5.13.+"
 junit-platform-launcher = "1.13.+"
-sqlite = "3.51.3.0" # Specific version for plugin.yml required
-flyway = "12.2.0" # Specific version for plugin.yml required
-caffeine = "3.2.4" # Specific version for plugin.yml required
+shadow = "9.6.+"
+worldguard = "7.0.17"
+vault = "1.7.+"
+treasury = "2.0.+"
+
+# Specific versions for plugin.yml
+flyway = "12.2.0"
+sqlite = "3.51.3.0"
+mysql = "26.7.0"
+mariadb = "3.5.10"
+caffeine = "3.2.4"
 
 [libraries]
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
@@ -20,9 +32,15 @@ junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform
 sqlite = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite" }
 flyway-core = { group = "org.flywaydb", name = "flyway-core", version.ref = "flyway" }
 caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }
+mysql = { group = "com.mysql", name = "mysql-connector-j", version.ref = "mysql" }
+mariadb = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariadb" }
+vault = { group = "com.github.MilkBowl", name = "VaultAPI", version.ref = "vault" }
+treasury = { group = "me.lokka30", name = "treasury-api", version.ref = "treasury" }
+worldguard = { group = "com.sk89q.worldguard", name = "worldguard-bukkit", version.ref = "worldguard" }
 
 [plugins]
 runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
 paperweight-userdev = { id = "io.papermc.paperweight.userdev", version.ref = "paperweight-userdev" }
 flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }
 lombok = { id = "io.freefair.lombok", version.ref = "lombok" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

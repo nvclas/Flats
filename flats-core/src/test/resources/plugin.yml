@@ -1,0 +1,8 @@
+name: FlatsTest
+version: 1.0.0
+main: de.nvclas.flats.core.testutil.TestFlatsPlugin
+api-version: '1.13'
+
+commands:
+  flats:
+    description: Plugin base command

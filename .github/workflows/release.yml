@@ -13,7 +13,7 @@ jobs:
     permissions:
       contents: read
     outputs:
-      version: ${{ steps.extract_version.outputs.version }}
+      tag_version: ${{ steps.extract_version.outputs.tag_version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -25,23 +25,24 @@ jobs:
           java-version: '21'
           cache: gradle
 
-      - name: Extract version
-        id: extract_version
-        run: |
-          VERSION=$(grep '^version' build.gradle.kts | sed -E 's/^version[[:space:]]*=[[:space:]]*"([^"]+)"/\1/')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Extract versions
+        id: extract_version
+        run: |
+          CORE_VER=$(./gradlew :flats-core:properties --console=plain -q | grep "^version:" | awk '{print $2}')
+          LITE_VER=$(./gradlew :flats-lite:properties --console=plain -q | grep "^version:" | awk '{print $2}')
+          echo "tag_version=${CORE_VER}-${LITE_VER}" >> $GITHUB_OUTPUT
+
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew :flats-lite:build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
           name: build-artifacts
-          path: build/libs/*.jar
+          path: flats-lite/build/libs/Flats_*.jar
 
   release:
     name: Create Release
@@ -54,14 +55,14 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: build-artifacts
-          path: build/libs/
+          path: release-libs/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.build.outputs.version }}
-          name: Flats v${{ needs.build.outputs.version }}
+          tag_name: v${{ needs.build.outputs.tag_version }}
+          name: Flats v${{ needs.build.outputs.tag_version }}
           body: ${{ github.event.head_commit.message }}
           draft: true
           prerelease: false
-          files: build/libs/Flats-${{ needs.build.outputs.version }}.jar
+          files: release-libs/Flats_*.jar

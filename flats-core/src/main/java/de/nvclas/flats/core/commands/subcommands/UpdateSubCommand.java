@@ -24,24 +24,17 @@ public class UpdateSubCommand implements SubCommand {
             return;
         }
 
-        plugin.getUpdateService().updateAsync()
-                .thenAccept(result -> Bukkit.getScheduler()
-                        .runTask(plugin, () -> sendStatusMessage(player, result)));
+        plugin.getUpdateService()
+                .updateAsync()
+                .thenAccept(result -> Bukkit.getScheduler().runTask(plugin, () -> sendStatusMessage(player, result)));
     }
 
     private void sendStatusMessage(@NotNull Player player, @NotNull UpdateResult result) {
         switch (result.status()) {
-            case SUCCESS -> player.sendMessage(
-                    plugin.getPrefix() + I18n.translate("update.success", result.fileName()));
-            case UPDATE_AVAILABLE -> {
-                if (result.downloadUrl() != null) {
-                    player.sendMessage(
-                            plugin.getPrefix() + I18n.translate("update.available_link", result.latestVersion(),
-                                    result.downloadUrl()));
-                } else {
+            case SUCCESS ->
+                    player.sendMessage(plugin.getPrefix() + I18n.translate("update.success", result.fileName()));
+            case UPDATE_AVAILABLE ->
                     player.sendMessage(plugin.getPrefix() + I18n.translate("update.available", result.latestVersion()));
-                }
-            }
             case NOT_FOUND ->
                     player.sendMessage(plugin.getPrefix() + I18n.translate("update.not_found", plugin.getPluginName()));
             case FAILED ->

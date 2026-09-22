@@ -58,7 +58,7 @@ jobs:
           path: release-libs/
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ needs.build.outputs.tag_version }}
           name: Flats v${{ needs.build.outputs.tag_version }}

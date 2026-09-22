@@ -31,7 +31,7 @@ public enum MainSubCommand {
     /**
      * Constructs the fully qualified name of the command by combining the main command name and the subcommand name.
      *
-     * @param plugin the plugin instance containing the main command name.
+     * @param plugin  the plugin instance containing the main command name.
      * @param command the subcommand whose name is required.
      * @return a string representing the full command name (e.g., "flats add").
      */

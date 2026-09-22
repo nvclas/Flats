@@ -192,6 +192,6 @@ public enum Permission {
         return !canEditFlats(plugin, player, configAdapter) && !canClaimFlats(plugin, player, configAdapter) &&
                 !canShowFlats(plugin, player, configAdapter) && !canListFlats(plugin, player, configAdapter) &&
                 !canInfoFlats(plugin, player, configAdapter) && !canTrustPlayers(plugin, player, configAdapter) &&
-                !canSkipCommandDelay(plugin, player, configAdapter);
+                !canSkipCommandDelay(plugin, player, configAdapter) && !hasAdminPermission(plugin, player);
     }
 }

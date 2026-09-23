@@ -3,6 +3,8 @@ package de.nvclas.flats.lite.testutil;
 import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.config.SettingsConfig;
+import de.nvclas.flats.core.migration.CoreMigrationService;
+import de.nvclas.flats.core.migration.MigrationService;
 import de.nvclas.flats.core.storage.SqliteStorage;
 import de.nvclas.flats.core.storage.StorageAdapter;
 import de.nvclas.flats.core.updater.UpdateService;
@@ -39,6 +41,11 @@ public class TestFlatsPlugin extends BaseFlats {
     @Override
     protected @NotNull UpdateService createUpdateService() {
         return new GitHubUpdateService(this, "");
+    }
+
+    @Override
+    protected @NotNull MigrationService createMigrationService() {
+        return new CoreMigrationService(this);
     }
 
     @Override

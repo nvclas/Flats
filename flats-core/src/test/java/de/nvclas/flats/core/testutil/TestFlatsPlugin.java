@@ -3,6 +3,8 @@ package de.nvclas.flats.core.testutil;
 import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.config.SettingsConfig;
+import de.nvclas.flats.core.migration.CoreMigrationService;
+import de.nvclas.flats.core.migration.MigrationService;
 import de.nvclas.flats.core.storage.SqliteStorage;
 import de.nvclas.flats.core.storage.StorageAdapter;
 import de.nvclas.flats.core.updater.UpdateResult;
@@ -42,6 +44,11 @@ public class TestFlatsPlugin extends BaseFlats {
     @Override
     protected @NotNull UpdateService createUpdateService() {
         return () -> CompletableFuture.completedFuture(UpdateResult.status(UpdateStatus.ALREADY_UP_TO_DATE));
+    }
+
+    @Override
+    protected MigrationService createMigrationService() {
+        return new CoreMigrationService(this);
     }
 
     @Override

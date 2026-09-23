@@ -4,6 +4,8 @@ import de.nvclas.flats.core.BaseFlats;
 import de.nvclas.flats.core.config.ConfigAdapter;
 import de.nvclas.flats.core.config.SettingsConfig;
 import de.nvclas.flats.core.listeners.ProtectionListener;
+import de.nvclas.flats.core.migration.CoreMigrationService;
+import de.nvclas.flats.core.migration.MigrationService;
 import de.nvclas.flats.core.storage.SqliteStorage;
 import de.nvclas.flats.core.storage.StorageAdapter;
 import de.nvclas.flats.core.updater.UpdateService;
@@ -43,6 +45,11 @@ public class Flats extends BaseFlats {
     @Override
     protected @NotNull UpdateService createUpdateService() {
         return new GitHubUpdateService(this, GITHUB_URL);
+    }
+
+    @Override
+    protected @NotNull MigrationService createMigrationService() {
+        return new CoreMigrationService(this);
     }
 
     @Override

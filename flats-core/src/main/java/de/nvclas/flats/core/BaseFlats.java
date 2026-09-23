@@ -7,6 +7,7 @@ import de.nvclas.flats.core.listeners.FlatEnteredOrLeftListener;
 import de.nvclas.flats.core.listeners.PlayerChangedWorldListener;
 import de.nvclas.flats.core.listeners.PlayerMoveListener;
 import de.nvclas.flats.core.listeners.StickInteractListener;
+import de.nvclas.flats.core.migration.MigrationService;
 import de.nvclas.flats.core.schedulers.CommandDelayScheduler;
 import de.nvclas.flats.core.storage.StorageAdapter;
 import de.nvclas.flats.core.updater.UpdateService;
@@ -34,6 +35,7 @@ public abstract class BaseFlats extends JavaPlugin {
     private ConfigAdapter configAdapter;
     private StorageAdapter storageAdapter;
     private UpdateService updateService;
+    private MigrationService migrationService;
 
     private FlatsCache flatsCache;
 
@@ -51,27 +53,26 @@ public abstract class BaseFlats extends JavaPlugin {
 
     protected abstract @NotNull UpdateService createUpdateService();
 
+    protected abstract @NotNull MigrationService createMigrationService();
+
     protected abstract void registerProtection();
 
     @Override
     public void onEnable() {
-        // Config Adaption
+        this.migrationService = createMigrationService();
+        this.migrationService.migrate();
+
         this.configAdapter = createConfigAdapter();
 
-        // Translations
         I18n.initialize(this);
         I18n.loadTranslations(this.configAdapter.getLanguage());
 
-        // Dynamic Storage Initialization
         this.storageAdapter = createStorageAdapter();
 
-        // Update Service
-        this.updateService = createUpdateService();
-
-        // Cache
         this.flatsCache = new FlatsCache(this.storageAdapter);
 
-        // Commands & Listeners
+        this.updateService = createUpdateService();
+
         registerMainCommand();
         registerCommonListeners();
         registerProtection();

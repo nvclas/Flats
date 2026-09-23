@@ -36,11 +36,9 @@ public class SqliteStorage implements StorageAdapter {
 
     public SqliteStorage(BaseFlats plugin) {
         this.plugin = plugin;
-        initConnection();
-        migrate();
     }
 
-    private void initConnection() {
+    public void initConnection() {
         File dataFolder = plugin.getDataFolder();
         if (!dataFolder.exists() && !dataFolder.mkdir()) {
             throw new IllegalStateException("Failed to create plugin data folder: " + dataFolder.getAbsolutePath());
@@ -65,11 +63,7 @@ public class SqliteStorage implements StorageAdapter {
         }
     }
 
-    private @NotNull String getJdbcUrl() {
-        return "jdbc:sqlite:" + new File(plugin.getDataFolder(), DATABASE_NAME).getAbsolutePath();
-    }
-
-    private void migrate() {
+    public void migrate() {
         Flyway flyway = Flyway.configure(plugin.getClass().getClassLoader())
                 .dataSource(getJdbcUrl(), null, null)
                 .baselineOnMigrate(true)
@@ -125,6 +119,10 @@ public class SqliteStorage implements StorageAdapter {
         } finally {
             resetAutoCommit();
         }
+    }
+
+    private @NotNull String getJdbcUrl() {
+        return "jdbc:sqlite:" + new File(plugin.getDataFolder(), DATABASE_NAME).getAbsolutePath();
     }
 
     private void upsertFlatMetadata(@NotNull Flat flat) throws SQLException {
@@ -305,8 +303,7 @@ public class SqliteStorage implements StorageAdapter {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger()
-                    .log(Level.SEVERE, e, () -> "Could not get owned flats count for " + player.getName());
+            plugin.getLogger().log(Level.SEVERE, e, () -> "Could not get owned flats count for " + player.getName());
         }
         return 0;
     }

@@ -1,7 +1,7 @@
 [versions]
 flats-lite = "1.0.1"
-flats-pro = "1.0.1"
-flats-core = "3.0.1"
+flats-pro = "1.0.2"
+flats-core = "3.0.2"
 
 annotations = "26.1.+"
 lombok = "9.5.+"

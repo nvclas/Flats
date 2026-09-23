@@ -41,8 +41,12 @@ public class AddSubCommand implements SubCommand {
         }
 
         String flatName = args[1];
-        Area area = Area.fromSelection(selection, flatName);
+        if (flatName.length() > 64) {
+            player.sendMessage(plugin.getPrefix() + I18n.translate("add.name_too_long"));
+            return;
+        }
 
+        Area area = Area.fromSelection(selection, flatName);
         Flat flat = flatsCache.getFlat(flatName);
         if (flat == null) {
             flatsCache.create(flatName, area);

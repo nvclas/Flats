@@ -59,19 +59,21 @@ public abstract class BaseFlats extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        this.migrationService = createMigrationService();
-        this.migrationService.migrate();
+        migrationService = createMigrationService();
+        migrationService.migrate();
 
-        this.configAdapter = createConfigAdapter();
+        configAdapter = createConfigAdapter();
 
         I18n.initialize(this);
-        I18n.loadTranslations(this.configAdapter.getLanguage());
+        I18n.loadTranslations(configAdapter.getLanguage());
 
-        this.storageAdapter = createStorageAdapter();
+        storageAdapter = createStorageAdapter();
+        storageAdapter.initConnection();
+        storageAdapter.migrate();
 
-        this.flatsCache = new FlatsCache(this.storageAdapter);
+        flatsCache = new FlatsCache(storageAdapter);
 
-        this.updateService = createUpdateService();
+        updateService = createUpdateService();
 
         registerMainCommand();
         registerCommonListeners();
@@ -84,12 +86,12 @@ public abstract class BaseFlats extends JavaPlugin {
     public void onDisable() {
         CommandDelayScheduler.stopAll();
 
-        if (this.flatsCache != null) {
-            this.flatsCache.shutdown();
+        if (flatsCache != null) {
+            flatsCache.shutdown();
         }
 
-        if (this.storageAdapter != null) {
-            this.storageAdapter.close();
+        if (storageAdapter != null) {
+            storageAdapter.close();
         }
 
         getLogger().log(Level.INFO, () -> "Schedulers stopped and storage closed");

@@ -11,6 +11,7 @@ import de.nvclas.flats.core.updater.UpdateResult;
 import de.nvclas.flats.core.updater.UpdateService;
 import de.nvclas.flats.core.updater.UpdateStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -47,7 +48,7 @@ public class TestFlatsPlugin extends BaseFlats {
     }
 
     @Override
-    protected MigrationService createMigrationService() {
+    protected @NonNull MigrationService createMigrationService() {
         return new CoreMigrationService(this);
     }
 

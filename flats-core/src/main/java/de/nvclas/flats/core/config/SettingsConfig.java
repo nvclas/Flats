@@ -18,11 +18,12 @@ public class SettingsConfig extends Config implements ConfigAdapter {
 
     private static final String PATH_LANGUAGE = "language";
     private static final String PATH_MAX_FLAT_SIZE = "maxFlatSize";
+    private static final String PATH_MAX_CLAIMABLE_FLATS = "maxClaimableFlats";
+    private static final String PATH_USE_ADVANCED_PERMISSIONS = "useAdvancedPermissions";
     private static final String PATH_ENABLE_AUTO_GAMEMODE = "enableAutoGamemode";
     private static final String PATH_INSIDE_GAMEMODE = "insideFlatGamemode";
     private static final String PATH_OUTSIDE_GAMEMODE = "outsideFlatGamemode";
-    private static final String PATH_MAX_CLAIMABLE_FLATS = "maxClaimableFlats";
-    private static final String PATH_USE_ADVANCED_PERMISSIONS = "useAdvancedPermissions";
+    private static final String PATH_SQLITE_FILENAME = "storage.sqlite.fileName";
 
     private static final String DEFAULT_LANGUAGE = "en_US";
     private static final int DEFAULT_MAX_FLAT_SIZE = 10000;
@@ -31,6 +32,7 @@ public class SettingsConfig extends Config implements ConfigAdapter {
     private static final boolean DEFAULT_ENABLE_AUTO_GAMEMODE = false;
     private static final GameMode DEFAULT_INSIDE_GAMEMODE = GameMode.CREATIVE;
     private static final GameMode DEFAULT_OUTSIDE_GAMEMODE = GameMode.ADVENTURE;
+    private static final String DEFAULT_SQLITE_FILENAME = "data.sqlite";
 
     /**
      * Constructs a new {@code SettingsConfig} instance with the specified file name and plugin reference.
@@ -142,5 +144,10 @@ public class SettingsConfig extends Config implements ConfigAdapter {
         } catch (IllegalArgumentException exception) {
             return defaultGameMode;
         }
+    }
+
+    @Override
+    public @NotNull String getSqliteFileName() {
+        return getConfigFile().getString(PATH_SQLITE_FILENAME, DEFAULT_SQLITE_FILENAME);
     }
 }

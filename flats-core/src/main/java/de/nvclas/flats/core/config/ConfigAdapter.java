@@ -18,4 +18,6 @@ public interface ConfigAdapter {
     @NotNull GameMode getInsideGamemode();
 
     @NotNull GameMode getOutsideGamemode();
+
+    @NotNull String getSqliteFileName();
 }

@@ -14,6 +14,25 @@ import java.util.List;
 public interface StorageAdapter extends AutoCloseable {
 
     /**
+     * Initializes the connection to the storage system, preparing it for operations.
+     * This method must be called before performing any storage-related operations.
+     * <p>
+     * Failure to invoke this method before interacting with the storage may result
+     * in undefined behavior or exceptions.
+     */
+    void initConnection();
+
+    /**
+     * Migrates data to a new structure, format, or version within the storage system.
+     * This operation may involve schema updates, data transformations, or other adjustments
+     * necessary to ensure compatibility or alignment with updated storage requirements.
+     * <p>
+     * It is recommended to initialize the storage connection by calling {@link #initConnection()}
+     * before invoking this method. Failure to do so may result in undefined behavior or exceptions.
+     */
+    void migrate();
+
+    /**
      * Closes the storage connection and releases any allocated resources.
      */
     @Override

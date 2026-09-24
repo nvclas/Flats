@@ -35,8 +35,8 @@ public class GitHubUpdateService implements UpdateService {
 
     private final HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
 
-    private final JavaPlugin plugin;
     private final String apiUrl;
+    private final JavaPlugin plugin;
 
     @Override
     public @NotNull CompletableFuture<UpdateResult> updateAsync() {

@@ -82,7 +82,7 @@ class GitHubUpdateServiceTest {
                 RELEASE_VERSION_JSON_TEMPLATE.formatted(MOCK_VERSION, MOCK_VERSION, baseUrl(), MOCK_VERSION)));
         httpServer.createContext("/downloads/Flats-" + MOCK_VERSION + ".jar", exchange -> {
             exchange.getResponseHeaders()
-                    .add("Content-Disposition", "attachment; filename=\"Flats-" + MOCK_VERSION + ".jar\"");
+                    .add("Content-Disposition", "attachment; fileName=\"Flats-" + MOCK_VERSION + ".jar\"");
             exchange.sendResponseHeaders(200, jarBytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(jarBytes);
@@ -90,7 +90,7 @@ class GitHubUpdateServiceTest {
         });
         httpServer.start();
 
-        GitHubUpdateService updateService = new GitHubUpdateService(plugin, baseUrl() + "/releases/latest");
+        GitHubUpdateService updateService = new GitHubUpdateService(baseUrl() + "/releases/latest", plugin);
 
         UpdateResult result = updateService.updateAsync().join();
 
@@ -107,7 +107,7 @@ class GitHubUpdateServiceTest {
         httpServer.createContext("/releases/latest", exchange -> respondJson(exchange, RELEASE_WITHOUT_JAR_ASSET_JSON));
         httpServer.start();
 
-        GitHubUpdateService updateService = new GitHubUpdateService(plugin, baseUrl() + "/releases/latest");
+        GitHubUpdateService updateService = new GitHubUpdateService(baseUrl() + "/releases/latest", plugin);
 
         UpdateResult result = updateService.updateAsync().join();
 
@@ -123,7 +123,7 @@ class GitHubUpdateServiceTest {
                 RELEASE_VERSION_JSON_TEMPLATE.formatted(currentVersion, currentVersion, baseUrl(), currentVersion)));
         httpServer.start();
 
-        GitHubUpdateService updateService = new GitHubUpdateService(plugin, baseUrl() + "/releases/latest");
+        GitHubUpdateService updateService = new GitHubUpdateService(baseUrl() + "/releases/latest", plugin);
 
         UpdateResult result = updateService.updateAsync().join();
 
@@ -142,7 +142,7 @@ class GitHubUpdateServiceTest {
         });
         httpServer.start();
 
-        GitHubUpdateService updateService = new GitHubUpdateService(plugin, baseUrl() + "/releases/latest");
+        GitHubUpdateService updateService = new GitHubUpdateService(baseUrl() + "/releases/latest", plugin);
 
         UpdateResult result = updateService.updateAsync().join();
 

@@ -40,7 +40,7 @@ public class TestFlatsPlugin extends BaseFlats {
 
     @Override
     protected @NotNull UpdateService createUpdateService() {
-        return new GitHubUpdateService(this, "");
+        return new GitHubUpdateService("", this);
     }
 
     @Override

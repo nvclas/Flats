@@ -1,39 +1,38 @@
 package de.nvclas.flats.core.migration;
 
 import de.nvclas.flats.core.BaseFlats;
-import de.nvclas.flats.core.storage.SqliteStorage;
-import lombok.RequiredArgsConstructor;
+import de.nvclas.flats.core.config.ConfigAdapter;
 
 import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
 
-@RequiredArgsConstructor
 public class CoreMigrationService implements MigrationService {
 
     private final BaseFlats plugin;
+    private final ConfigAdapter configAdapter;
+
+    public CoreMigrationService(BaseFlats plugin) {
+        this.plugin = plugin;
+        this.configAdapter = plugin.getConfigAdapter();
+    }
 
     @Override
     public void migrate() {
-        migrateSqliteFilename(List.of("flats.db"));
+        migrateSqliteFileName(List.of("flats.db", "data.sqlite"));
     }
 
-    private void migrateSqliteFilename(List<String> oldNames) {
+    private void migrateSqliteFileName(List<String> oldNames) {
         for (String oldName : oldNames) {
-            File dbFile = new File(plugin.getDataFolder(), oldName);
-            if (!dbFile.exists()) {
-                return;
+            File oldDbFile = new File(plugin.getDataFolder(), oldName);
+            File newDbFile = new File(plugin.getDataFolder(), configAdapter.getSqliteFileName());
+            if (!oldDbFile.exists() || newDbFile.exists()) {
+                continue;
             }
-            File dataFile = new File(plugin.getDataFolder(), SqliteStorage.DATABASE_NAME);
-            if (dataFile.exists()) {
-                return;
-            }
-            if (!dbFile.renameTo(new File(plugin.getDataFolder(), SqliteStorage.DATABASE_NAME))) {
+            if (!oldDbFile.renameTo(newDbFile)) {
                 plugin.getLogger()
-                        .log(Level.SEVERE,
-                                () -> "Failed to migrate database, please rename " + oldName + " to "
-                                        + SqliteStorage.DATABASE_NAME
-                                        + " manually");
+                        .log(Level.SEVERE, () -> "Failed to migrate database, please rename " + oldName + " to "
+                                + configAdapter.getSqliteFileName() + " manually");
                 plugin.getServer().getPluginManager().disablePlugin(plugin);
             }
         }

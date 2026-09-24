@@ -29,3 +29,9 @@ useAdvancedPermissions: false
 enableAutoGamemode: false # true if enabled, false if disabled
 insideFlatGamemode: creative # Possible values: survival, creative, adventure, spectator
 outsideFlatGamemode: adventure # Possible values: survival, creative, adventure, spectator
+
+# Storage configuration
+storage:
+  # Configuration for SQLite
+  sqlite:
+    fileName: "data.sqlite"

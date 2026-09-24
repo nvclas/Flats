@@ -59,10 +59,10 @@ public abstract class BaseFlats extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        configAdapter = createConfigAdapter();
+
         migrationService = createMigrationService();
         migrationService.migrate();
-
-        configAdapter = createConfigAdapter();
 
         I18n.initialize(this);
         I18n.loadTranslations(configAdapter.getLanguage());

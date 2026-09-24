@@ -44,7 +44,7 @@ public class Flats extends BaseFlats {
 
     @Override
     protected @NotNull UpdateService createUpdateService() {
-        return new GitHubUpdateService(this, GITHUB_URL);
+        return new GitHubUpdateService(GITHUB_URL, this);
     }
 
     @Override

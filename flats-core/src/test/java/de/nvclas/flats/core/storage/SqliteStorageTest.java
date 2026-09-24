@@ -79,7 +79,7 @@ class SqliteStorageTest {
     @Test
     @DisplayName("Verify that Flyway migrations are correctly applied")
     void testMigrationsApplied() throws SQLException {
-        File dbFile = new File(plugin.getDataFolder(), SqliteStorage.DATABASE_NAME);
+        File dbFile = new File(plugin.getDataFolder(), plugin.getConfigAdapter().getSqliteFileName());
         assertTrue(dbFile.exists(), "Database file should exist after migration");
 
         String url = "jdbc:sqlite:" + dbFile.getAbsolutePath();
